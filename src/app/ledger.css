@@ -1,0 +1,137 @@
+.ledger {
+  min-height: 0;
+  padding: var(--space-8) var(--space-4) var(--space-12) var(--space-6);
+  border-right: 1px solid var(--rule-strong);
+  background: var(--paper-deep);
+}
+.ledger-heading,
+.version-register > header,
+.correction-register > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.ledger-heading {
+  padding: 0 var(--space-2) var(--space-4);
+}
+
+.ledger-heading h1,
+.version-register h3,
+.correction-register h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 600;
+}
+
+.ledger-heading h1 {
+  font-size: 1.12rem;
+}
+
+.ledger-heading span,
+.version-register header span,
+.correction-register header span {
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-empty {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-12) var(--space-2);
+}
+
+.ledger-empty p,
+.ledger-empty span {
+  margin: 0;
+}
+
+.ledger-empty p {
+  font-family: var(--display);
+  font-size: 1.3rem;
+}
+
+.ledger-empty span {
+  max-width: 25ch;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.ledger-list,
+.version-register ol,
+.quality-ledger ul,
+.correction-register ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ledger-list {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.ledger-entry {
+  display: grid;
+  width: 100%;
+  min-height: 4.65rem;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+  border: 0;
+  background: var(--paper-deep);
+  text-align: left;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+
+.ledger-entry:hover {
+  background: var(--pine-pale);
+}
+
+.ledger-entry.is-selected {
+  background: var(--pine);
+  color: var(--paper);
+}
+
+.ledger-index {
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.is-selected .ledger-index,
+.is-selected .ledger-entry-main span,
+.is-selected .ledger-state {
+  color: var(--pine-pale);
+}
+
+.ledger-entry-main {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.ledger-entry-main strong {
+  overflow: hidden;
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-entry-main span,
+.ledger-state {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.ledger-state.is-live {
+  color: var(--pine);
+  font-weight: 700;
+}

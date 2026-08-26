@@ -1,0 +1,41 @@
+interface WebMcpToolAnnotations {
+  readOnlyHint?: boolean
+  untrustedContentHint?: boolean
+}
+
+interface WebMcpExecuteOptions {
+  signal: AbortSignal
+}
+
+interface WebMcpTool {
+  name: string
+  title?: string
+  description: string
+  inputSchema?: object
+  annotations?: WebMcpToolAnnotations
+  execute(input: object, options: WebMcpExecuteOptions): Promise<unknown>
+}
+
+interface WebMcpRegisterOptions {
+  exposedTo?: string[]
+  signal?: AbortSignal
+}
+
+interface WebMcpModelContext {
+  registerTool(tool: WebMcpTool, options?: WebMcpRegisterOptions): Promise<void>
+}
+
+interface Document {
+  modelContext?: WebMcpModelContext
+}
+
+interface Window {
+  eevee?: Readonly<{
+    inputs: Readonly<Record<string, unknown>>
+    store: Readonly<{
+      get(key: string): Promise<unknown>
+      set(key: string, value: unknown): Promise<unknown>
+      all(): Promise<Record<string, unknown>>
+    }>
+  }>
+}

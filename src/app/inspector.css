@@ -1,0 +1,116 @@
+.bench {
+  min-width: 0;
+  padding: clamp(1.5rem, 4vw, 4rem);
+  background: var(--ground);
+}
+.bench-message {
+  display: grid;
+  max-width: 44rem;
+  gap: var(--space-3);
+  padding-top: 14vh;
+}
+
+.bench-message > span {
+  color: var(--stamp);
+  font-family: var(--display);
+  font-size: clamp(4rem, 10vw, 9rem);
+  font-variation-settings: "wght" 100;
+  line-height: 0.75;
+}
+
+.bench-message h2,
+.bench-message p {
+  margin: 0;
+}
+
+.bench-message h2 {
+  max-width: 18ch;
+  font-family: var(--display);
+  font-size: clamp(2.3rem, 5vw, 5.6rem);
+  font-weight: 520;
+  letter-spacing: -0.025em;
+  line-height: 0.98;
+}
+
+.bench-message p {
+  max-width: 56ch;
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.bench-message.is-error h2,
+.form-error {
+  color: var(--error);
+}
+
+.inspector {
+  display: grid;
+  max-width: 75rem;
+  gap: var(--space-12);
+  margin: 0 auto;
+}
+
+.inspector-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-12);
+}
+
+.inspector-heading > div:first-child {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.inspector-heading span {
+  color: var(--stamp);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.inspector-heading h2,
+.inspector-heading p {
+  margin: 0;
+}
+
+.inspector-heading h2 {
+  overflow-wrap: anywhere;
+  font-family: var(--display);
+  font-size: clamp(2.4rem, 5vw, 5rem);
+  font-weight: 540;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.inspector-heading p {
+  max-width: 62ch;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.inspector-heading dl {
+  display: grid;
+  min-width: 15rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.inspector-heading dl div {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.inspector-heading dt {
+  color: var(--ink-faint);
+  font-size: 0.7rem;
+}
+
+.inspector-heading dd {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+}
