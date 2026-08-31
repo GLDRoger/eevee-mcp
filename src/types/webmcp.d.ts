@@ -37,5 +37,21 @@ interface Window {
       set(key: string, value: unknown): Promise<unknown>
       all(): Promise<Record<string, unknown>>
     }>
+    files: Readonly<{
+      list(): Promise<
+        Array<{ id: string; name: string; medium: string; version: number; size: number }>
+      >
+      read(fileId: string): Promise<{
+        id: string
+        name: string
+        medium: string
+        version: number
+        contentBase64: string
+      }>
+      table(
+        fileId: string,
+      ): Promise<Array<{ name: string; rows: Array<Array<string | number | boolean | null>> }>>
+      text(fileId: string): Promise<string>
+    }>
   }>
 }

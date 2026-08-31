@@ -1,51 +1,3 @@
-.tool-register {
-  display: grid;
-  min-height: 4.4rem;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-6);
-  border-top: 1px solid var(--rule-strong);
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.workspace-ref {
-  color: var(--pine-pale);
-  font-size: 0.7rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.tool-register div {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.tool-register strong,
-.tool-register p {
-  margin: 0;
-}
-
-.tool-register strong {
-  font-size: 0.82rem;
-}
-
-.tool-register p {
-  color: var(--pine-pale);
-  font-size: 0.74rem;
-}
-
-.connection-mark {
-  width: 0.7rem;
-  height: 0.7rem;
-  border: 1px solid var(--paper);
-  border-radius: 50%;
-}
-
-.connection-mark.is-connected {
-  background: var(--pine-pale);
-}
-
 @media (max-width: 760px) {
   .topbar p {
     display: none;
@@ -71,6 +23,10 @@
     padding: var(--space-8) var(--space-4) var(--space-12);
   }
 
+  .bench.is-library {
+    padding: var(--space-2) 0 0;
+  }
+
   .inspector {
     gap: var(--space-8);
   }
@@ -86,21 +42,24 @@
 
   .run-form,
   .version-review > header,
-  .publish-waiting,
-  .quality-ledger,
-  .version-register,
+    .publish-waiting,
+    .quality-ledger,
+    .evaluation-register,
+    .version-register,
   .correction-register {
     padding: var(--space-6) var(--space-4);
   }
 
   .run-form > header,
-  .version-review > header,
-  .quality-ledger > header {
+    .version-review > header,
+    .quality-ledger > header,
+    .evaluation-register > header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .quality-ledger li {
+  .quality-ledger li,
+  .evaluation-register li {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
@@ -126,13 +85,6 @@
     flex-direction: column;
   }
 
-  .tool-register {
-    padding-inline: var(--space-4);
-  }
-
-  .workspace-ref {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

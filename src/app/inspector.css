@@ -1,7 +1,13 @@
 .bench {
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   padding: clamp(1.5rem, 4vw, 4rem);
   background: var(--ground);
+}
+
+.bench.is-library {
+  padding: var(--space-3);
 }
 .bench-message {
   display: grid;
@@ -92,8 +98,8 @@
 
 .inspector-heading dl {
   display: grid;
-  min-width: 15rem;
-  grid-template-columns: repeat(3, 1fr);
+  min-width: 20rem;
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
   margin: 0;
 }

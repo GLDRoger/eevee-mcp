@@ -1,0 +1,679 @@
+.office-docs {
+  --word-blue: #185abd;
+  --word-blue-dark: #124a9e;
+  --word-heading: #2f5496;
+  --surface: #ffffff;
+  --chrome-bg: #ffffff;
+  --border: #e1dfdd;
+  --border-strong: #c8c6c4;
+  --text: #252423;
+  --text-dim: #605e5c;
+  --hover: #f3f2f1;
+  --pressed: #edebe9;
+  --active-bg: #e8f1fb;
+  --canvas: #e6e6e6;
+  --generated-highlight: #fff3c4;
+  --generated-highlight-border: #f2b900;
+}
+
+.office-docs * {
+  box-sizing: border-box;
+}
+
+/* UI CJK fonts per language (documentElement.lang is set at bootstrap and on switch);
+ * the zh expansion must keep the historical stack byte-identical */
+.office-docs {
+  --ui-cjk: 'PingFang SC', 'Microsoft YaHei';
+}
+
+.office-docs:lang(ja) {
+  --ui-cjk: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', 'Meiryo';
+}
+
+.office-docs:lang(ko) {
+  --ui-cjk: 'Apple SD Gothic Neo', 'Malgun Gothic';
+}
+
+.office-docs:lang(zh-TW) {
+  --ui-cjk: 'PingFang TC', 'Microsoft JhengHei';
+}
+
+.office-docs {
+  height: 100%;
+  min-height: 600px;
+  margin: 0;
+}
+
+.office-docs {
+  font-family:
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    var(--ui-cjk),
+    sans-serif;
+  color: var(--text);
+  background: var(--chrome-bg);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  /* The document itself never scrolls: a too-wide ribbon (or any other
+     overflowing chrome) must scroll inside its own container, not drag the
+     whole page sideways. */
+  overflow: hidden;
+}
+
+.office-docs .app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.office-docs button {
+  font-family: inherit;
+}
+
+/* ================= title bar (doc name centered) ================= */
+
+.office-docs .qa-btn {
+  width: 30px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.office-docs .qa-btn svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.office-docs .qa-btn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .qa-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ================= ribbon ================= */
+
+.office-docs .ribbon {
+  flex-shrink: 0;
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--border-strong);
+  user-select: none;
+  /* shared toolbar ink (glyphs, letterforms, labels) — same as sheets/slides */
+  color: #232425;
+}
+
+.office-docs .ribbon-tabs {
+  display: flex;
+  align-items: center;
+  /* same tab-row metrics as PowerPoint's ribbon (slides app): 5px top inset,
+     no bottom padding — the active tab's underline sits on the row's edge */
+  padding: 5px 10px 0;
+  gap: 2px;
+  user-select: none;
+}
+
+.office-docs button:focus-visible,
+.office-docs input:focus-visible,
+.office-docs select:focus-visible,
+.office-docs textarea:focus-visible {
+  outline: 2px solid var(--ember, #ff8a3d);
+  outline-offset: 2px;
+}
+
+.office-docs .ribbon-file {
+  max-width: 30%;
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+
+.office-docs .ribbon-tab {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 7px 9px 6px;
+  font-size: 13px;
+  /* every tab label is semibold, not just the active one */
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  /* transparent border keeps the row height; the visible underline is the
+   * ::after, sized to the label text rather than the padded button */
+  border-bottom: 2.5px solid transparent;
+  border-radius: 4px 4px 0 0;
+}
+
+/* hovering a tab tints the label, it doesn't paint a box */
+.office-docs .ribbon-tab:hover {
+  color: var(--word-blue);
+}
+
+.office-docs .ribbon-tab.active {
+  color: var(--word-blue);
+  font-weight: 600;
+}
+
+/* active underline: exactly the text width (insets = horizontal padding),
+ * ends slightly rounded — not a full capsule */
+.office-docs .ribbon-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  right: 13px;
+  bottom: -2.5px;
+  height: 2.5px;
+  border-radius: 1px;
+  background: var(--word-blue);
+}
+
+.office-docs .ribbon-tab-file {
+  color: #fff;
+  background: var(--word-blue);
+  border-radius: 4px;
+  padding: 6px 16px;
+  margin-right: 6px;
+}
+
+.office-docs .ribbon-tab-file:hover,
+.office-docs .ribbon-tab-file.open {
+  background: var(--word-blue-dark);
+}
+
+.office-docs .file-tab-wrap {
+  position: relative;
+}
+
+.office-docs .file-menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 60;
+  min-width: 210px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 5px;
+}
+
+.office-docs .file-menu button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .file-menu button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .file-menu button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.office-docs .file-menu-key {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.office-docs .file-menu-note {
+  margin: 5px 8px 3px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.office-docs .ribbon-tabs-spacer {
+  flex: 1;
+}
+
+.office-docs .qa-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 6px;
+  background: var(--border-strong, #c8c6c4);
+  flex-shrink: 0;
+}
+
+/* ---- ribbon body ---- */
+
+.office-docs .ribbon-body {
+  display: flex;
+  align-items: stretch;
+  /* band metrics shared with the slides ribbon */
+  padding: 6px 12px;
+  /* HARD-fixed height, not min-height: the ribbon height stays constant across
+     tabs, so switching tabs or auto-jumping to Table Layout when the cursor
+     enters a table never pushes the editing area below. A tab that outgrows this must
+     compact its own content instead. */
+  height: 80px;
+  /* Groups never shrink below content, so a narrow window overflows the row:
+     scroll it inside the ribbon instead of stretching the document (matching
+     the sheets/slides ribbons). Dropdown panels are NOT clipped by this —
+     they escape the scroll container via anchor positioning (see
+     .rb-split-wrap). */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.office-docs .ribbon-body::-webkit-scrollbar {
+  display: none;
+}
+
+.office-docs .ribbon-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2px 4px;
+}
+
+.office-docs .ribbon-group-items {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+/* Word for Mac shows no group captions under the ribbon */
+.office-docs .ribbon-group-label {
+  display: none;
+}
+
+.office-docs .ribbon-sep {
+  width: 1px;
+  background: var(--border);
+  margin: 8px 6px;
+}
+
+.office-docs .ribbon-placeholder {
+  align-self: center;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  padding: 0 14px;
+}
+
+/* big paste button */
+.office-docs .rb-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  /* PowerPoint-density: minimal side padding (slides ribbon parity) */
+  padding: 4px 7px 6px;
+  font-size: 12px;
+  /* no tab wrapping: wrapping in narrow windows makes the ribbon taller, causing height jumps when switching tabs */
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .rb-big-icon {
+  min-height: 28px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #232425;
+}
+
+/* hover/open paint only the icon row — the label below
+ * stays outside the gray. The box spans the whole button width (align-self
+ * stretch + horizontal bleed), not just the icon content. Negative margins
+ * cancel the bleed so button layout/alignment is unchanged. */
+.office-docs .rb-big .rb-big-icon {
+  align-self: stretch;
+  border-radius: 4px;
+  padding: 3px 4px;
+  margin: 0 -4px;
+}
+
+/* the dropdown chevron sits beside the icon (top row), not the label */
+.office-docs .rb-caret-svg {
+  flex-shrink: 0;
+}
+
+.office-docs .rb-big-icon .rb-caret-svg {
+  display: block;
+  margin-left: 3px;
+  color: #605e5c;
+}
+
+.office-docs .rb-big-icon-colored {
+  position: relative;
+}
+
+.office-docs .rb-big-icon-colored .rb-color-bar {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: -3px;
+  width: auto;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.office-docs .rb-big:hover:not(:disabled) .rb-big-icon {
+  background: var(--hover);
+}
+
+.office-docs .rb-big:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.office-docs .rb-big.active {
+  color: var(--word-blue);
+}
+
+.office-docs .rb-big.active .rb-big-icon {
+  background: var(--active-bg);
+}
+
+.office-docs .rb-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.office-docs .rb-small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .rb-small svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: #232425;
+  /* CSS resizes these below their attr size — re-pin the painted stroke
+     (1.43 units × 14/16 ≈ 1.25px) */
+  stroke-width: 1.43;
+}
+
+.office-docs .rb-small:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .rb-small.active {
+  background: var(--active-bg);
+}
+
+.office-docs .rb-small.active svg {
+  color: var(--word-blue);
+}
+
+.office-docs .rb-small:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.office-docs .rb-font-group {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  justify-content: center;
+}
+
+.office-docs .rb-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.office-docs .rb-select {
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--surface);
+  font-size: 12px;
+  padding: 0 4px;
+  color: var(--text);
+}
+
+.office-docs .rb-select:disabled {
+  opacity: 0.55;
+}
+
+.office-docs .rb-font-family {
+  width: 128px;
+}
+
+.office-docs .rb-font-size {
+  width: 58px;
+}
+
+.office-docs .rb-icon {
+  min-width: 28px;
+  height: 30px;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text);
+  padding: 0 4px;
+  /* flex-center the content: buttons whose svg is followed by an inline caret
+     (line spacing / shading / borders) otherwise sit on baseline math and land
+     a couple px off the plain icon buttons (align left/center/right/justify) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.office-docs .rb-icon:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .rb-icon.active {
+  background: var(--active-bg);
+  color: var(--word-blue);
+}
+
+.office-docs .rb-icon:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.office-docs .rb-mini-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 5px;
+}
+
+.office-docs .rb-icon svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.office-docs .rb-script {
+  font-size: 12px;
+}
+
+.office-docs .rb-script sub,
+.office-docs .rb-script sup {
+  font-size: 9px;
+}
+
+/* split button: main action + caret dropdown */
+.office-docs .rb-split-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Anchor for the dropdown panels (color-palette / layout-menu / …), which are
+   position: fixed so they escape the ribbon-body scroll clip while tracking
+   their trigger through ribbon scrolling. Every wrap shares the name, so the
+   scope is essential: without it a fixed-position panel (laid out after all
+   in-flow content) would resolve to the LAST wrap in the document instead of
+   its own parent. */
+.office-docs .rb-split-wrap,
+.office-docs .rb-color-wrap {
+  anchor-name: --rb-drop-wrap;
+  anchor-scope: --rb-drop-wrap;
+}
+
+.office-docs .rb-caret {
+  width: 13px;
+  height: 26px;
+  border: none;
+  background: none;
+  border-radius: 0 3px 3px 0;
+  font-size: 8px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+}
+
+.office-docs .rb-caret:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .rb-caret:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.office-docs .rb-color-caret {
+  width: 24px;
+  height: 30px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.office-docs .rb-caret-inline {
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-left: 2px;
+}
+
+/* font color button with color bar */
+.office-docs .rb-color-wrap {
+  position: relative;
+}
+
+.office-docs .rb-color-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 30px;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.office-docs .rb-color-a {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.office-docs .rb-color-bar {
+  width: 16px;
+  height: 4px;
+  margin-top: 1px;
+  border-radius: 1px;
+}
+
+.office-docs .color-palette {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(6, 22px);
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.office-docs .color-swatch {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.office-docs .color-swatch:hover {
+  outline: 2px solid var(--word-blue);
+}
+
+/* "No Shading" reset row under the swatch grid */
+.office-docs .color-clear {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  padding: 5px 6px;
+  font-size: 12.5px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.office-docs .color-clear:hover {
+  background: var(--hover);
+}
+
+.office-docs .color-palette-highlight {
+  grid-template-columns: none;
+}
+
+.office-docs .color-palette-highlight-word {
+  display: block;
+  width: 233px;
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+.office-docs .color-highlight-title {
+  margin: 0 0 10px;
+}
+
+.office-docs .color-highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 35px);
+  gap: 7px;
+}

@@ -1,0 +1,708 @@
+.office-docs .doc-comment:has(.doc-comment-resolved),
+.office-docs .doc-comment-resolved,
+.office-docs .doc-comment-resolved .doc-comment {
+  background: none;
+  border-bottom: none;
+  cursor: text;
+}
+
+.office-docs .doc-comment-flash {
+  animation: comment-flash 1.2s ease-out;
+}
+
+@keyframes comment-flash {
+  0%,
+  40% {
+    background: rgba(255, 170, 0, 0.55);
+  }
+  100% {
+    background: rgba(255, 196, 0, 0.22);
+  }
+}
+
+.office-docs .comments-pane {
+  width: 264px;
+  flex: none;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.office-docs .comments-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .comments-pane-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.office-docs .comments-pane-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.office-docs .comments-pane-close:hover {
+  background: var(--hover);
+}
+
+.office-docs .comments-pane-list {
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.office-docs .comment-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg, #fff);
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.office-docs .comment-card:hover {
+  border-color: #e8a33d;
+}
+
+.office-docs .comment-card.active {
+  border-color: #e8a33d;
+  box-shadow: 0 0 0 1px #e8a33d;
+}
+
+.office-docs .comment-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.office-docs .comment-avatar {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e8a33d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.office-docs .comment-author {
+  font-weight: 600;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.office-docs .comment-date {
+  margin-left: auto;
+  flex: none;
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+
+.office-docs .comment-anchor {
+  font-size: 11px;
+  color: var(--text-dim);
+  border-left: 2px solid #e8a33d;
+  padding-left: 6px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.office-docs .comment-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.office-docs .comments-empty {
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* horizontal ruler */
+.office-docs .ruler {
+  position: relative;
+  height: 20px;
+  margin: 0 auto 6px;
+  background:
+    repeating-linear-gradient(to right, #b9b9b9 0, #b9b9b9 1px, transparent 1px, transparent 12px)
+      bottom / 100% 5px no-repeat,
+    #f3f2f1;
+  border: 1px solid #d6d6d6;
+  border-radius: 2px;
+  font-size: 9px;
+  color: #666;
+  user-select: none;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.office-docs .ruler-tab-type {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 100%;
+  background: #e0e0e0;
+  border: none;
+  border-right: 1px solid #ccc;
+  font-size: 9px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.office-docs .ruler-tab-type:hover {
+  background: #d0d0d0;
+}
+
+/* tab stop markers on ruler */
+.office-docs .ruler-tab {
+  position: absolute;
+  bottom: 2px;
+  width: 10px;
+  height: 10px;
+  font-size: 8px;
+  font-weight: bold;
+  color: #185abd;
+  cursor: move;
+  transform: translateX(-50%);
+  text-align: center;
+  line-height: 10px;
+  z-index: 3;
+  user-select: none;
+}
+
+.office-docs .ruler-tab:hover {
+  color: #0c3c82;
+  background: rgba(24, 90, 189, 0.1);
+}
+
+/* default tab stop guide (no interaction) */
+.office-docs .ruler-tab-default {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+  background: #aaa;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.office-docs .ruler-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.office-docs .ruler-num {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+  line-height: 1;
+}
+
+/* header/footer dropdown editor */
+.office-docs .hf-menu {
+  /* fixed + anchored like the other ribbon panels, so the ribbon-body
+     scroll clip can't cut it off */
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: anchor(bottom);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 10px;
+  width: 260px;
+}
+
+.office-docs .hf-menu-title {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.office-docs .hf-menu input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12.5px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.office-docs .hf-menu-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.office-docs .hf-menu-actions button {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.office-docs .hf-menu-actions .btn-primary {
+  background: #2b7cd3;
+  border-color: #2b7cd3;
+  color: #fff;
+}
+
+/* the page: size/margins/background follow the docx sectPr via CSS vars */
+.office-docs .doc-page {
+  width: var(--page-w, 816px);
+  margin: 0 auto;
+  background: var(--page-bg, var(--surface));
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.28),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: var(--page-pad, 96px 96px 120px);
+  min-height: var(--page-h, 1056px);
+  outline: none;
+  font-family: Calibri, 'DengXian', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: #000;
+}
+
+.office-docs .workspace-dark {
+  background: #3d3d3d;
+}
+
+/* visual page-break indicator (w:pageBreakBefore) */
+.office-docs .doc-page .page-break-before {
+  position: relative;
+  border-top: 1px dashed var(--border-strong);
+  padding-top: 14px;
+  margin-top: 14pt;
+}
+
+.office-docs .doc-page .page-break-before::before {
+  content: attr(data-page-break-label);
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--text-dim);
+  background: var(--page-bg, var(--surface));
+  padding: 0 8px;
+}
+
+.office-docs .doc-page p {
+  margin: 0 0 8pt;
+}
+
+/* M4 always-on pagination in the canvas: page gap = previous page's bottom margin (white) + inter-page band (gray) + next page's top margin (white) */
+.office-docs .page-gap {
+  position: relative;
+  cursor: default;
+  user-select: none;
+}
+
+.office-docs .page-gap::before {
+  content: '';
+  position: absolute;
+  top: var(--gap-mb, 96px);
+  bottom: var(--gap-mt, 96px);
+  left: 0;
+  right: 0;
+  background: var(--canvas);
+  box-shadow:
+    inset 0 8px 8px -8px rgba(0, 0, 0, 0.35),
+    inset 0 -3px 3px -3px rgba(0, 0, 0, 0.18);
+}
+
+.office-docs .workspace-dark .page-gap::before {
+  background: #3d3d3d;
+}
+
+/* inline gap for mid-paragraph page breaks: inserted at the broken line inside the paragraph, takes its own line, excluded from text selection/cursor */
+.office-docs .page-gap-inline {
+  display: inline-block;
+  vertical-align: top;
+  pointer-events: none;
+  text-indent: 0;
+}
+
+/* In-table gap at a row boundary. A real spanning cell isolates collapsed
+   borders/backgrounds from the page gutter; the inner fill paints paper /
+   canvas / paper bands without inheriting table-cell decoration. */
+.office-docs .page-gap-table {
+  display: table-row;
+}
+
+.office-docs .doc-table .page-gap-table > td {
+  position: relative;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: var(--page-bg, var(--surface));
+}
+
+.office-docs .page-gap-table::before {
+  display: none;
+}
+
+/* absolute: height 100% of an auto-height td resolves to 0, hiding the bands */
+.office-docs .page-gap-table-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--page-bg, var(--surface)) 0 var(--gap-mb, 96px),
+    var(--canvas) var(--gap-mb, 96px) calc(var(--gap-mb, 96px) + 28px),
+    var(--page-bg, var(--surface)) calc(var(--gap-mb, 96px) + 28px) 100%
+  );
+}
+
+.office-docs .workspace-dark .page-gap-table-fill {
+  --canvas: #3d3d3d;
+}
+
+/* footnote area at the top of a page gap (previous page's bottom, Word behavior): the gap was already enlarged by the reserved height;
+   the estimated height differs from actual rendering by pixels, so overflow into the bottom-margin area is allowed (no clipping) */
+.office-docs .page-gap-notes {
+  position: absolute;
+  top: 0;
+  overflow: visible;
+  box-sizing: border-box;
+  pointer-events: auto;
+  font-size: 10pt;
+  line-height: 1.3;
+  color: var(--text, #333);
+  text-indent: 0;
+  text-align: left;
+}
+
+.office-docs .page-gap-notes::before {
+  content: '';
+  display: block;
+  width: 33%;
+  border-top: 1px solid #888;
+  margin-bottom: 4px;
+}
+
+.office-docs .page-gap-note {
+  cursor: default;
+  overflow: hidden;
+}
+
+.office-docs .pv-footnote {
+  overflow: hidden;
+}
+
+.office-docs .page-gap-note sup {
+  margin-right: 4px;
+}
+
+/* pagination preview: page-bottom footnote area (the referencing page; separator + small text); tiny overflow spills into the bottom margin */
+.office-docs .pv-footnotes {
+  position: absolute;
+  overflow: visible;
+  box-sizing: border-box;
+  font-size: 10pt;
+  line-height: 1.3;
+  color: #333;
+}
+
+.office-docs .pv-footnotes::before {
+  content: '';
+  display: block;
+  width: 33%;
+  border-top: 1px solid #888;
+  margin-bottom: 4px;
+}
+
+.office-docs .pv-footnote sup {
+  margin-right: 4px;
+}
+
+/* endnote area: right after the body's end, separator above the first entry, continuation pages have no separator */
+.office-docs .pv-endnotes {
+  position: absolute;
+  overflow: visible;
+  box-sizing: border-box;
+  font-size: 10pt;
+  line-height: 1.3;
+  color: #333;
+}
+
+.office-docs .pv-endnote-separator {
+  /* matches FOOTNOTE_SEPARATOR_H (16px): 11 + 1 border + 4 bottom spacing */
+  width: 33%;
+  border-top: 1px solid #888;
+  margin-bottom: 4px;
+  height: 11px;
+}
+
+/* when a page gap is right next to a page-break indicator, hide the duplicate dashed marker (keep placeholder height) */
+.office-docs .page-gap + .page-break-before {
+  border-top-color: transparent;
+}
+
+.office-docs .page-gap + .page-break-before::before {
+  display: none;
+}
+
+/* pagination preview: read-only overlay, one fixed-size box per page, content clone clipped via negative margin */
+.office-docs .pagination-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: #525659;
+}
+
+.office-docs .pv-toolbar {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: no-drag;
+}
+
+.office-docs .pv-title {
+  font-weight: 600;
+}
+
+.office-docs .pv-count {
+  color: var(--text-dim, #777);
+}
+
+.office-docs .pv-hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-dim, #777);
+}
+
+.office-docs .pv-close {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 4px 14px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.office-docs .pv-close:hover {
+  background: var(--word-blue);
+  border-color: var(--word-blue);
+  color: #fff;
+}
+
+.office-docs .pv-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 24px 0 48px;
+}
+
+.office-docs .pv-page {
+  position: relative;
+  margin: 0 auto 24px;
+  background: #fff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.28),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: Calibri, 'DengXian', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 11pt;
+  line-height: 1.35;
+  color: #000;
+}
+
+.office-docs .pv-clip {
+  overflow: hidden;
+}
+
+/* clip at the paper edge, not the content box: over-wide tables bleed into the margin
+   like Word (keep overflow hidden — print pagination needs the box monolithic) */
+.office-docs .pv-page > .pv-clip {
+  margin-right: calc(-1 * var(--pv-mr, 0px));
+}
+
+/* column flow: regions stack vertically; narrow clipped columns sit side by side within a region */
+.office-docs .pv-region {
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.office-docs .pv-col {
+  flex: none;
+}
+
+/* the clone is a gapless continuous flow (slices use virtual coordinates); canvas page gaps don't enter the clone */
+.office-docs .pv-clip .page-gap,
+.office-docs .pv-clip .page-gap-cut {
+  display: none;
+}
+
+/* the clone keeps only content layout, stripping the page box's chrome (width = content area, matching the canvas) */
+.office-docs .pv-clip .doc-page {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 0;
+  pointer-events: none;
+}
+
+/* page-break indicators are only visually hidden, keeping placeholder height — clone line heights must match measurement */
+.office-docs .pv-clip .doc-page .page-break-before {
+  border-top-color: transparent;
+}
+
+.office-docs .pv-clip .doc-page .page-break-before::before {
+  visibility: hidden;
+}
+
+.office-docs .pv-page .page-hf {
+  cursor: default;
+}
+
+.office-docs .pv-pageno {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 10px;
+  color: #aaa;
+  user-select: none;
+}
+
+.office-docs .doc-page h1,
+.office-docs .doc-page h2,
+.office-docs .doc-page h3,
+.office-docs .doc-page h4,
+.office-docs .doc-page h5,
+.office-docs .doc-page h6 {
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 14pt 0 4pt;
+}
+
+.office-docs .doc-page h1 {
+  font-size: 16pt;
+  color: var(--word-heading);
+}
+
+.office-docs .doc-page h2 {
+  font-size: 13pt;
+  color: var(--word-heading);
+}
+
+.office-docs .doc-page h3 {
+  font-size: 12pt;
+  color: #1f3864;
+}
+
+.office-docs .doc-page h4,
+.office-docs .doc-page h5,
+.office-docs .doc-page h6 {
+  font-size: 11pt;
+  color: var(--word-heading);
+  font-style: italic;
+}
+
+.office-docs .doc-link {
+  color: #0563c1;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* flat list items (1:1 with w:p anchors)
+   geometry comes from w:ind (--li-left text indent / --li-hang hanging marker-area width,
+   emitted by extensions.ts); defaults replicate the old fixed per-level indents. The marker
+   is an inline hanging box: it fills the hanging area, and when too wide it pushes the body
+   text aside instead of overlapping it (Word behavior).
+   Logical (inline-start) geometry so RTL list items (direction:rtl via w:bidi)
+   mirror automatically: indent and marker land on the right side. */
+.office-docs .doc-li {
+  position: relative;
+  padding-inline-start: var(--li-left, 0.55in);
+  margin: 0 0 4pt;
+}
+
+.office-docs .doc-li.ilvl-1 {
+  padding-inline-start: var(--li-left, 0.85in);
+}
+
+.office-docs .doc-li.ilvl-2 {
+  padding-inline-start: var(--li-left, 1.15in);
+}
+
+.office-docs .doc-li.ilvl-3 {
+  padding-inline-start: var(--li-left, 1.45in);
+}
+
+.office-docs .doc-li.ilvl-4 {
+  padding-inline-start: var(--li-left, 1.75in);
+}
+
+.office-docs .doc-li::before {
+  display: inline-block;
+  min-width: var(--li-hang, 0.25in);
+  margin-inline-start: calc(-1 * var(--li-hang, 0.25in));
+  font-size: var(--li-marker-size, inherit);
+}
+
+.office-docs .doc-li-bullet::before {
+  content: '•';
+}

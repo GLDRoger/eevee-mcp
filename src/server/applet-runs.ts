@@ -8,7 +8,7 @@ import type {
   WebAppRunOutput,
 } from '@/domain/applet'
 import { validateAppletInputs } from '@/domain/input'
-import { compileWebAppRun } from '@/domain/web-app-runtime'
+import { prepareAppletRuntime } from '@/domain/applet-runtime'
 import { getDatabase } from './db/client'
 import { appletDeployment, appletRun, appletVersion } from './db/schema'
 import { RequestFailure } from './http'
@@ -60,6 +60,13 @@ export const runApplet = async (
   if (!active) {
     throw new RequestFailure(409, 'applet_not_published', 'Publish a passing version before running')
   }
+  if (!active.version.artifact) {
+    throw new RequestFailure(
+      409,
+      'artifact_unavailable',
+      'The published version has no executable artifact',
+    )
+  }
   const validated = validateAppletInputs(active.version.inputs, request.input)
   if (!validated.ok) {
     throw new RequestFailure(
@@ -72,7 +79,7 @@ export const runApplet = async (
   const output: WebAppRunOutput = {
     kind: 'web-app',
     channel,
-    html: compileWebAppRun(active.version.definition.html, channel, validated.values),
+    html: prepareAppletRuntime(active.version.artifact.html, channel, validated.values),
   }
   const [row] = await getDatabase()
     .insert(appletRun)

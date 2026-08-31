@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  appletVersionDefinitionSchema,
   appletMediumSchema,
   appletRunSchema,
   webAppRunOutputSchema,
@@ -10,6 +11,12 @@ import {
 } from './applet'
 import { inputDefinitionSchema } from './input'
 import { qualityReportSchema } from './quality'
+import {
+  evaluationExecutionSchema,
+  evaluationPlanSchema,
+  evaluationRunSchema,
+  evaluationSuiteSchema,
+} from './evaluation'
 
 export const appletSummarySchema = z.strictObject({
   id: z.uuid(),
@@ -21,6 +28,7 @@ export const appletSummarySchema = z.strictObject({
   versionCount: z.number().int().nonnegative(),
   runCount: z.number().int().nonnegative(),
   correctionCount: z.number().int().nonnegative(),
+  evaluationCount: z.number().int().nonnegative(),
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
 })
@@ -31,7 +39,7 @@ export const appletVersionSummarySchema = z.strictObject({
   state: versionStateSchema,
   note: z.string(),
   inputs: inputDefinitionSchema,
-  definitionKind: z.literal('web-app'),
+  definitionKind: z.literal('react-app'),
   qualityReport: qualityReportSchema,
   createdAt: z.iso.datetime({ offset: true }),
 })
@@ -49,6 +57,8 @@ export const appletDetailSchema = z.strictObject({
   versions: z.array(appletVersionSummarySchema),
   runs: z.array(runSummarySchema),
   corrections: z.array(correctionSchema),
+  evaluationSuites: z.array(evaluationSuiteSchema),
+  evaluationRuns: z.array(evaluationRunSchema),
 })
 
 export const appletListResponseSchema = z.strictObject({
@@ -57,6 +67,10 @@ export const appletListResponseSchema = z.strictObject({
 
 export const appletResponseSchema = z.strictObject({ applet: appletSummarySchema })
 export const appletDetailResponseSchema = z.strictObject({ detail: appletDetailSchema })
+export const appletVersionDetailResponseSchema = z.strictObject({
+  version: appletVersionSummarySchema,
+  definition: appletVersionDefinitionSchema,
+})
 export const appletVersionResponseSchema = z.strictObject({
   version: appletVersionSummarySchema,
   publishable: z.boolean(),
@@ -64,9 +78,16 @@ export const appletVersionResponseSchema = z.strictObject({
 export const appletRunResponseSchema = z.strictObject({ run: appletRunSchema })
 export const appletPreviewResponseSchema = z.strictObject({ preview: webAppRunOutputSchema })
 export const correctionResponseSchema = z.strictObject({ correction: correctionSchema })
+export const evaluationSuiteResponseSchema = z.strictObject({ suite: evaluationSuiteSchema })
+export const evaluationPlanResponseSchema = z.strictObject({ plan: evaluationPlanSchema })
+export const evaluationExecutionResponseSchema = z.strictObject({
+  execution: evaluationExecutionSchema,
+})
+export const evaluationRunResponseSchema = z.strictObject({ run: evaluationRunSchema })
 export const workspaceSessionResponseSchema = z.strictObject({ workspaceId: z.uuid() })
 
 export type AppletSummary = z.infer<typeof appletSummarySchema>
 export type AppletVersionSummary = z.infer<typeof appletVersionSummarySchema>
+export type AppletVersionDetail = z.infer<typeof appletVersionDetailResponseSchema>
 export type RunSummary = z.infer<typeof runSummarySchema>
 export type AppletDetail = z.infer<typeof appletDetailSchema>

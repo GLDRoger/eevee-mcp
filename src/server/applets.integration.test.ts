@@ -6,6 +6,7 @@ import {
   createVersion,
   ensureWorkspace,
   getApplet,
+  getAppletVersion,
   listApplets,
   previewVersion,
   publishVersion,
@@ -16,24 +17,70 @@ import { completeRun, failRun, getRun, runApplet } from './applet-runs'
 import { getDatabase } from './db/client'
 import { appletValue, workspace } from './db/schema'
 import { RequestFailure } from './http'
+import type { ReactAppDefinition } from '@/domain/react-app'
+import type { EvaluationSuite, EvaluationVersionEvidenceInput } from '@/domain/evaluation'
+import {
+  completeEvaluation,
+  getEvaluationRun,
+  startEvaluation,
+} from './evaluations'
+import { createEvaluationSuite } from './evaluation-suites'
 
 const runIntegration = Boolean(process.env.DATABASE_URL)
 const workspaceId = crypto.randomUUID()
 const otherWorkspaceId = crypto.randomUUID()
-const appHtml = `<!doctype html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Persistent task register</title>
-  </head>
-  <body>
-    <main>
-      <h1>Persistent task register</h1>
-      <button type="button">Add task</button>
-    </main>
-    <script>document.querySelector('h1').textContent = window.eevee.inputs.title;</script>
-  </body>
-</html>`
+const appSource = `
+import { useEffect, useState } from 'react'
+import './app.css'
+
+export default function App({ inputs, store }) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    void store.get('task-count').then((saved) => {
+      if (typeof saved === 'number') setCount(saved)
+    })
+  }, [store])
+  const addTask = () => {
+    const next = count + 1
+    setCount(next)
+    void store.set('task-count', next)
+  }
+  return <main className="register">
+    <h1>{String(inputs.title)}</h1>
+    <p>{count} tasks</p>
+    <button type="button" onClick={addTask}>Add task</button>
+  </main>
+}
+`
+
+const definition = (source = appSource): ReactAppDefinition => ({
+  kind: 'react-app',
+  entry: 'src/App.tsx',
+  files: [
+    { path: 'src/App.tsx', content: source },
+    {
+      path: 'src/app.css',
+      content: 'body { margin: 0; } .register { max-width: 42rem; margin: auto; padding: 2rem; }',
+    },
+  ],
+})
+
+const passingEvidence = (
+  versionId: string,
+  suite: EvaluationSuite,
+): EvaluationVersionEvidenceInput => ({
+  versionId,
+  cases: suite.cases.map((evaluationCase) => ({
+    caseId: evaluationCase.id,
+    steps: evaluationCase.steps.map((step, index) => ({
+      index,
+      action: step.action,
+      verdict: 'pass',
+      detail: 'The deterministic browser step passed.',
+      durationMs: 10,
+    })),
+  })),
+})
 
 describe.runIf(runIntegration)('durable applet lifecycle', () => {
   afterAll(async () => {
@@ -58,13 +105,49 @@ describe.runIf(runIntegration)('durable applet lifecycle', () => {
           kind: 'text',
         },
       ],
-      definition: { kind: 'web-app', html: appHtml },
+      definition: definition(),
     })
-    expect(created.publishable).toBe(true)
+    expect(created.publishable).toBe(false)
     expect(created.version.qualityReport.score).toBe(100)
+    expect(await getAppletVersion(workspaceId, applet.id, created.version.id)).toMatchObject({
+      version: { id: created.version.id, definitionKind: 'react-app' },
+      definition: { kind: 'react-app', entry: 'src/App.tsx' },
+    })
     expect((await previewVersion(workspaceId, applet.id, created.version.id)).html).toContain(
-      'Persistent task register',
+      '<div id="root"></div>',
     )
+
+    await expect(
+      publishVersion(workspaceId, applet.id, created.version.id),
+    ).rejects.toMatchObject({ status: 409, code: 'behavioral_evaluation_required' })
+    const suite = await createEvaluationSuite(workspaceId, applet.id, {
+      name: 'Persistent task behavior',
+      cases: [
+        {
+          id: 'add-and-reload',
+          name: 'Add and reload one task',
+          criticality: 'required',
+          input: { title: 'Evaluation register' },
+          steps: [
+            { action: 'click', selector: 'button' },
+            { action: 'assert-text', selector: 'main', contains: '1 tasks' },
+            { action: 'restart' },
+            { action: 'assert-stored-value', key: 'task-count', value: 1 },
+            { action: 'assert-text', selector: 'main', contains: '1 tasks' },
+          ],
+        },
+      ],
+    })
+    const evaluation = await startEvaluation(workspaceId, applet.id, {
+      versionId: created.version.id,
+      suiteId: suite.id,
+    })
+    expect(evaluation.run.baselineVersionId).toBeNull()
+    const evaluated = await completeEvaluation(workspaceId, evaluation.run.id, {
+      candidate: passingEvidence(created.version.id, suite),
+      baseline: null,
+    })
+    expect(evaluated).toMatchObject({ state: 'passed', report: { verdict: 'pass' } })
 
     await publishVersion(workspaceId, applet.id, created.version.id)
     const run = await runApplet(workspaceId, applet.id, { input: { title: 'August work' } })
@@ -84,15 +167,23 @@ describe.runIf(runIntegration)('durable applet lifecycle', () => {
     const blocked = await createVersion(workspaceId, applet.id, {
       note: 'Missing the required main landmark',
       inputs: [],
-      definition: {
-        kind: 'web-app',
-        html: appHtml.replace('<main>', '<div>').replace('</main>', '</div>'),
-      },
+      definition: definition(appSource.replace('<main', '<div').replace('</main>', '</div>')),
     })
     expect(blocked.publishable).toBe(false)
     await expect(
       publishVersion(workspaceId, applet.id, blocked.version.id),
     ).rejects.toMatchObject({ status: 409, code: 'quality_gate_failed' })
+
+    const compileFailed = await createVersion(workspaceId, applet.id, {
+      note: 'Invalid React source remains visible as evidence',
+      inputs: [],
+      definition: definition('export default () => <main>'),
+    })
+    expect(compileFailed.publishable).toBe(false)
+    expect(compileFailed.version.qualityReport.verdict).toBe('fail')
+    await expect(
+      previewVersion(workspaceId, applet.id, compileFailed.version.id),
+    ).rejects.toMatchObject({ status: 409, code: 'artifact_unavailable' })
 
     await writeAppletValue(workspaceId, applet.id, 'tasks', [{ title: 'Ship the demo' }])
     expect(await readAppletValues(workspaceId, applet.id)).toEqual({
@@ -144,12 +235,16 @@ describe.runIf(runIntegration)('durable applet lifecycle', () => {
       expect.objectContaining({
         id: applet.id,
         activeVersionId: created.version.id,
-        versionCount: 2,
+        versionCount: 3,
         runCount: 2,
         correctionCount: 1,
+        evaluationCount: 1,
       }),
     ])
-    expect((await getApplet(workspaceId, applet.id)).corrections).toHaveLength(1)
+    const detail = await getApplet(workspaceId, applet.id)
+    expect(detail.corrections).toHaveLength(1)
+    expect(detail.evaluationSuites).toHaveLength(1)
+    expect(detail.evaluationRuns).toHaveLength(1)
 
     await expect(getApplet(otherWorkspaceId, applet.id)).rejects.toMatchObject({
       status: 404,
@@ -159,6 +254,13 @@ describe.runIf(runIntegration)('durable applet lifecycle', () => {
       status: 404,
       code: 'run_not_found',
     } satisfies Partial<RequestFailure>)
+    await expect(
+      getAppletVersion(otherWorkspaceId, applet.id, created.version.id),
+    ).rejects.toMatchObject({ status: 404, code: 'version_not_found' })
+    await expect(getEvaluationRun(otherWorkspaceId, evaluation.run.id)).rejects.toMatchObject({
+      status: 404,
+      code: 'evaluation_not_found',
+    })
   })
 
   it('rejects undeclared run inputs at the boundary', async () => {

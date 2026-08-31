@@ -1,0 +1,563 @@
+@scope (.office-pdf) {
+
+  .pdf-page {
+    /* pdf.js setLayerDimensions uses these vars to give textLayer its unrotated size */
+    --user-unit: 1;
+    --total-scale-factor: calc(var(--scale-factor) * var(--user-unit));
+    --scale-round-x: 1px;
+    --scale-round-y: 1px;
+
+    position: relative;
+    flex-shrink: 0;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  }
+
+  .pdf-page-content {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pdf-page-content canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  /* ── Outline sidebar ── */
+
+  .pdf-outline-pane {
+    padding: 8px 4px;
+  }
+
+  .pdf-outline {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pdf-outline-item {
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+    padding: 5px 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pdf-outline-item:hover {
+    background: var(--hover);
+  }
+
+  /* ── Encrypted document password ── */
+
+  .pdf-password {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .pdf-password-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .pdf-password-input {
+    width: 220px;
+    height: 30px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    padding: 0 10px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .pdf-password-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .pdf-password-error {
+    font-size: 12px;
+    color: #c0392b;
+  }
+
+  .pdf-password-btn {
+    height: 30px;
+    padding: 0 22px;
+    border: none;
+    border-radius: 5px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .pdf-password-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .tb-readonly {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  /* ── Generic small dialogs (extract range etc.) ── */
+
+  .pdf-modal-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: rgb(0 0 0 / 18%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .pdf-modal {
+    margin-top: 96px;
+    min-width: 300px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 22%);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pdf-modal-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .pdf-modal-input {
+    height: 28px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .pdf-modal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .pdf-modal-input.invalid {
+    border-color: #c0392b;
+  }
+
+  .pdf-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .pdf-modal-btn {
+    height: 27px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+
+  .pdf-modal-btn:hover {
+    background: var(--hover);
+  }
+
+  .pdf-modal-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Full-text search ── */
+
+  .pdf-search-bar {
+    position: absolute;
+    top: 8px;
+    right: 20px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+  }
+
+  .pdf-search-input {
+    width: 180px;
+    height: 26px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0 8px;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .pdf-search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .pdf-search-count {
+    min-width: 52px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .pdf-search-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .pdf-search-hit {
+    position: absolute;
+    background: rgb(255 214 0 / 35%);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+  }
+
+  .pdf-search-hit-cur {
+    background: rgb(255 150 50 / 55%);
+    outline: 1.5px solid #f08c00;
+  }
+
+  /* ── Drawing annotation layer ── */
+
+  .pdf-draw-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* With a tool active, take over the pointer and disable text selection so dragging doesn't select text */
+  .pdf-draw-active {
+    pointer-events: auto;
+    cursor: crosshair;
+  }
+
+  .pdf-scroll.pdf-drawing .textLayer {
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .pdf-draw-shape {
+    cursor: pointer;
+  }
+
+  .pdf-draw-shape:hover {
+    opacity: 0.65;
+  }
+
+  .pdf-note-pin {
+    position: absolute;
+    z-index: 5;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px 4px 4px 0;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .pdf-note-pin:hover {
+    opacity: 0.75;
+  }
+
+  /* ── Stamp (watermark/header-footer) preview and config ── */
+
+  .pdf-stamp-preview {
+    position: absolute;
+    z-index: 1;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .pdf-stamp-preview:hover {
+    outline: 1px dashed rgb(0 0 0 / 35%);
+  }
+
+  .pdf-modal-wide {
+    min-width: 440px;
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+
+  .pdf-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+
+  .pdf-field > span:first-child {
+    flex-shrink: 0;
+    min-width: 74px;
+    color: var(--text-dim);
+  }
+
+  .pdf-field .pdf-modal-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pdf-field input[type='range'] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .pdf-field em {
+    font-style: normal;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .pdf-input-sm {
+    max-width: 84px;
+  }
+
+  .pdf-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+
+  .pdf-field-grid .pdf-field > span:first-child {
+    min-width: 56px;
+  }
+
+  .pdf-wm-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 96px;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 26px;
+    font-weight: 600;
+    overflow: hidden;
+  }
+
+  /* ── Read-only document properties area ── */
+
+  .pdf-prop-table {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    background: rgb(0 0 0 / 3%);
+    border-radius: 6px;
+  }
+
+  .pdf-prop-row {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .pdf-prop-row > span {
+    min-width: 74px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .pdf-prop-row > em {
+    font-style: normal;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Thumbnail drag-to-reorder ── */
+
+  .pdf-thumb[draggable='true'] {
+    cursor: grab;
+  }
+
+  .pdf-thumb-dropbefore {
+    position: relative;
+  }
+
+  .pdf-thumb-dropbefore::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: -5px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* ── Signature dialog ── */
+
+  .pdf-sign-tabs {
+    display: flex;
+    gap: 4px;
+  }
+
+  .pdf-sign-tab {
+    height: 26px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+
+  .pdf-sign-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .pdf-sign-pad {
+    border: 1px dashed var(--border-strong);
+    border-radius: 6px;
+    background: #fff;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .pdf-sign-preview {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    background: #fff;
+    font-family: 'Snell Roundhand', 'Segoe Script', cursive;
+    font-style: italic;
+    font-size: 34px;
+    overflow: hidden;
+  }
+
+  .pdf-sign-hint {
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  /* ── Drawing colors ── */
+
+  .pdf-color-col {
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .pdf-color-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .pdf-color-dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 18%) inset;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .pdf-color-dot.active {
+    border-color: var(--text);
+  }
+
+  .pdf-color-dot:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .pdf-color-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .pdf-modal-textarea {
+    min-width: 300px;
+    min-height: 90px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 7px 9px;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.5;
+    background: var(--surface);
+    color: var(--text);
+    resize: vertical;
+  }
+
+  .pdf-modal-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ── Link annotation hit areas ── */
+
+  .pdf-link-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .pdf-link {
+    position: absolute;
+    border-radius: 2px;
+  }
+
+  .pdf-link:hover {
+    background: rgb(60 120 216 / 12%);
+    box-shadow: 0 0 0 1px rgb(60 120 216 / 35%);
+  }
+
+  /* Collapsible tool-activity group.
+   Unlike docs/slides, this app renders the group BEFORE the reply text, so the
+   gap to the surrounding content comes from margin-bottom, not margin-top. */
+
+  /* Step rows inside the group: 20px icon slot + 1px connector */
+}

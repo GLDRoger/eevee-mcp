@@ -1,7 +1,9 @@
 @import './ledger.css';
 @import './inspector.css';
 @import './applet-controls.css';
+@import './activity.css';
 @import './workbench-footer.css';
+@import './file-library.css';
 
 :root {
   --ink: oklch(25% 0.026 157);
@@ -71,18 +73,25 @@ button {
 }
 
 button:disabled {
-  cursor: wait;
+  cursor: not-allowed;
   opacity: 0.58;
 }
 
 .workbench {
   display: grid;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 100vh;
   grid-template-rows: auto 1fr auto;
+  overflow-x: clip;
 }
 
 .topbar {
   display: grid;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 4.25rem;
   grid-template-columns: 18rem minmax(0, 1fr) auto;
   align-items: center;
@@ -103,11 +112,31 @@ button:disabled {
   text-decoration: none;
 }
 
-.topbar p,
 .topbar > span {
   margin: 0;
   color: var(--ink-soft);
   font-size: 0.82rem;
+}
+
+.workspace-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.workspace-nav button {
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.workspace-nav button:hover,
+.workspace-nav button[aria-current='page'] {
+  border-bottom-color: var(--stamp);
+  color: var(--ink);
 }
 
 .topbar > span {
@@ -116,14 +145,25 @@ button:disabled {
 
 .workbench-body {
   display: grid;
+  width: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
   grid-template-columns: 19.5rem minmax(0, 1fr);
 }
 
 @media (max-width: 760px) {
   .topbar {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr);
     padding-inline: var(--space-4);
+  }
+
+  .workspace-nav {
+    justify-self: end;
+  }
+
+  .topbar > span {
+    display: none;
   }
 
   .workbench-body {

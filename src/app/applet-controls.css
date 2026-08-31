@@ -1,6 +1,97 @@
+.inspector-status {
+  margin: 0;
+  color: var(--pine);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stage {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.stage-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--paper);
+}
+
+.stage-toggle {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.stage-toggle button {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.stage-toggle button[aria-selected='true'] {
+  border-color: var(--pine);
+  background: var(--pine-pale);
+  color: var(--ink);
+}
+
+.stage-note {
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-empty {
+  margin: 0;
+  padding: var(--space-12) var(--space-8);
+  background: var(--paper);
+  color: var(--ink-soft);
+}
+
+.review-source.is-stage {
+  padding: var(--space-4);
+}
+
+.review-source.is-stage .review-source-body {
+  max-height: 34rem;
+}
+
+.provenance {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.provenance > summary {
+  padding: var(--space-4) var(--space-8);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  list-style-position: inside;
+}
+
+.provenance > summary:hover {
+  color: var(--ink);
+}
+
+.provenance-body {
+  display: grid;
+  gap: 1px;
+  border-top: 1px solid var(--rule);
+  background: var(--rule);
+}
+
 .run-form,
 .publish-waiting,
 .quality-ledger,
+.evaluation-register,
 .version-register,
 .correction-register,
 .correction-form,
@@ -11,6 +102,7 @@
 .run-form,
 .publish-waiting,
 .quality-ledger,
+.evaluation-register,
 .version-register,
 .correction-register {
   padding: var(--space-8);
@@ -18,6 +110,7 @@
 
 .run-form > header,
 .quality-ledger > header,
+.evaluation-register > header,
 .preview-stage > header,
 .correction-form > header {
   display: flex;
@@ -27,7 +120,8 @@
 }
 
 .run-form header div,
-.quality-ledger header div {
+.quality-ledger header div,
+.evaluation-register header div {
   display: grid;
   gap: var(--space-1);
 }
@@ -36,19 +130,23 @@
 .run-form header h3,
 .quality-ledger header p,
 .quality-ledger header h3,
+.evaluation-register header p,
+.evaluation-register header h3,
 .publish-waiting h3,
 .publish-waiting p {
   margin: 0;
 }
 
 .run-form header p,
-.quality-ledger header p {
+.quality-ledger header p,
+.evaluation-register header p {
   color: var(--ink-faint);
   font-size: 0.72rem;
 }
 
 .run-form h3,
 .quality-ledger h3,
+.evaluation-register h3,
 .publish-waiting h3,
 .preview-stage h3,
 .correction-form h3 {
@@ -145,6 +243,117 @@
   background: var(--rule);
 }
 
+.review-evidence {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-8);
+  background: var(--paper);
+}
+
+.review-evidence-summary {
+  margin: 0;
+  color: var(--pine);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.review-evidence-summary.is-missing {
+  padding: var(--space-3) var(--space-8);
+  background: var(--paper);
+  color: var(--stamp);
+}
+
+.review-cases {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  background: var(--rule);
+  list-style: none;
+}
+
+.review-cases > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  background: var(--paper);
+}
+
+.review-cases strong {
+  font-size: 0.9rem;
+}
+
+.review-steps {
+  display: grid;
+  gap: 0.2rem;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-steps li {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.review-steps li.is-fail {
+  color: var(--error);
+}
+
+.review-steps code {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.review-source {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-8);
+  background: var(--paper);
+}
+
+.review-source-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.review-source-tabs button {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+.review-source-tabs button[aria-selected='true'] {
+  border-color: var(--pine);
+  background: var(--pine-pale);
+  color: var(--ink);
+}
+
+.review-source-body {
+  max-height: 24rem;
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  border: 1px solid var(--rule);
+  background: var(--ground);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.review-source-hint {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+}
+
 .version-review > header {
   display: flex;
   align-items: center;
@@ -228,25 +437,29 @@
   color: var(--ink);
 }
 
-.quality-ledger {
+.quality-ledger,
+.evaluation-register {
   display: grid;
   gap: var(--space-6);
 }
 
-.quality-ledger > header > strong {
+.quality-ledger > header > strong,
+.evaluation-register > header > strong {
   font-family: var(--display);
   font-size: 2rem;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
-.quality-ledger ul {
+.quality-ledger ul,
+.evaluation-register ul {
   display: grid;
   gap: 1px;
   background: var(--rule);
 }
 
-.quality-ledger li {
+.quality-ledger li,
+.evaluation-register li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
@@ -255,20 +468,31 @@
   background: var(--paper);
 }
 
-.quality-ledger li div {
+.quality-ledger li div,
+.evaluation-register li div {
   display: grid;
   gap: var(--space-1);
 }
 
 .quality-ledger li p,
-.quality-ledger li strong {
+.quality-ledger li strong,
+.evaluation-register li p,
+.evaluation-register li strong {
   margin: 0;
 }
 
-.quality-ledger li p {
+.quality-ledger li p,
+.evaluation-register li p,
+.evaluation-suite-name,
+.evaluation-progress {
   color: var(--ink-soft);
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.evaluation-suite-name,
+.evaluation-progress {
+  margin: 0;
 }
 
 .quality-mark {
@@ -279,17 +503,12 @@
   border-radius: 50%;
 }
 
-.quality-mark.is-passed {
+.quality-mark.is-pass {
   border-color: var(--pine);
   background: var(--pine);
 }
 
-.quality-mark.is-warning {
-  border-color: var(--stamp);
-  background: var(--stamp-pale);
-}
-
-.quality-mark.is-failed {
+.quality-mark.is-fail {
   border-color: var(--error);
   background: var(--error);
 }
@@ -366,6 +585,19 @@
   gap: var(--space-1) var(--space-4);
   padding: var(--space-4) 0;
   background: var(--paper);
+}
+
+.correction-hint {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.correction-actions {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
 }
 
 .correction-register li p {

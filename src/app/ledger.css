@@ -1,5 +1,8 @@
 .ledger {
+  width: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
   padding: var(--space-8) var(--space-4) var(--space-12) var(--space-6);
   border-right: 1px solid var(--rule-strong);
   background: var(--paper-deep);

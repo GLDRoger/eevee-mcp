@@ -13,12 +13,12 @@ export function QualityLedger({ report }: { report: QualityReport }) {
       <ul>
         {report.checks.map((item) => (
           <li key={item.id}>
-            <span className={`quality-mark is-${item.status}`} aria-hidden="true" />
+            <span className={`quality-mark is-${item.verdict}`} aria-hidden="true" />
             <div>
               <strong>{item.label}</strong>
               <p>{item.detail}</p>
             </div>
-            <span className="quality-status">{item.status}</span>
+            <span className="quality-status">{item.criticality} · {item.verdict}</span>
           </li>
         ))}
       </ul>

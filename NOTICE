@@ -6,3 +6,26 @@ https://github.com/delucis/avara-variable
 
 Avara Variable is licensed under the SIL Open Font License, Version 1.1.
 The complete font license is included at public/fonts/AVARA-OFL.txt.
+
+The required/informational evaluation verdict aggregation in this product is
+adapted from GrowthX Output at commit
+b3beef161910df053f62710dc190d5a00c4ab3d2:
+https://github.com/growthxai/output
+
+GrowthX Output is licensed under the Apache License, Version 2.0.
+
+This product bundles PDF.js 6.2.108 by the Mozilla Foundation under the
+Apache License, Version 2.0, and pdf-lib 1.17.1 by Andrew Dillon under the MIT
+License. PDF.js runtime assets and their included notices are under
+public/pdfjs.
+
+At the repository owner's direction on 26 August 2026, EEVEE's office ribbon,
+control, and document-engine source may be ported from the private predecessor
+at commit e32e1f7 and released here under the repository's Apache License,
+Version 2.0. Imported paths are recorded in docs/provenance.md as they land.
+
+This product bundles Carlito, Liberation Sans, Liberation Serif, Liberation
+Mono, and subsetted Noto Sans/Serif CJK fonts under the SIL Open Font License
+1.1, included at public/fonts/office/LICENSE-OFL.txt. Caladea is licensed under
+Apache License 2.0. Font sources and copyright holders are recorded at
+public/fonts/office/README.md.

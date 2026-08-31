@@ -1,0 +1,154 @@
+/*
+ * Metric-compatible fallback fonts (bundled from LibreOffice, SIL OFL 1.1):
+ *   Carlito ↔ Calibri, Caladea ↔ Cambria, Liberation Serif/Sans/Mono ↔
+ *   Times New Roman/Arial/Courier New.
+ * When a Word font the document declares is missing locally, the browser's
+ * silent fallback (Helvetica etc.) changes character widths → line breaks and
+ * pagination all shift. With metric-compatible fallbacks, canvas line breaking
+ * reproduces the original document's layout and shares its font source with
+ * the offline pagination model (lo-fonts measures the same set of files).
+ */
+
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/office/Carlito-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/office/Carlito-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/office/Carlito-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Carlito';
+  src: url('/fonts/office/Carlito-BoldItalic.woff2') format('woff2');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Caladea';
+  src: url('/fonts/office/Caladea-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Caladea';
+  src: url('/fonts/office/Caladea-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Caladea';
+  src: url('/fonts/office/Caladea-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Caladea';
+  src: url('/fonts/office/Caladea-BoldItalic.woff2') format('woff2');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('/fonts/office/LiberationSerif-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('/fonts/office/LiberationSerif-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('/fonts/office/LiberationSerif-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Liberation Serif';
+  src: url('/fonts/office/LiberationSerif-BoldItalic.woff2') format('woff2');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Liberation Sans';
+  src: url('/fonts/office/LiberationSans-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Sans';
+  src: url('/fonts/office/LiberationSans-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Sans';
+  src: url('/fonts/office/LiberationSans-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Liberation Sans';
+  src: url('/fonts/office/LiberationSans-BoldItalic.woff2') format('woff2');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'Liberation Mono';
+  src: url('/fonts/office/LiberationMono-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Mono';
+  src: url('/fonts/office/LiberationMono-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Liberation Mono';
+  src: url('/fonts/office/LiberationMono-Italic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Liberation Mono';
+  src: url('/fonts/office/LiberationMono-BoldItalic.woff2') format('woff2');
+  font-weight: bold;
+  font-style: italic;
+}
+
+/*
+ * CJK fallback (Noto Sans/Serif CJK SC, SIL OFL): environments with no Chinese
+ * fonts at all (e.g. stripped-down Windows/Linux packages) no longer show tofu
+ * boxes. GB2312 subset (7445 common characters + CJK punctuation/fullwidth
+ * forms); rare characters still use system fallback. Bold is synthesized by the browser.
+ */
+@font-face {
+  font-family: 'Noto Sans CJK SC';
+  src: url('/fonts/office/NotoSansCJKsc-Regular-subset.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Serif CJK SC';
+  src: url('/fonts/office/NotoSerifCJKsc-Regular-subset.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}

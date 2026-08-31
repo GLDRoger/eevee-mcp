@@ -1,0 +1,686 @@
+@scope (.office-sheets) {
+
+  .chart-body.chart-legend-right > .chart-legend,
+  .chart-body.chart-legend-left > .chart-legend {
+    flex: 0 0 auto;
+    padding: 0 12px;
+  }
+
+  .axis-title {
+    font-size: 11px;
+    fill: #555;
+  }
+
+  .chart-legend {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  .chart-legend span {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .chart-legend i {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 auto;
+  }
+
+  .xlsx-image {
+    display: block;
+    object-fit: contain;
+  }
+
+  .xlsx-shape,
+  .xlsx-visual-loading,
+  .xlsx-visual-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #aeb4b8;
+    background: rgb(255 255 255 / 94%);
+    color: #596068;
+    font:
+      12px 'Segoe UI',
+      sans-serif;
+    text-align: center;
+  }
+
+  .xlsx-visual-error {
+    border-color: #d9a4a4;
+    color: #9a3030;
+  }
+
+  .inline-tools .color-tool {
+    position: relative;
+    display: grid;
+    /* same 28×30 box as the sibling toggles, so the row's 3px rhythm holds */
+    min-width: 28px;
+    height: 30px;
+    place-items: center;
+    cursor: pointer;
+    border-radius: var(--radius-small);
+    font-size: 12px;
+  }
+
+  .inline-tools .color-tool:hover {
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .inline-tools .color-tool input[type='color'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* Format Cells dialog (⌘1) */
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    background: rgb(0 0 0 / 25%);
+  }
+
+  .format-cells-dialog {
+    display: grid;
+    gap: 10px;
+    width: 420px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-medium);
+    padding: 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .format-cells-dialog header {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .dialog-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dialog-tabs button {
+    border: 0;
+    padding: 5px 12px;
+    background: transparent;
+    font-size: 12px;
+  }
+
+  .dialog-tabs button.active {
+    color: var(--excel-green-dark);
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--excel-green);
+  }
+
+  .dialog-body {
+    min-height: 150px;
+  }
+
+  .dialog-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .dialog-grid label {
+    display: grid;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .dialog-grid select,
+  .dialog-grid input:not([type='checkbox']):not([type='radio']) {
+    height: 26px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 0 6px;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .dialog-grid .dialog-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    align-self: end;
+  }
+
+  /* Format Cells → Number tab */
+  .numfmt-tab {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 12px;
+  }
+
+  .numfmt-cats {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 3px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    align-self: start;
+  }
+
+  .numfmt-cats button {
+    border: 0;
+    padding: 4px 8px;
+    background: transparent;
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    color: var(--text);
+    text-align: start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .numfmt-cats button:hover:not(.active) {
+    background: var(--surface-hover);
+  }
+
+  .numfmt-cats button.active {
+    background: var(--excel-green);
+    color: #ffffff;
+  }
+
+  .numfmt-body {
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    min-width: 0;
+  }
+
+  .numfmt-field {
+    display: grid;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .numfmt-field select,
+  .numfmt-field input {
+    height: 26px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 0 6px;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .numfmt-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .numfmt-body .dialog-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .numfmt-sample output {
+    min-height: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .numfmt-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 138px;
+    overflow-y: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+  }
+
+  .numfmt-list button {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 3px 8px;
+    background: transparent;
+    font-size: 12px;
+    color: var(--text);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  .numfmt-list button:hover:not(.active) {
+    background: var(--surface-hover);
+  }
+
+  .numfmt-list button.red {
+    color: #d13438;
+  }
+
+  .numfmt-list button.active {
+    background: var(--excel-green);
+    color: #ffffff;
+  }
+
+  .numfmt-note {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .dialog-actions button {
+    min-width: 68px;
+    padding: 5px 14px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .dialog-actions button:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  .dialog-actions button.primary {
+    border-color: var(--excel-green);
+    background: var(--excel-green);
+    color: #ffffff;
+  }
+
+  .dialog-actions button.primary:hover:not(:disabled) {
+    background: var(--excel-green-dark);
+  }
+
+  /* Consolidate dialog */
+  .dialog-grid .dialog-span {
+    grid-column: 1 / -1;
+  }
+
+  /* Pivot dialog: long localized labels and stacked field rows outgrow the
+   shared 420px card, so it gets its own bounds and a scrolling body. */
+  .format-cells-dialog.pivot-dialog {
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: min(92vw, 640px);
+    max-height: 88vh;
+  }
+
+  .pivot-dialog .dialog-grid {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  /* fieldsets don't shrink below min-content unless min-width is reset */
+  .pivot-dialog .dialog-grid fieldset {
+    min-width: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .input-row input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reference-list {
+    grid-column: 1 / -1;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+
+  .reference-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 3px 6px;
+  }
+
+  /* Insert Function dialog */
+  .insert-function-dialog {
+    width: 460px;
+  }
+
+  .fn-filter-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .fn-filter-row input {
+    flex: 1;
+  }
+
+  .fn-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+  }
+
+  .fn-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+    padding: 5px 8px;
+    border: none;
+    border-bottom: 1px solid var(--surface-subtle);
+    background: var(--surface);
+    text-align: left;
+    font-size: 12px;
+  }
+
+  .fn-row span {
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fn-row:hover {
+    background: var(--surface-hover);
+  }
+
+  .fn-row.active {
+    background: var(--excel-green-soft);
+  }
+
+  .fn-syntax code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+  }
+
+  .fn-formula {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  /* Insert Symbol dialog */
+  .symbol-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+
+  .symbol-grid button {
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: var(--surface);
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .symbol-grid button:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  /* Insert/Edit Link dialog */
+  .link-dialog {
+    width: 420px;
+  }
+  .link-dialog .dialog-body label {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    color: #444;
+  }
+  .link-dialog .dialog-body input {
+    padding: 6px 8px;
+    border: 1px solid #c8c8c8;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  /* Sort / Remove Duplicates dialogs */
+  .sort-dialog {
+    width: 420px;
+  }
+  .sort-dialog .dialog-note,
+  .format-cells-dialog .dialog-note {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #555;
+  }
+  .format-cells-dialog .dialog-note {
+    grid-column: 1 / -1;
+  }
+  .name-manager-dialog {
+    width: 520px;
+  }
+  .name-manager-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .name-manager-table th,
+  .name-manager-table td {
+    text-align: left;
+    padding: 4px 6px;
+    border-bottom: 1px solid #e3e3e3;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .name-manager-table tbody tr {
+    cursor: pointer;
+  }
+  .name-manager-table tbody tr.selected {
+    background: #e7f0e9;
+  }
+  .name-manager-empty {
+    color: #888;
+  }
+  .dialog-error {
+    color: #b3261e;
+  }
+  .sort-header-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .sort-level {
+    display: grid;
+    grid-template-columns: 60px 1fr 90px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .styles-row.as-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    padding: 0;
+  }
+  .styles-row.as-button:hover {
+    color: #1a7340;
+  }
+
+  /* ─── Slicer ─────────────────────────────────────────────────────────── */
+
+  /* Field picker: grid of button tiles */
+  .slicer-picker-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 18px 10px;
+  }
+
+  .slicer-picker-field {
+    padding: 6px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+
+  .slicer-picker-field:hover {
+    border-color: var(--excel-green);
+    color: var(--excel-green-dark);
+  }
+
+  /* Slicer overlay stack on the right side of the worksheet */
+  .slicer-stack {
+    position: fixed;
+    top: 190px;
+    right: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 60;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+  }
+
+  .slicer-panel {
+    width: 190px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 40, 30, 0.14);
+    overflow: hidden;
+  }
+
+  .slicer-panel header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px 6px 10px;
+    background: var(--excel-green);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .slicer-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .slicer-clear,
+  .slicer-close {
+    border: none;
+    background: transparent;
+    color: #ffffff;
+    font-size: 13px;
+    line-height: 1;
+    padding: 2px 4px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .slicer-clear:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .slicer-clear:hover:not(:disabled),
+  .slicer-close:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .slicer-members {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  .slicer-member {
+    text-align: left;
+    padding: 4px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background: #f6f8f7;
+    color: #5c6660;
+    font-size: 12.5px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .slicer-member.selected {
+    background: var(--excel-green);
+    border-color: var(--excel-green);
+    color: #ffffff;
+  }
+
+  .slicer-member:hover:not(.selected) {
+    border-color: var(--excel-green);
+  }
+
+  /* Univer's bottom sheet-switcher: the selected tab label ships in Univer's
+   primary blue (univer-text-primary-700); recolor it to the Excel green. */
+  [data-u-comp='slide-tab-item'][aria-selected='true'] {
+    color: var(--excel-green) !important;
+  }
+
+  /* The gridlines toggle at the right of the sheet bar is a two-tone icon whose
+   accent path hardcodes fill=var(--univer-primary-600); neutralize the blue. */
+  .univerjs-icon-hide-gridlines-double-icon {
+    --univer-primary-600: currentColor;
+  }
+
+
+}

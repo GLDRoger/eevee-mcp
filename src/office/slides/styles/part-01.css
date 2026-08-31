@@ -1,0 +1,50 @@
+/* The editor fills the inspector workspace without taking over the page viewport. */
+.office-slides {
+  --accent: #c43e1c;
+  --accent-dark: #a33517;
+  --accent-soft: #fbeae5;
+  --surface: #ffffff;
+  --chrome-bg: #ffffff;
+  --border: #e1dfdd;
+  --border-strong: #c8c6c4;
+  --text: #252423;
+  --text-dim: #605e5c;
+  --hover: #f3f2f1;
+  --pressed: #edebe9;
+  --active-bg: #e2e0de;
+  --canvas: #e6e6e6;
+  --ui-cjk: 'PingFang SC', 'Microsoft YaHei';
+  box-sizing: border-box;
+  width: 100%;
+  height: min(76dvh, 760px);
+  max-height: 760px;
+  min-width: 0;
+  min-height: 600px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  font-family:
+    'Segoe UI',
+    -apple-system,
+    BlinkMacSystemFont,
+    var(--ui-cjk),
+    sans-serif;
+  color: var(--text);
+  background: var(--chrome-bg);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.office-slides:lang(ja) {
+  --ui-cjk: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', 'Meiryo';
+}
+
+.office-slides:lang(ko) {
+  --ui-cjk: 'Apple SD Gothic Neo', 'Malgun Gothic';
+}
+
+.office-slides:lang(zh-TW) {
+  --ui-cjk: 'PingFang TC', 'Microsoft JhengHei';
+}

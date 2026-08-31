@@ -2,6 +2,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ['esbuild'],
   turbopack: {
     root: process.cwd(),
   },
@@ -15,7 +16,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-src 'self'; object-src 'none'; base-uri 'self'",
+            value: "frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'",
           },
         ],
       },

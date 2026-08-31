@@ -1,0 +1,9 @@
+.office-sheets {
+  width: 100%;
+  height: min(76dvh, 760px);
+  min-width: 0;
+  min-height: 600px;
+  max-height: 760px;
+  overflow: hidden;
+  position: relative;
+}

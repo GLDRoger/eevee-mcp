@@ -1,0 +1,692 @@
+@scope (.office-sheets) {
+  .office-sheets {
+    color-scheme: light;
+    --excel-green: #217346;
+    --excel-green-dark: #185c37;
+    --excel-green-soft: #e9f3ed;
+    --surface: #ffffff;
+    --surface-subtle: #f5f6f7;
+    --surface-hover: #edf1ee;
+    /* ribbon toggle states match the slides ribbon (--hover / --active-bg):
+     neutral gray, not the app's green-tinted surface hover */
+    --ribbon-hover: #f3f2f1;
+    --ribbon-active: #e2e0de;
+    --border: #d5d9dc;
+    --border-strong: #b9bec3;
+    --text: #242424;
+    --text-muted: #61666b;
+    /* quick-access icon gray shared with the docs/slides ribbons (their --text-dim) */
+    --text-dim: #605e5c;
+    --focus: rgb(33 115 70 / 24%);
+    --radius-small: 3px;
+    --radius-medium: 6px;
+    --shadow-panel: 0 8px 24px rgb(0 0 0 / 10%);
+    /* Same stack as docs/slides — an Inter fallback here made ribbon labels
+     render in a different face than the other apps on machines with Inter */
+    font-family:
+      'Segoe UI',
+      -apple-system,
+      BlinkMacSystemFont,
+      var(--ui-cjk),
+      sans-serif;
+    color: var(--text);
+    background: var(--surface);
+    font-synthesis: none;
+  }
+
+  /* UI CJK fonts per language (documentElement.lang is set at bootstrap and on switch);
+ * the zh expansion must keep the historical stack byte-identical */
+  .office-sheets {
+    --ui-cjk: 'PingFang SC', 'Microsoft YaHei';
+  }
+
+  .office-sheets:lang(ja) {
+    --ui-cjk: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', 'Meiryo';
+  }
+
+  .office-sheets:lang(ko) {
+    --ui-cjk: 'Apple SD Gothic Neo', 'Malgun Gothic';
+  }
+
+  .office-sheets:lang(zh-TW) {
+    --ui-cjk: 'PingFang TC', 'Microsoft JhengHei';
+  }
+
+  .office-sheets,
+  .office-sheets * {
+    box-sizing: border-box;
+  }
+
+  .office-sheets {
+    margin: 0;
+    width: 100%;
+    height: min(76dvh, 760px);
+    min-width: 0;
+    min-height: 600px;
+    max-height: 760px;
+    overflow: hidden;
+    position: relative;
+    /* Grayscale antialiasing to match docs/slides: without it, same-weight text renders noticeably bolder on macOS */
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus);
+  }
+
+  button:active:not(:disabled) {
+    filter: brightness(0.92);
+  }
+
+  button:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .app-shell {
+    display: grid;
+    /* minmax(0, 1fr) column: the ribbon's min-content width must clip at the
+     viewport instead of stretching the whole shell past it. */
+    grid-template-columns: minmax(0, 1fr);
+    /* header / sheet / status bar */
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  /* Excel's formula-bar row: Name Box (plus its Go To arrow) for now. */
+  .name-box-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-subtle);
+  }
+
+  .name-box {
+    width: 120px;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small) 0 0 var(--radius-small);
+    background: var(--surface);
+    font-size: 12px;
+  }
+
+  .name-box:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: -1px;
+  }
+
+  .name-box.invalid {
+    border-color: #b3261e;
+  }
+
+  .name-box-goto {
+    padding: 0 5px;
+    border: 1px solid var(--border);
+    border-left: 0;
+    border-radius: 0 var(--radius-small) var(--radius-small) 0;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  /* Go To dialog: defined-name list, one row per name with its ref. */
+  .goto-name-list {
+    max-height: 180px;
+    margin: 10px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+  }
+
+  .goto-name-list li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .goto-name-list button {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .goto-name-list button:hover {
+    background: var(--surface-hover);
+  }
+
+  .goto-name-list button span {
+    color: var(--text-muted);
+  }
+
+  .excel-header {
+    position: relative;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-strong);
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  }
+
+  .ribbon-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    /* tab-row text ink matches the ribbon band below (#232425) */
+    color: #232425;
+    /* same tab-row metrics as PowerPoint's ribbon (slides app): 5px top inset, no
+     bottom padding, no divider line — the row blends into the band below */
+    padding: 5px 10px 0;
+    background: #fff;
+    /* the tab row doubles as the frameless-window drag region */
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  /* standalone-window chrome insets; in a shell tab (mode=tab) the tab strip
+   above owns the traffic lights / caption buttons */
+  .ribbon-tabs-mac {
+    padding-left: 84px;
+  }
+
+  .ribbon-tabs-win {
+    padding-right: 150px;
+  }
+
+  .ribbon-tabs > button:not(.qa-btn) {
+    -webkit-app-region: no-drag;
+    position: relative;
+    border: 0;
+    padding: 7px 9px 6px;
+    /* inactive tab ink matches the ribbon band's #232425 (active stays green) */
+    color: inherit;
+    background: transparent;
+    font-size: 13px;
+    /* every tab label is semibold, not just the active one */
+    font-weight: 600;
+    /* transparent border keeps the row height; the visible underline is the
+   * ::after below, sized to the label text rather than the padded button */
+    border-bottom: 2.5px solid transparent;
+    border-radius: 4px 4px 0 0;
+    white-space: nowrap;
+  }
+
+  .ribbon-tabs-spacer {
+    flex: 1;
+  }
+
+  .sheets-file-tab-wrap {
+    position: relative;
+    -webkit-app-region: no-drag;
+  }
+
+  .sheets-file-tab {
+    border: 0;
+    border-bottom: 2.5px solid transparent;
+    border-radius: 4px 4px 0 0;
+    background: transparent;
+    padding: 7px 9px 6px;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sheets-file-tab:hover,
+  .sheets-file-tab.open {
+    background: var(--ribbon-hover);
+    color: var(--excel-green-dark);
+  }
+
+  .sheets-file-menu {
+    position: absolute;
+    z-index: 60;
+    top: calc(100% + 2px);
+    left: 0;
+    display: block;
+    min-width: 210px;
+    padding: 5px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  }
+
+  .sheets-file-menu button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .sheets-file-menu button:hover:not(:disabled) {
+    background: var(--ribbon-hover);
+  }
+
+  .sheets-file-menu button:disabled,
+  .sheets-teach:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  .sheets-teach {
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: var(--surface);
+    padding: 5px 10px;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .sheets-teach:hover:not(:disabled) {
+    background: var(--ribbon-hover);
+  }
+
+  .qa-sep {
+    width: 1px;
+    height: 16px;
+    margin: 0 6px;
+    background: var(--border-strong, #c8c6c4);
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .ribbon-tabs .qa-btn {
+    -webkit-app-region: no-drag;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* same box and 15px glyph as the slides ribbon's .qa-btn */
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-dim, #605e5c);
+    background: none;
+    cursor: pointer;
+  }
+
+  .ribbon-tabs .qa-btn svg {
+    display: block;
+    width: 15px;
+    height: 15px;
+  }
+
+  .ribbon-tabs .qa-btn:hover:not(:disabled) {
+    background: var(--ribbon-hover);
+  }
+
+  .ribbon-tabs .qa-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  /* AutoSave toggle in the tab row — same knob as the docs/slides ribbons,
+   with the Excel-green accent. */
+  .autosave-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-right: 4px;
+    -webkit-app-region: no-drag;
+    user-select: none;
+  }
+
+  .autosave-toggle input {
+    display: none;
+  }
+
+  .autosave-knob {
+    width: 26px;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--border-strong);
+    position: relative;
+    transition: background 0.15s;
+  }
+
+  .autosave-knob::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.15s;
+  }
+
+  .autosave-toggle.on .autosave-knob {
+    background: var(--excel-green);
+  }
+
+  .autosave-toggle.on .autosave-knob::after {
+    left: 14px;
+  }
+
+  .autosave-text {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .workbook-status {
+    max-width: min(360px, 30vw);
+    overflow: hidden;
+    color: var(--text-muted, #605e5c);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Hovering a tab tints the label, it doesn't paint a box */
+  .ribbon-tabs > button:not(.qa-btn):hover {
+    color: var(--excel-green-dark);
+  }
+
+  .ribbon-tabs > button:not(.qa-btn).active {
+    color: var(--excel-green-dark);
+    font-weight: 600;
+  }
+
+  /* active underline: about the label's width (insets past the tab padding),
+ * ends slightly rounded — same as the slides ribbon */
+  .ribbon-tabs > button:not(.qa-btn).active::after {
+    position: absolute;
+    right: 13px;
+    bottom: -2.5px;
+    left: 13px;
+    height: 2.5px;
+    border-radius: 1px;
+    background: var(--excel-green);
+    content: '';
+  }
+
+  /* Contextual tabs (Chart Design) stand out even while inactive, with a
+   colored caption. */
+  .ribbon-tabs > button:not(.qa-btn).contextual {
+    color: var(--excel-green-dark);
+    font-weight: 600;
+  }
+
+  /* Ribbon: compact single band, hairline separators between
+   groups, no group captions. */
+  .ribbon {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    /* ribbon text ink, a touch off the app's --text (#242424) — same shade
+     as the .inline-tools glyphs */
+    color: #232425;
+    /* band metrics shared with the slides ribbon */
+    height: 80px;
+    /* Groups must never shrink below content (they would paint over each
+     other); anything past the window edge scrolls instead. */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: 6px 12px;
+    background: #fff;
+  }
+
+  .ribbon::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ribbon-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 2px 8px;
+  }
+
+  /* group separator: a hairline inset from the band's top/bottom, like the slides
+   ribbon's .ribbon-sep (a plain border-right would span the full 80px band) */
+  .ribbon-group::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 0;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .ribbon-group:last-child::after {
+    display: none;
+  }
+
+  .ribbon-group-content {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    /* Fill the group's height (docs/slides .ribbon-group-items get this via
+     flex: 1 in their column-direction groups): without it this wrapper sits at
+     natural height, so a .large button's own align-self: stretch tops out
+     ~4px short of the other apps' 64px and the whole stack rides higher. */
+    align-self: stretch;
+  }
+
+  .ribbon-tool {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 58px;
+    /* icon-beside-label rows match the slides ribbon's .rb-small */
+    padding: 3px 8px;
+    border-radius: var(--radius-small);
+  }
+
+  .ribbon-tool:not(.large):hover {
+    background: var(--ribbon-hover);
+  }
+
+  /* Icon over label for the tall Insert-tab buttons — same metrics as the
+   slides ribbon's .rb-big. */
+  .ribbon-tool.large {
+    flex-direction: column;
+    justify-content: center;
+    /* content-hugged and centered, same box as the docs/slides .rb-big */
+    gap: 4px;
+    padding: 4px 7px 6px;
+    text-align: center;
+  }
+
+  /* 12px like the docs/slides .rb-big: buttons `font: inherit` and sheets' body
+   has no font-size, so label wrapper spans got a 16px line box. Declared with
+   .as-button so it survives that rule's own later `font: inherit` shorthand. */
+  .ribbon-tool.as-button.large {
+    font-size: 12px;
+  }
+
+  .ribbon-tool.large small {
+    display: none;
+  }
+
+  .ribbon-tool.large strong {
+    /* labels never wrap, the button hugs its content (slides .rb-big) — a
+     two-line label would push the icon off the shared center line.
+     Default line-height, not a compact 1.1: the label height feeds the
+     icon-row flex, so it must match the docs/slides .rb-big label. */
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  /* the tall buttons carry the ribbon's big 28px glyph; letterform glyphs
+   (ƒx, $, θ, …) get a 23px face so their cap height (~16.5px) matches the
+   ~17px ink of the drawn 28px svgs beside them, and a regular 400 weight —
+   the base 600 paints ~2.4px stems at this size vs the svgs' 1.5px strokes */
+  .ribbon-tool.large .tool-symbol {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    font-size: 23px;
+    font-weight: 400;
+  }
+
+  .ribbon-tool.large .tool-symbol svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* icon + caret row of tall buttons: stretches across the button like the
+   slides ribbon's .rb-big-icon, so hover/press paint it edge to edge while
+   the label below stays outside */
+  .ribbon-tool.large .tool-icon-row {
+    align-self: stretch;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    border-radius: 4px;
+    padding: 3px 4px;
+    margin: 0 -4px;
+  }
+
+  /* Hovering a tall button tints only its icon row — the label below
+   stays outside the gray (slides .rb-big:hover .rb-big-icon) */
+  .ribbon-tool.large:not(.reserved):hover .tool-icon-row {
+    background: var(--ribbon-hover);
+  }
+
+  .ribbon-tool.large.as-button:disabled:hover .tool-icon-row {
+    background: transparent;
+  }
+
+  /* The active workbook view (View tab's Normal) shows a pressed state. */
+  .ribbon-tool:not(.large).is-current {
+    background: var(--ribbon-active);
+  }
+
+  .ribbon-tool.large.is-current .tool-icon-row {
+    background: var(--ribbon-active);
+  }
+
+  .ribbon-tool.accent {
+    min-width: 96px;
+  }
+
+  /* Bare colored ribbon glyphs — no chip background.
+   Icon-beside-label rows use the slides ribbon's .rb-small icon size (14px);
+   the tall .large buttons scale theirs up to 28px below. */
+  .tool-symbol {
+    display: grid;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    /* ribbon glyphs share the toolbar's #232425 ink (was Excel green) */
+    color: #232425;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .tool-symbol svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Constant rendered stroke instead of proportional scaling: the 24-canvas
+   svgs carry a 1.5-unit strokeWidth attr, so left alone a 28px glyph paints
+   1.75px lines while a 14px row paints 0.875px hairlines. These overrides
+   pin the painted stroke at ~1.5px for 20px+ glyphs and ~1.25px for the
+   small 13-16px ones (a touch lighter so dense glyphs stay legible).
+   stroke-width is in viewBox units: units = 24 / rendered-px × target-px. */
+  .tool-symbol svg {
+    stroke-width: 2.15; /* 14px rows → 1.25px */
+  }
+
+  .ribbon-tool.large .tool-symbol svg {
+    stroke-width: 1.3; /* 28px → ~1.5px */
+  }
+
+  .tool-stack .tool-symbol svg {
+    stroke-width: 1.9; /* 16px → ~1.27px */
+  }
+
+  .chart-grid .tool-symbol svg {
+    stroke-width: 2.2; /* 13px → ~1.2px */
+  }
+
+  .ribbon-tabs .qa-btn svg {
+    stroke-width: 2; /* 15px → 1.25px */
+  }
+
+  .chev path {
+    stroke-width: 2.6; /* 10px caret → ~1.1px */
+  }
+
+  /* every inline-row glyph — toggles, dropdown triggers and labeled buttons —
+   shares one size so icons sitting side by side read identically. 20px puts
+   the padded 24-canvas ink (~61%) at ~12.5px, just under the docs ribbon's
+   optical size (16-canvas at 18px ≈ 14px ink), sized to taste. */
+  .inline-tools .tool-symbol svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.8; /* 20px → 1.5px */
+  }
+
+  .ribbon-tool.reserved .tool-symbol {
+    color: var(--text-muted);
+  }
+
+  .ribbon-tool strong,
+  .ribbon-tool small {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .ribbon-tool strong {
+    /* label weight matches the slides ribbon's .rb-small (regular, not medium) */
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .ribbon-tool small {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 9px;
+  }
+
+  /* Narrow windows: drop the detail line first, before falling back to
+   horizontal scrolling. */
+
+
+}

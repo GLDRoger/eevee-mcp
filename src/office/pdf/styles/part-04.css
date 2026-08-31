@@ -1,0 +1,57 @@
+@scope (.office-pdf) {
+
+  /* Step detail opens instantly, no animation */
+
+  /* Running tool row: two grow/shrink brand dots */
+
+  /* caret: text glyph right after the label, always visible, rotates open */
+
+  /* stream rows ease in */
+
+  /* expanded step detail: subtle gray card, no border */
+
+  /* ── Print container: hidden on screen, the only thing shown when printing ── */
+
+  .pdf-print-root {
+    display: none;
+  }
+
+  @media print {
+    .app {
+      display: none !important;
+    }
+
+    .pdf-print-root {
+      display: block;
+    }
+
+    .pdf-print-root img {
+      display: block;
+      width: 100%;
+      page-break-after: always;
+    }
+  }
+
+  /* dock wrapper: its width animates between the panel and the 34px collapsed rail
+ * (docs-parity 180ms ease); the panel inside keeps its natural width and is clipped */
+
+  /* while dragging the resizer, follow the pointer without easing */
+
+  /* the rail stretches to fill the dock while the width animates */
+
+  /* drag handle on the panel's right edge — resize the panel horizontally */
+
+  /* while dragging: keep the col-resize cursor everywhere, no text selection */
+
+  /* Boundary between the restored transcript and the live turn */
+
+  /* User pill: gray, fully rounded (no tail) */
+
+  /* blank markdown paragraphs would each eat a 16px margin — the stream never renders them */
+
+  /* inline code: neutral gray chip (deliberately not red), 2px below body size */ /* Thinking indicator: shimmer label above two grow/shrink dots */
+
+  /* streaming caret at the tail of streaming assistant text */
+
+  /* composer card — 16px radius, default border, production float shadow */
+}

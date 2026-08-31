@@ -1,0 +1,704 @@
+.office-docs .color-highlight-swatch {
+  width: 35px;
+  height: 35px;
+  border-radius: 4px;
+}
+
+.office-docs .color-highlight-swatch:hover,
+.office-docs .color-highlight-swatch.selected {
+  outline: 2px solid var(--word-blue);
+  outline-offset: 1px;
+}
+
+.office-docs .color-highlight-none {
+  width: 100%;
+  margin-top: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+}
+
+.office-docs .color-highlight-none.selected {
+  outline: 2px solid color-mix(in srgb, var(--word-blue) 65%, transparent);
+  outline-offset: -2px;
+}
+
+.office-docs .color-palette-word {
+  display: block;
+  width: 389px;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.office-docs .color-automatic {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.office-docs .color-automatic:hover,
+.office-docs .color-automatic.selected {
+  background: var(--hover);
+  outline: 2px solid color-mix(in srgb, var(--word-blue) 65%, transparent);
+  outline-offset: -2px;
+}
+
+.office-docs .color-section-title {
+  margin: 18px 0 8px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.office-docs .color-theme-base,
+.office-docs .color-theme-shades,
+.office-docs .color-standard-row {
+  display: grid;
+  grid-template-columns: repeat(10, 31px);
+  column-gap: 5px;
+}
+
+.office-docs .color-theme-base {
+  row-gap: 0;
+  margin-bottom: 12px;
+}
+
+.office-docs .color-theme-shades {
+  row-gap: 0;
+}
+
+.office-docs .color-swatch-large {
+  width: 31px;
+  height: 31px;
+  border-radius: 0;
+}
+
+.office-docs .color-swatch-large:hover,
+.office-docs .color-swatch-large.selected {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--word-blue);
+  outline-offset: 1px;
+}
+
+.office-docs .color-standard-title {
+  margin-top: 18px;
+}
+
+.office-docs .color-more {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px -16px -12px;
+  padding: 11px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.office-docs .color-more:hover {
+  background: var(--hover);
+}
+
+.office-docs .color-more-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.office-docs .color-more input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.office-docs .color-none {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  font-size: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .color-none:hover {
+  background: var(--hover);
+}
+
+/* line spacing dropdown */
+.office-docs .spacing-menu {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  min-width: 92px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 4px;
+}
+
+.office-docs .spacing-menu button {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .spacing-menu button:hover {
+  background: var(--hover);
+}
+
+.office-docs .spacing-menu button.active {
+  background: var(--active-bg);
+  color: var(--word-blue);
+}
+
+/* ---- Insert: table size picker ---- */
+
+/* Insert → Cover Page gallery */
+.office-docs .cover-gallery {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(4, 104px);
+  gap: 8px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.office-docs .cover-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 5px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.office-docs .cover-card:hover {
+  border-color: var(--word-blue);
+  background: var(--hover);
+}
+
+.office-docs .cover-thumb-page {
+  width: 88px;
+  height: 116px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  padding: 4px 5px;
+  font-size: 4px;
+  line-height: 1.3;
+  color: #333;
+  text-align: left;
+  pointer-events: none;
+}
+
+.office-docs .cover-thumb-para {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.office-docs .cover-card-name {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.office-docs .table-picker {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+}
+
+.office-docs .table-picker-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.office-docs .table-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 18px);
+  gap: 3px;
+}
+
+.office-docs .table-cell {
+  width: 18px;
+  height: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: var(--surface);
+  cursor: pointer;
+  padding: 0;
+}
+
+.office-docs .table-cell.hot {
+  background: var(--active-bg);
+  border-color: var(--word-blue);
+}
+
+/* ---- Insert: symbol palette ---- */
+
+.office-docs .symbol-palette {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(10, 28px);
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+}
+
+.office-docs .symbol-cell {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .symbol-cell:hover {
+  background: var(--active-bg);
+}
+
+/* ---- Shape picker dropdown ---- */
+
+.office-docs .shape-palette {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(4, 64px);
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+}
+
+.office-docs .shape-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 64px;
+  padding: 4px 2px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .shape-cell:hover {
+  background: var(--active-bg);
+}
+
+.office-docs .shape-preview {
+  display: block;
+  width: 36px;
+  height: 24px;
+  border: 1.5px solid #2f5496;
+}
+
+.office-docs .shape-label {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60px;
+}
+
+/* ---- WordArt picker panel ---- */
+
+.office-docs .wordart-palette {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: repeat(2, 120px);
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+}
+
+.office-docs .wordart-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  width: 120px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .wordart-cell:hover {
+  background: var(--active-bg);
+}
+
+.office-docs .wordart-preview {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: 'SimHei', 'Microsoft YaHei', sans-serif;
+  min-width: 26px;
+  text-align: center;
+}
+
+.office-docs .wordart-label {
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  text-align: left;
+}
+
+/* ---- Drop cap dropdown menu ---- */
+
+.office-docs .dropcap-menu {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+  min-width: 200px;
+}
+
+.office-docs .dropcap-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text);
+  min-width: 56px;
+}
+
+.office-docs .dropcap-option:hover {
+  background: var(--active-bg);
+  border-color: var(--border);
+}
+
+.office-docs .dropcap-preview {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--text);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+/* ---- Equations: built-in equation library dropdown + LaTeX insert dialog ---- */
+
+.office-docs .equation-gallery {
+  /* right-aligned to its trigger (the Equation button sits at the ribbon's
+     far right) — fixed + anchored like the other panels */
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  right: anchor(right);
+  position-visibility: anchors-visible;
+  z-index: 60;
+  width: 300px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+}
+
+.office-docs .equation-gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  padding: 8px 6px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .equation-gallery-item:hover {
+  background: var(--active-bg);
+}
+
+.office-docs .equation-gallery-name {
+  font-size: 11px;
+  color: var(--text-dim, #777);
+  align-self: flex-start;
+}
+
+.office-docs .equation-gallery-preview {
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 15px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.office-docs .equation-gallery-custom {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border-strong);
+  background: none;
+  padding: 8px 6px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .equation-gallery-custom:hover {
+  background: var(--active-bg);
+}
+
+.office-docs .equation-modal {
+  min-width: 460px;
+}
+
+.office-docs .equation-preview {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  margin: 10px 0 2px;
+  padding: 10px;
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 18px;
+  overflow-x: auto;
+}
+
+.office-docs .equation-preview-hint {
+  font-size: 12px;
+  color: var(--text-dim, #999);
+  font-family: system-ui, sans-serif;
+}
+
+.office-docs .equation-preview-error {
+  font-size: 12px;
+  color: #c0392b;
+  font-family: system-ui, sans-serif;
+}
+
+.office-docs .equation-inline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim, #666);
+  user-select: none;
+}
+
+/* ---- Layout: preset menus + paragraph spinners ---- */
+
+.office-docs .layout-menu {
+  position: fixed;
+  position-anchor: --rb-drop-wrap;
+  top: calc(anchor(bottom) + 4px);
+  left: anchor(left);
+  position-try-fallbacks: flip-inline;
+  position-visibility: anchors-visible;
+  z-index: 60;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 5px;
+}
+
+.office-docs .layout-menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 7px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.office-docs .layout-menu button span {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.office-docs .layout-menu button:hover {
+  background: var(--hover);
+}
+
+.office-docs .layout-menu button.active {
+  background: var(--active-bg);
+}
+
+/* table row/cell revisions: insert = green background, delete = red background (inline text has separate ins/del underline/strike styles) */
+.office-docs tr.row-rev-ins > td,
+.office-docs tr.row-rev-ins > th,
+.office-docs td.cell-rev-ins,
+.office-docs th.cell-rev-ins {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.office-docs tr.row-rev-del > td,
+.office-docs tr.row-rev-del > th,
+.office-docs td.cell-rev-del,
+.office-docs th.cell-rev-del {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+/* no-markup mode = as if all accepted: deleted rows hidden, insert background removed */
+.office-docs .rev-display-none tr.row-rev-del,
+.office-docs .rev-display-none td.cell-rev-del,
+.office-docs .rev-display-none th.cell-rev-del {
+  display: none;
+}
+
+.office-docs .rev-display-none tr.row-rev-ins > td,
+.office-docs .rev-display-none tr.row-rev-ins > th,
+.office-docs .rev-display-none td.cell-rev-ins,
+.office-docs .rev-display-none th.cell-rev-ins {
+  background: none;
+}
+
+/* original mode = as if all rejected: inserted rows hidden, delete background removed */
+.office-docs .rev-display-original tr.row-rev-ins,
+.office-docs .rev-display-original td.cell-rev-ins,
+.office-docs .rev-display-original th.cell-rev-ins {
+  display: none;
+}
+
+.office-docs .rev-display-original tr.row-rev-del > td,
+.office-docs .rev-display-original tr.row-rev-del > th,
+.office-docs .rev-display-original td.cell-rev-del,
+.office-docs .rev-display-original th.cell-rev-del {
+  background: none;
+}
+
+/* Arrange group position gallery: 3x3 page thumbnail grid, dots indicate image placement */
+.office-docs .pos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  gap: 4px;
+  padding: 6px 8px 4px;
+}
+
+.office-docs .layout-menu button.pos-cell {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+}
+
+.office-docs .layout-menu button.pos-cell.active {
+  border-color: var(--accent, #2b579a);
+  background: var(--active-bg);
+}
+
+.office-docs .pos-cell .pos-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--text-dim);
+}

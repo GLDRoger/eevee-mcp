@@ -15,6 +15,27 @@
       "when": 1787735021949,
       "tag": "0001_lonely_trauma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787737600000,
+      "tag": "0002_store_compiled_artifact",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787745000000,
+      "tag": "0003_behavioral_evaluations",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787751000000,
+      "tag": "0004_durable_office_files",
+      "breakpoints": true
     }
   ]
 }

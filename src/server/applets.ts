@@ -1,6 +1,7 @@
 import 'server-only'
-import { and, desc, eq, max, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, max, sql } from 'drizzle-orm'
 import type {
+  AppletMedium,
   Correction,
   CreateAppletInput,
   CreateCorrectionInput,
@@ -15,9 +16,15 @@ import type {
 } from '@/domain/api'
 import type { InputDefinition } from '@/domain/input'
 import { jsonValueSchema, type JsonObject, type JsonValue } from '@/domain/json'
+import {
+  MAX_STATE_KEYS,
+  StateLimitError,
+  assertStateKey,
+  assertStateValueSize,
+} from '@/domain/applet-store'
+import { prepareAppletRuntime } from '@/domain/applet-runtime'
 import { isPublishableQuality } from '@/domain/quality'
-import { evaluateWebAppHtml } from '@/domain/web-app-quality'
-import { compileWebAppRun } from '@/domain/web-app-runtime'
+import { evaluateReactApp } from './react-app-quality'
 import { getDatabase } from './db/client'
 import {
   applet,
@@ -26,12 +33,32 @@ import {
   appletValue,
   appletVersion,
   correction,
+  evaluationRun,
   workspace,
 } from './db/schema'
 import { RequestFailure } from './http'
+import { compileReactApp } from './react-compiler'
+import {
+  hasPassingBehavioralEvaluation,
+  listEvaluationRuns,
+} from './evaluations'
+import { listEvaluationSuites } from './evaluation-suites'
 
 const iso = (value: Date): string => value.toISOString()
-const MAX_STATE_KEYS = 128
+
+const requireReactVersionTarget = (
+  target: { medium: AppletMedium } | undefined,
+  definitionKind: 'react-app',
+): void => {
+  if (!target) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
+  if (target.medium !== 'web-app') {
+    throw new RequestFailure(
+      409,
+      'medium_mismatch',
+      `A ${target.medium} applet cannot use a ${definitionKind} definition`,
+    )
+  }
+}
 
 export const ensureWorkspace = async (workspaceId: string): Promise<void> => {
   await getDatabase().insert(workspace).values({ id: workspaceId }).onConflictDoNothing()
@@ -61,6 +88,11 @@ const summaryRows = async (workspaceId: string) =>
         where ${correction.workspaceId} = ${applet.workspaceId}
           and ${correction.appletId} = ${applet.id}
       )`,
+      evaluationCount: sql<number>`(
+        select count(*) from ${evaluationRun}
+        where ${evaluationRun.workspaceId} = ${applet.workspaceId}
+          and ${evaluationRun.appletId} = ${applet.id}
+      )`,
       createdAt: applet.createdAt,
       updatedAt: applet.updatedAt,
     })
@@ -82,6 +114,7 @@ const summary = (
   versionCount: Number(row.versionCount),
   runCount: Number(row.runCount),
   correctionCount: Number(row.correctionCount),
+  evaluationCount: Number(row.evaluationCount),
   createdAt: iso(row.createdAt),
   updatedAt: iso(row.updatedAt),
 })
@@ -131,7 +164,7 @@ export const getApplet = async (
   workspaceId: string,
   appletId: string,
 ): Promise<AppletDetail> => {
-  const [appletSummary, versions, runs, corrections] = await Promise.all([
+  const [appletSummary, versions, runs, corrections, evaluationSuites, evaluationRuns] = await Promise.all([
     getSummary(workspaceId, appletId),
     getDatabase()
       .select()
@@ -152,13 +185,37 @@ export const getApplet = async (
       .where(and(eq(correction.workspaceId, workspaceId), eq(correction.appletId, appletId)))
       .orderBy(desc(correction.createdAt))
       .limit(25),
+    listEvaluationSuites(workspaceId, appletId),
+    listEvaluationRuns(workspaceId, appletId),
   ])
   return {
     applet: appletSummary,
     versions: versions.map(versionSummary),
     runs: runs.map(runSummary),
     corrections: corrections.map(correctionView),
+    evaluationSuites,
+    evaluationRuns,
   }
+}
+
+export const getAppletVersion = async (
+  workspaceId: string,
+  appletId: string,
+  versionId: string,
+): Promise<{ version: AppletVersionSummary; definition: CreateVersionInput['definition'] }> => {
+  const [row] = await getDatabase()
+    .select()
+    .from(appletVersion)
+    .where(
+      and(
+        eq(appletVersion.workspaceId, workspaceId),
+        eq(appletVersion.appletId, appletId),
+        eq(appletVersion.id, versionId),
+      ),
+    )
+    .limit(1)
+  if (!row) throw new RequestFailure(404, 'version_not_found', 'This version was not found')
+  return { version: versionSummary(row), definition: row.definition }
 }
 
 export const createApplet = async (
@@ -179,28 +236,28 @@ export const createVersion = async (
   value: CreateVersionInput,
 ): Promise<{ version: AppletVersionSummary; publishable: boolean }> => {
   const database = getDatabase()
+  const [target] = await database
+    .select({ medium: applet.medium })
+    .from(applet)
+    .where(and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId)))
+    .limit(1)
+  requireReactVersionTarget(target, value.definition.kind)
+  const compilation = await compileReactApp(value.definition)
+  const qualityReport = await evaluateReactApp(value.definition, compilation)
   const created = await database.transaction(async (transaction) => {
-    const [target] = await transaction
-      .select({ medium: applet.medium })
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${appletId}))`)
+    const [owned] = await transaction
+      .select({ id: applet.id, medium: applet.medium })
       .from(applet)
       .where(and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId)))
       .limit(1)
-    if (!target) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
-    if (target.medium !== value.definition.kind) {
-      throw new RequestFailure(
-        409,
-        'medium_mismatch',
-        `A ${target.medium} applet cannot use a ${value.definition.kind} definition`,
-      )
-    }
-    await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${appletId}))`)
+    requireReactVersionTarget(owned, value.definition.kind)
     const [current] = await transaction
       .select({ version: max(appletVersion.version) })
       .from(appletVersion)
       .where(
         and(eq(appletVersion.workspaceId, workspaceId), eq(appletVersion.appletId, appletId)),
       )
-    const qualityReport = evaluateWebAppHtml(value.definition.html)
     const [row] = await transaction
       .insert(appletVersion)
       .values({
@@ -210,10 +267,27 @@ export const createVersion = async (
         note: value.note,
         inputs: value.inputs,
         definition: value.definition,
+        artifact: compilation.artifact,
         qualityReport,
       })
       .returning()
     if (!row) throw new Error('PostgreSQL did not return the created version')
+    if (value.resolvesCorrections?.length) {
+      // The new version answers these proposals; only open proposals on this
+      // applet can transition, so a stale or foreign id is a silent no-op
+      // rather than a cross-applet write.
+      await transaction
+        .update(correction)
+        .set({ state: 'applied' })
+        .where(
+          and(
+            eq(correction.workspaceId, workspaceId),
+            eq(correction.appletId, appletId),
+            eq(correction.state, 'proposed'),
+            inArray(correction.id, value.resolvesCorrections),
+          ),
+        )
+    }
     await transaction
       .update(applet)
       .set({ updatedAt: new Date() })
@@ -222,7 +296,7 @@ export const createVersion = async (
   })
   return {
     version: versionSummary(created),
-    publishable: isPublishableQuality(created.qualityReport),
+    publishable: false,
   }
 }
 
@@ -233,6 +307,7 @@ export const publishVersion = async (
 ): Promise<void> => {
   const database = getDatabase()
   await database.transaction(async (transaction) => {
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`publish:${appletId}`}))`)
     const [version] = await transaction
       .select()
       .from(appletVersion)
@@ -245,11 +320,25 @@ export const publishVersion = async (
       )
       .limit(1)
     if (!version) throw new RequestFailure(404, 'version_not_found', 'This version was not found')
+    if (!version.artifact) {
+      throw new RequestFailure(
+        409,
+        'artifact_unavailable',
+        'This version did not compile into an executable artifact',
+      )
+    }
     if (!isPublishableQuality(version.qualityReport)) {
       throw new RequestFailure(
         409,
         'quality_gate_failed',
-        'This version has not passed its blocking quality checks',
+        'This version has not passed its required quality checks',
+      )
+    }
+    if (!(await hasPassingBehavioralEvaluation(workspaceId, appletId, versionId))) {
+      throw new RequestFailure(
+        409,
+        'behavioral_evaluation_required',
+        'Run a passing behavioral evaluation against the current published version first',
       )
     }
     await transaction
@@ -303,7 +392,7 @@ export const previewVersion = async (
   versionId: string,
 ): Promise<WebAppRunOutput> => {
   const [version] = await getDatabase()
-    .select()
+    .select({ artifact: appletVersion.artifact, inputs: appletVersion.inputs })
     .from(appletVersion)
     .where(
       and(
@@ -314,19 +403,30 @@ export const previewVersion = async (
     )
     .limit(1)
   if (!version) throw new RequestFailure(404, 'version_not_found', 'This version was not found')
+  if (!version.artifact) {
+    throw new RequestFailure(
+      409,
+      'artifact_unavailable',
+      'This version did not compile into an executable artifact',
+    )
+  }
   const channel = crypto.randomUUID()
   return {
     kind: 'web-app',
     channel,
-    html: compileWebAppRun(version.definition.html, channel, previewInputs(version.inputs)),
+    html: prepareAppletRuntime(version.artifact.html, channel, previewInputs(version.inputs)),
   }
 }
 
 const stateKey = (value: string): string => {
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/.test(value)) {
-    throw new RequestFailure(400, 'invalid_state_key', 'State keys must be 1 to 128 safe characters')
+  try {
+    return assertStateKey(value)
+  } catch (error) {
+    if (error instanceof StateLimitError) {
+      throw new RequestFailure(400, error.code, error.message)
+    }
+    throw error
   }
-  return value
 }
 
 export const readAppletValues = async (
@@ -350,8 +450,13 @@ export const writeAppletValue = async (
 ): Promise<JsonValue> => {
   const key = stateKey(keyInput)
   const value = jsonValueSchema.parse(input)
-  if (new TextEncoder().encode(JSON.stringify(value)).byteLength > 64_000) {
-    throw new RequestFailure(413, 'state_value_too_large', 'One stored value cannot exceed 64 KB')
+  try {
+    assertStateValueSize(value)
+  } catch (error) {
+    if (error instanceof StateLimitError) {
+      throw new RequestFailure(413, error.code, error.message)
+    }
+    throw error
   }
   const storedValue = value === null ? sql<JsonValue>`'null'::jsonb` : value
   await getDatabase().transaction(async (transaction) => {
@@ -421,5 +526,30 @@ export const createCorrection = async (
     .values({ workspaceId, appletId: run.appletId, runId, ...value })
     .returning()
   if (!row) throw new Error('PostgreSQL did not return the correction')
+  return correctionView(row)
+}
+
+export const dismissCorrection = async (
+  workspaceId: string,
+  correctionId: string,
+): Promise<Correction> => {
+  const [row] = await getDatabase()
+    .update(correction)
+    .set({ state: 'dismissed' })
+    .where(
+      and(
+        eq(correction.workspaceId, workspaceId),
+        eq(correction.id, correctionId),
+        eq(correction.state, 'proposed'),
+      ),
+    )
+    .returning()
+  if (!row) {
+    throw new RequestFailure(
+      404,
+      'correction_not_open',
+      'This correction was not found or is no longer open',
+    )
+  }
   return correctionView(row)
 }

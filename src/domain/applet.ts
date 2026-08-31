@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { inputDefinitionSchema } from './input'
 import { jsonObjectSchema, jsonValueSchema } from './json'
 import { qualityReportSchema } from './quality'
+import { reactAppDefinitionSchema } from './react-app'
 
 export const appletMediumSchema = z.enum([
   'web-app',
@@ -14,30 +15,34 @@ export const appletMediumSchema = z.enum([
   'video',
 ])
 
+/**
+ * Media an agent or person can create an applet for today. The full medium
+ * enum above stays for storage and future executors, but creation is limited
+ * to media with a working executor so nobody mints a draft that can never
+ * run. Widen this list as executors land.
+ */
+export const creatableAppletMediumSchema = z.enum(['web-app'])
+
 export const appletStateSchema = z.enum(['active', 'archived'])
 export const versionStateSchema = z.enum(['draft', 'approved', 'rejected'])
 export const runStateSchema = z.enum(['queued', 'running', 'succeeded', 'failed'])
 export const correctionStateSchema = z.enum(['proposed', 'applied', 'dismissed'])
 
-export const webAppDefinitionSchema = z.strictObject({
-  kind: z.literal('web-app'),
-  html: z.string().min(1).max(1_500_000),
-})
-
 export const appletVersionDefinitionSchema = z.discriminatedUnion('kind', [
-  webAppDefinitionSchema,
+  reactAppDefinitionSchema,
 ])
 
 export const createAppletSchema = z.strictObject({
   name: z.string().trim().min(1).max(80),
   description: z.string().trim().min(1).max(500),
-  medium: appletMediumSchema,
+  medium: creatableAppletMediumSchema,
 })
 
 export const createVersionSchema = z.strictObject({
   note: z.string().trim().min(1).max(240),
   inputs: inputDefinitionSchema,
   definition: appletVersionDefinitionSchema,
+  resolvesCorrections: z.array(z.uuid()).max(25).optional(),
 })
 
 export const createRunSchema = z.strictObject({ input: jsonObjectSchema })

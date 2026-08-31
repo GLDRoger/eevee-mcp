@@ -1,0 +1,723 @@
+@scope (.office-slides) {
+
+  .rb-drop {
+    /* Fixed + anchored to the parent .rb-drop-wrap (same geometry as the old
+     absolute top:100%/left:0), so the panel escapes the ribbon-body scroll
+     clip while still tracking its trigger through ribbon scrolling. */
+    position: fixed;
+    position-anchor: --rb-drop-wrap;
+    top: calc(anchor(bottom) + 6px);
+    left: anchor(left);
+    /* near the right window edge, right-align to the trigger instead of
+     spilling past the (now clipped) viewport */
+    position-try-fallbacks: flip-inline;
+    /* trigger scrolled out of the ribbon → hide the panel with it */
+    position-visibility: anchors-visible;
+    z-index: 60;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.14),
+      0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 8px;
+  }
+
+  /* Bubble tail pointing at the trigger button (skipped on
+ * scrollable menus, where overflow would clip the pseudo-element) */
+  .rb-drop:not(.rb-menu-scroll)::before {
+    content: '';
+    position: absolute;
+    top: -5.5px;
+    left: 18px;
+    width: 10px;
+    height: 10px;
+    background: var(--surface);
+    border-left: 1px solid var(--border-strong);
+    border-top: 1px solid var(--border-strong);
+    border-top-left-radius: 2px;
+    transform: rotate(45deg);
+  }
+
+  .rb-font-color {
+    position: relative;
+    display: inline-block;
+    font-weight: 600;
+    line-height: 1;
+    padding-bottom: 3px;
+  }
+
+  /* Font name / font size dropdowns (Home tab font group; applies to the selection while editing, otherwise display-only) */
+  .rb-font-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    height: 28px;
+    padding: 0 7px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .rb-font-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .rb-font-btn.active,
+  .rb-font-btn:not(:disabled):hover {
+    background: var(--hover, rgba(0, 0, 0, 0.06));
+  }
+
+  .rb-font-name {
+    width: 178px;
+  }
+
+  .rb-font-size {
+    width: 68px;
+  }
+
+  /* Font size combobox (editable input + caret): any pt value can be typed, Enter applies */
+  .rb-size-combo {
+    padding: 0;
+  }
+
+  .rb-size-combo.rb-combo-disabled {
+    opacity: 0.5;
+  }
+
+  .rb-size-combo.rb-combo-disabled,
+  .rb-size-combo.rb-combo-disabled .rb-size-input,
+  .rb-size-combo.rb-combo-disabled .rb-size-caret {
+    cursor: default;
+  }
+
+  .rb-size-input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    padding: 0 0 0 8px;
+    outline: none;
+  }
+
+  .rb-size-caret {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    border: none;
+    background: transparent;
+    padding: 0 6px 0 2px;
+    cursor: pointer;
+  }
+
+  .rb-font-name-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .rb-font-caret {
+    font-size: 9px;
+    opacity: 0.6;
+  }
+
+  /* dropdown carets inside toggle buttons (AV / Aa / highlighter / font color) sit 2px off the glyph */
+  .rb-icon .rb-font-caret {
+    margin-left: 2px;
+  }
+
+  /* the font-family / font-size dropdowns keep a small gap from their neighbours (MS-style),
+   while plain toggle buttons stay flush against each other */
+  .rb-font-btn {
+    margin-right: 3px;
+  }
+
+  /* Office-style accent colors on glyph modifiers (blue carets/arrows/scripts, purple eraser) —
+   colored in the DEFAULT state, matching Microsoft's ribbon */
+  .office-slides {
+    --ribbon-accent: #2b7cd3;
+    --ribbon-accent-2: #a33fb5;
+    --ribbon-accent-warm: #ed8733;
+  }
+  .rb-icon .rb-accent {
+    color: var(--ribbon-accent, #2b7cd3);
+  }
+  .rb-icon sup,
+  .rb-icon sub {
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  /* collapsed Paragraph group (MS-style): big button opens a two-row tool panel */
+  .rb-para-drop {
+    padding: 12px 14px;
+  }
+  .rb-para-drop .rb-col {
+    gap: 8px;
+  }
+  .rb-para-drop .rb-row {
+    gap: 4px;
+  }
+  /* PowerPoint-size targets inside the paragraph bubble: 20px glyphs in 36x32 hit areas */
+  .rb-para-drop .rb-icon {
+    min-width: 36px;
+    height: 32px;
+  }
+  .rb-para-drop .rb-mini-sep {
+    height: 22px;
+    margin: 0 6px;
+  }
+
+  .rb-font-menu {
+    min-width: 180px;
+  }
+
+  .rb-size-menu {
+    min-width: 64px;
+  }
+
+  .rb-font-menu button.on,
+  .rb-size-menu button.on {
+    background: var(--hover, rgba(0, 0, 0, 0.08));
+    font-weight: 600;
+  }
+
+  .rb-color-underbar {
+    position: absolute;
+    left: -1px;
+    right: -1px;
+    bottom: 0;
+    height: 3px;
+    border-radius: 1px;
+  }
+
+  .rb-color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 18px);
+    gap: 5px;
+  }
+
+  .rb-swatch {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .rb-swatch:hover {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* "More colors…" row at the bottom of the font color palette (native any-color picker) */
+  .rb-color-more {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border, #e3e3e3);
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .rb-color-more input[type='color'] {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: none;
+    cursor: pointer;
+  }
+
+  .rb-table-picker-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    white-space: nowrap;
+  }
+
+  .rb-table-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 16px);
+    gap: 3px;
+  }
+
+  .rb-table-custom {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-strong);
+  }
+
+  .rb-table-custom input {
+    width: 46px;
+    padding: 2px 4px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    color: inherit;
+  }
+
+  .rb-table-custom span {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .rb-table-custom-ok {
+    margin-left: auto;
+    padding: 2px 10px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .rb-table-custom-ok:hover {
+    background: var(--active-bg);
+    border-color: var(--accent);
+  }
+
+  .rb-table-cell {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    background: var(--surface);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .rb-table-cell.on {
+    background: var(--active-bg);
+    border-color: var(--accent);
+  }
+
+  .rb-para-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 6px 0 2px;
+    white-space: nowrap;
+  }
+
+  .rb-bullet-char {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .rb-bullet-hang {
+    padding: 3px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+
+  .rb-bullet-hang:hover:not(:disabled) {
+    background: var(--active-bg);
+    border-color: var(--accent);
+  }
+
+  .rb-bullet-hang:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .rb-bullet-hang-input {
+    width: 52px;
+    cursor: text;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+  }
+
+  .rb-bullet-hang-input:hover:not(:disabled) {
+    background: var(--surface);
+  }
+
+  /* Bullet color row: swatches + "More colors" on its own line */
+  .rb-bullet-colors {
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 226px;
+  }
+  .rb-bullet-colors .rb-swatch:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .rb-bullet-color-more {
+    flex-basis: 100%;
+  }
+
+  .rb-trans-glyph {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  /* ── Animations tab ──────────────────────────────────────────────────────── */
+
+  .rb-anim-glyph {
+    font-size: 18px;
+    line-height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* PowerPoint colors: entrance=green / emphasis=yellow / exit=red / motion path=blue */
+  .rb-anim-entr {
+    color: #107c41;
+  }
+
+  .rb-anim-emph {
+    color: #c28e00;
+  }
+
+  .rb-anim-exit {
+    color: #c43e1c;
+  }
+
+  .rb-anim-path {
+    color: #2b7cd3;
+  }
+
+  .rb-anim-menu {
+    max-height: 320px;
+    overflow-y: auto;
+    min-width: 150px;
+  }
+
+  .rb-anim-menu .rb-anim-glyph {
+    display: inline-flex;
+    width: 20px;
+    font-size: 13px;
+    vertical-align: -3px;
+  }
+
+  .rb-anim-timing {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text);
+    padding: 2px 4px;
+  }
+
+  .rb-anim-timing label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .rb-anim-timing select,
+  .rb-anim-timing input {
+    font-size: 12px;
+    padding: 1px 4px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .rb-anim-timing input {
+    width: 58px;
+  }
+
+  /* ── Animation pane (reuses the comments-pane skeleton) ───────────────── */
+
+  .anim-pane .comments-list {
+    padding: 8px;
+  }
+
+  .anim-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    user-select: none;
+  }
+
+  .anim-row:hover {
+    background: var(--hover, rgba(0, 0, 0, 0.05));
+  }
+
+  .anim-row.selected {
+    background: var(--accent-soft, rgba(196, 62, 28, 0.12));
+  }
+
+  .anim-row.anim-entrance {
+    border-left-color: #107c41;
+  }
+
+  .anim-row.anim-emphasis {
+    border-left-color: #c28e00;
+  }
+
+  .anim-row.anim-exit {
+    border-left-color: #c43e1c;
+  }
+
+  .anim-row.anim-path {
+    border-left-color: #2b7cd3;
+  }
+
+  .anim-row-no {
+    width: 16px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .anim-row-trigger {
+    width: 16px;
+    text-align: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .anim-row-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .anim-row-effect {
+    font-size: 12.5px;
+  }
+
+  .anim-row-target {
+    font-size: 11px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .anim-row-actions {
+    display: none;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .anim-row:hover .anim-row-actions,
+  .anim-row.selected .anim-row-actions {
+    display: inline-flex;
+  }
+
+  .anim-row-actions button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: var(--text-dim);
+  }
+
+  .anim-row-actions button:hover:not(:disabled) {
+    background: var(--hover, rgba(0, 0, 0, 0.08));
+    color: var(--text);
+  }
+
+  .anim-row-actions button:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  /* ── Canvas animation preview overlay (covers .stage-rel) ──────────────── */
+
+  .anim-preview-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    cursor: pointer;
+    line-height: 0;
+    background: #fff;
+  }
+
+  /* ================= Context menu ================= */
+
+  .ctx-menu {
+    position: fixed;
+    z-index: 200;
+    min-width: 168px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    padding: 4px;
+  }
+
+  .ctx-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    border: none;
+    background: none;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .ctx-item:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .ctx-item:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .ctx-item.danger:hover:not(:disabled) {
+    background: #fbe9e7;
+    color: #c62828;
+  }
+
+  .ctx-hint {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .ctx-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 6px;
+  }
+
+  .ctx-swatches {
+    padding: 6px 10px;
+  }
+
+  .ctx-swatches-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  .ctx-swatches-row {
+    display: flex;
+    gap: 4px;
+  }
+
+  .ctx-swatch {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 0;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--text-dim);
+  }
+
+  .ctx-swatch:hover {
+    outline: 2px solid var(--accent, #4472c4);
+    outline-offset: 1px;
+  }
+
+  .ctx-swatch-none {
+    background: var(--surface);
+  }
+
+  /* ---- Draw (freehand ink) ---- */
+
+  .ink-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .ink-overlay.ink-active {
+    pointer-events: auto;
+    touch-action: none;
+  }
+
+  .ink-tool-pen,
+  .ink-tool-highlighter {
+    cursor: crosshair;
+  }
+
+  .ink-tool-eraser {
+    /* Custom eraser-shaped cursor (the cell crosshair leaves users unsure which tool is active);
+     white fill with dark stroke stays visible on light and dark backgrounds, hotspot at center (= erase test point) */
+    cursor:
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"><g fill="none" stroke="%23333" stroke-width="1.375" stroke-linejoin="round" stroke-linecap="round"><path fill="white" d="M13 3.9 18.1 9a1.8 1.8 0 0 1 0 2.5l-5.4 5.4H8.9L3.9 11.8a1.8 1.8 0 0 1 0-2.5l6.6-6.6a1.8 1.8 0 0 1 2.5 0Z"/><path d="M7.2 8.5 13.5 14.8"/><path d="M9 18.4h9.5"/></g></svg>')
+        11 11,
+      cell;
+  }
+
+  .ink-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+
+  .ink-settings {
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  /* ===== Draw tab: pen tray ===== */
+
+  .pen-tray {
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    align-self: stretch;
+    padding: 0 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  /* pens hang from the tray top; the held pen slides down */
+  .pen-btn {
+    border: none;
+    background: none;
+    padding: 0 3px;
+    cursor: pointer;
+    transform: translateY(-12px);
+    transition: transform 120ms ease;
+  }
+}

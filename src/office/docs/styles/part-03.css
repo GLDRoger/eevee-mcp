@@ -1,0 +1,720 @@
+.office-docs .pos-cell.ph-left {
+  justify-content: flex-start;
+}
+.office-docs .pos-cell.ph-center {
+  justify-content: center;
+}
+.office-docs .pos-cell.ph-right {
+  justify-content: flex-end;
+}
+.office-docs .pos-cell.pv-top {
+  align-items: flex-start;
+}
+.office-docs .pos-cell.pv-center {
+  align-items: center;
+}
+.office-docs .pos-cell.pv-bottom {
+  align-items: flex-end;
+}
+
+/* Switch Windows sits at the ribbon's right edge — anchor right so it isn't clipped */
+.office-docs .layout-menu.align-right {
+  left: auto;
+  right: anchor(right);
+}
+
+.office-docs .layout-para {
+  gap: 14px;
+}
+
+.office-docs .layout-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+}
+
+.office-docs .layout-num {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.office-docs .layout-num > span:first-child {
+  width: 44px;
+  text-align: right;
+  color: var(--text-dim);
+}
+
+.office-docs .layout-num input {
+  width: 56px;
+  height: 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.office-docs .layout-num input:disabled {
+  opacity: 0.5;
+}
+
+.office-docs .layout-unit {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+/* ---- Review: word count ---- */
+
+.office-docs .stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.office-docs .stats-table td {
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .stats-table td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ---- page color swatch selection ---- */
+
+.office-docs .color-palette-page {
+  grid-template-columns: repeat(5, 22px);
+}
+
+.office-docs .color-swatch.selected {
+  outline: 2px solid var(--word-blue);
+}
+
+/* style gallery */
+.office-docs .style-gallery {
+  gap: 4px;
+}
+
+.office-docs .style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 74px;
+  height: 62px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.office-docs .style-card:hover:not(:disabled) {
+  border-color: var(--word-blue);
+  background: var(--hover);
+}
+
+.office-docs .style-card.active {
+  border-color: var(--word-blue);
+  background: var(--active-bg);
+}
+
+.office-docs .style-card:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.office-docs .style-card-label {
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+
+.office-docs .style-card-preview {
+  font-size: 15px;
+}
+
+.office-docs .style-card-preview.style-normal {
+  color: var(--text);
+}
+
+.office-docs .style-card-preview.style-h1 {
+  color: var(--word-heading);
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.office-docs .style-card-preview.style-h2 {
+  color: var(--word-heading);
+  font-size: 15px;
+}
+
+.office-docs .style-card-preview.style-h3 {
+  color: #1f3864;
+  font-size: 13px;
+}
+
+.office-docs .style-gallery-more {
+  width: 20px;
+  height: 62px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.office-docs .style-gallery-more:hover:not(:disabled),
+.office-docs .style-gallery-more.active {
+  border-color: var(--word-blue);
+  background: var(--hover);
+}
+
+.office-docs .style-gallery-more:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ================= workspace / document canvas ================= */
+
+.office-docs .workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--canvas);
+}
+
+.office-docs .editor-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 26px 24px 140px;
+}
+
+.office-docs .doc-zoom {
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* ---- Word basics: marks / columns / page border / header-footer / nav / ruler ---- */
+
+/* ¶ editing marks (front-end only) */
+.office-docs .show-marks .doc-page p::after,
+.office-docs .show-marks .doc-page h1::after,
+.office-docs .show-marks .doc-page h2::after,
+.office-docs .show-marks .doc-page h3::after,
+.office-docs .show-marks .doc-page h4::after {
+  content: '¶';
+  color: #2b7cd3;
+  opacity: 0.55;
+  font-size: 0.85em;
+  margin-left: 2px;
+  user-select: none;
+}
+
+/* multi-column layout (w:cols) */
+.office-docs .doc-page {
+  column-count: var(--page-cols, auto);
+  column-gap: 28px;
+  column-fill: auto;
+}
+
+/* page border (w:pgBorders): a box inset from the page edge */
+.office-docs .page-bordered .doc-page {
+  outline: 1.5px solid #333;
+  outline-offset: -32px;
+}
+
+/* ---- tab stops (w:tabs) ---- */
+
+/* Paragraphs whose tabs were measured (TabStopExtension): tab chars get zero
+   intrinsic width; the jump to the stop is a letter-spacing decoration on the
+   tab char itself, so an ancestor <u> still underlines the gap. */
+.office-docs .has-tab-stops {
+  tab-size: 0;
+}
+
+/* underlined tab run: browsers skip text-decoration over a tab advance, so
+   the blank (e.g. signature "By: ____") gets an explicit line */
+.office-docs .doc-tab-underline {
+  border-bottom: 1px solid currentColor;
+}
+
+/* tab leader (w:leader) drawn across the tab gap */
+.office-docs .doc-tab-leader-dot,
+.office-docs .doc-tab-leader-middleDot {
+  border-bottom: 1px dotted currentColor;
+}
+.office-docs .doc-tab-leader-hyphen {
+  border-bottom: 1px dashed currentColor;
+}
+.office-docs .doc-tab-leader-underscore {
+  border-bottom: 1px solid currentColor;
+}
+.office-docs .doc-tab-leader-heavy {
+  border-bottom: 2px solid currentColor;
+}
+
+/* Drop cap: first-letter floats to 3 lines height */
+.office-docs .has-drop-cap::first-letter {
+  float: left;
+  font-size: 3em;
+  line-height: 0.85;
+  margin-right: 0.05em;
+  margin-top: 0.1em;
+  font-weight: normal;
+}
+
+/* Margin drop cap (in-margin): negative left margin to push it outside text area */
+.office-docs [data-drop-cap*='"type":"margin"']::first-letter {
+  margin-left: -0.6em;
+}
+
+/* Move-from revision: strikethrough + light red background (content moved away) */
+.office-docs .has-move-from {
+  background: rgba(220, 38, 38, 0.08);
+  text-decoration: line-through;
+  text-decoration-color: #dc2626;
+}
+
+/* Move-to revision: light green background (content moved in) */
+.office-docs .has-move-to {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+/* pPrChange (tracked paragraph format change): light amber left border + badge */
+.office-docs .has-ppr-change {
+  border-left: 3px solid #f59e0b;
+  padding-left: 4px;
+  position: relative;
+}
+
+/* pPrChange badge: "format revision" label at paragraph end via ::after */
+.office-docs .has-ppr-change::after {
+  content: attr(data-ppr-change-label);
+  margin-left: 6px;
+  font-size: 8px;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 2px;
+  padding: 0 3px;
+  vertical-align: middle;
+  pointer-events: none;
+}
+
+.office-docs .has-sdt {
+  position: relative;
+  border: 1px solid #a0c0e8;
+  border-radius: 2px;
+  padding: 1px 2px;
+  margin: 0 -2px;
+}
+
+/* SDT alias label: tiny floating tag in the top-left corner via ::before */
+.office-docs .has-sdt::before {
+  content: attr(data-sdt-alias);
+  position: absolute;
+  top: -10px;
+  left: 0;
+  font-size: 8px;
+  line-height: 1;
+  color: #5080b0;
+  background: #eef4fb;
+  border: 1px solid #a0c0e8;
+  border-radius: 2px 2px 0 0;
+  padding: 0 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.office-docs .page-wrap {
+  position: relative;
+  min-height: var(--page-h, 1056px);
+}
+
+.office-docs .page-hf {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(var(--page-w, 816px) - 120px);
+  text-align: center;
+  font-size: 9pt;
+  color: #777;
+  overflow: hidden;
+  z-index: 1;
+  cursor: default;
+}
+
+.office-docs .page-hf-para {
+  white-space: pre-wrap;
+  min-height: 1.3em;
+}
+
+/* logo and other images in the part (display-only, excluded from text editing) */
+.office-docs .page-hf-images {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+  user-select: none;
+  pointer-events: none;
+}
+
+.office-docs .page-hf-images img {
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.office-docs .page-hf-editing {
+  outline: 2px solid var(--word-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--text);
+  overflow: visible;
+  cursor: text;
+}
+
+/* editing surface: a separate element receives input and clears on unmount (no leftover input text nodes) */
+.office-docs .page-hf-edit-surface {
+  outline: none;
+  min-height: 1.3em;
+  white-space: pre-wrap;
+}
+
+.office-docs .page-hf-header {
+  top: var(--header-dist, 48px);
+  border-bottom: 1px dashed #d0d0d0;
+  padding-bottom: 2px;
+}
+
+.office-docs .page-hf-footer {
+  bottom: var(--footer-dist, 48px);
+  border-top: 1px dashed #d0d0d0;
+  padding-top: 2px;
+}
+
+/* first/odd/even header-footer switcher (only shown when Different First Page or Different Odd & Even is on) */
+.office-docs .hf-variant-chips {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+
+.office-docs .hf-variant-chips button {
+  font-size: 10px;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-dim, #777);
+  cursor: pointer;
+}
+
+.office-docs .hf-variant-chips button.on {
+  background: var(--word-blue);
+  border-color: var(--word-blue);
+  color: #fff;
+}
+
+/* "Different first page" entry next to the header itself: while the
+   feature is off the whole chip bar stays invisible until the header area is
+   hovered or being edited, so plain documents keep a clean page top. The
+   padding-bottom stretches the (invisible) bar down to the header so the cursor
+   can travel from the header up to the chip without a hover gap. */
+.office-docs .hf-chips-idle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  padding-bottom: max(0px, calc(var(--header-dist, 48px) - 24px));
+}
+
+.office-docs .page-wrap:has(.page-hf-header:hover) .hf-chips-idle,
+.office-docs .page-wrap:has(.page-hf-header.page-hf-editing) .hf-chips-idle,
+.office-docs .hf-variant-chips.hf-chips-idle:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* navigation pane */
+.office-docs .nav-pane {
+  width: 232px;
+  flex: none;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.office-docs .nav-pane-title {
+  padding: 10px 14px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .nav-pane-list {
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.office-docs .nav-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 4px 14px;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.office-docs .nav-item:hover {
+  background: var(--hover);
+  color: #2b7cd3;
+}
+
+.office-docs .nav-l2 {
+  padding-left: 28px;
+  font-size: 12px;
+}
+.office-docs .nav-l3 {
+  padding-left: 42px;
+  font-size: 11.5px;
+}
+.office-docs .nav-l4 {
+  padding-left: 56px;
+  font-size: 11.5px;
+}
+
+.office-docs .nav-empty {
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* tracked changes: insertions underlined, deletions struck through (Word revisions) */
+.office-docs .doc-ins {
+  color: #b91c1c;
+  text-decoration: underline;
+  text-decoration-color: #b91c1c;
+}
+
+.office-docs .doc-del {
+  color: #b91c1c;
+  text-decoration: line-through;
+  text-decoration-color: #b91c1c;
+  opacity: 0.72;
+}
+
+/* deleted text inside an insertion (insert-then-delete) keeps both cues */
+.office-docs .doc-ins .doc-del,
+.office-docs .doc-del .doc-ins {
+  text-decoration: underline line-through;
+}
+
+/* revision display mode: No Markup = as if all accepted (insertions shown normally, deletions hidden) */
+.office-docs .rev-display-none .doc-ins {
+  color: inherit;
+  text-decoration: none;
+}
+
+.office-docs .rev-display-none .doc-del,
+.office-docs .rev-display-none .has-move-from {
+  display: none;
+}
+
+.office-docs .rev-display-none .has-move-to {
+  background: none;
+}
+
+.office-docs .rev-display-none .has-rpr-change {
+  text-decoration: none;
+}
+
+.office-docs .rev-display-none .has-ppr-change {
+  border-left: none;
+  padding-left: 0;
+}
+
+.office-docs .rev-display-none .has-ppr-change::after {
+  content: none;
+}
+
+/* revision display mode: Original = as if all rejected (deletions shown normally, insertions hidden).
+   known approximation: old formats of rPrChange/pPrChange can't be restored in CSS; markers are merely hidden */
+.office-docs .rev-display-original .doc-del {
+  color: inherit;
+  text-decoration: none;
+  opacity: 1;
+}
+
+.office-docs .rev-display-original .doc-ins,
+.office-docs .rev-display-original .has-move-to {
+  display: none;
+}
+
+.office-docs .rev-display-original .has-move-from {
+  background: none;
+  text-decoration: none;
+}
+
+.office-docs .rev-display-original .has-rpr-change {
+  text-decoration: none;
+}
+
+.office-docs .rev-display-original .has-ppr-change {
+  border-left: none;
+  padding-left: 0;
+}
+
+.office-docs .rev-display-original .has-ppr-change::after {
+  content: none;
+}
+
+/* inserted then deleted: they cancel out in No Markup view → hidden; also nonexistent in Original view */
+.office-docs .rev-display-none .doc-ins .doc-del,
+.office-docs .rev-display-original .doc-del .doc-ins {
+  display: none;
+}
+
+/* Compare result pane */
+.office-docs .compare-meta {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .compare-same {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.office-docs .compare-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 9px;
+  margin: 4px 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.office-docs .compare-left {
+  color: #b91c1c;
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.office-docs .compare-right {
+  color: #166534;
+}
+
+.office-docs .compare-added {
+  background: rgba(22, 101, 52, 0.06);
+}
+
+.office-docs .compare-removed {
+  background: rgba(185, 28, 28, 0.06);
+}
+
+/* comment composer (new comment) */
+.office-docs .comment-compose {
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.office-docs .comment-compose textarea {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.office-docs .comment-compose-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.office-docs .comment-compose-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.office-docs .comment-compose-actions button.primary {
+  background: #2b579a;
+  border-color: #2b579a;
+  color: #fff;
+}
+
+.office-docs .comment-card-del {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 3px;
+  border-radius: 4px;
+}
+
+.office-docs .comment-card-del:hover {
+  background: var(--hover);
+  color: #b91c1c;
+}
+
+/* comments: in-text highlight + right-side pane */
+.office-docs .doc-comment {
+  background: rgba(255, 196, 0, 0.22);
+  border-bottom: 2px solid #e8a33d;
+  cursor: pointer;
+}
+
+/* range picked for a comment that is still being composed */
+.office-docs .comment-pending {
+  background: rgba(255, 196, 0, 0.22);
+  border-bottom: 2px dashed #e8a33d;
+}
+
+/* Word: body shading of resolved threads is hidden (the jump flash animation can still briefly reveal the position) */

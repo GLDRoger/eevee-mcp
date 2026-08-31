@@ -1,0 +1,113 @@
+@scope (.office-pdf) {
+
+  /* Stop button while generating: brand-supplied art (white square on black), transparent button chrome */
+
+  /* ── pdfjs text layer (select/copy); structure requirements per pdfjs TextLayer ── */
+
+  /* Matches pdf.js's official text_layer.css: spans laid out in unrotated page space,
+   whole layer rotated via data-main-rotation; font size/scale driven by --font-height/--scale-x vars */
+  .textLayer {
+    --min-font-size: 1;
+    --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+    --min-font-size-inv: calc(1 / var(--min-font-size));
+
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+    line-height: 1;
+    text-size-adjust: none;
+    forced-color-adjust: none;
+    transform-origin: 0 0;
+    caret-color: CanvasText;
+  }
+
+  .textLayer[data-main-rotation='90'] {
+    transform: rotate(90deg) translateY(-100%);
+  }
+
+  .textLayer[data-main-rotation='180'] {
+    transform: rotate(180deg) translate(-100%, -100%);
+  }
+
+  .textLayer[data-main-rotation='270'] {
+    transform: rotate(270deg) translateX(-100%);
+  }
+
+  .textLayer span,
+  .textLayer br {
+    color: transparent;
+    position: absolute;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+  }
+
+  .textLayer > :not(.markedContent),
+  .textLayer .markedContent span:not(.markedContent) {
+    z-index: 1;
+    --font-height: 0;
+    font-size: calc(var(--text-scale-factor) * var(--font-height));
+    --scale-x: 1;
+    --rotate: 0deg;
+    transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+  }
+
+  .textLayer .markedContent {
+    display: contents;
+  }
+
+  .textLayer span::selection {
+    background: rgba(56, 108, 255, 0.32);
+  }
+
+  /* pdfjs uses endOfContent to carry cross-page selection */
+  .textLayer .endOfContent {
+    display: block;
+    position: absolute;
+    inset: 100% 0 0;
+    z-index: -1;
+    cursor: default;
+    user-select: none;
+  }
+}
+
+.office-name-prompt {
+  position: fixed;
+  z-index: 100;
+  inset: 50% auto auto 50%;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: end;
+  gap: 10px;
+  width: min(440px, calc(100vw - 32px));
+  padding: 18px;
+  border: 1px solid #c8c6c4;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 24%);
+  transform: translate(-50%, -50%);
+}
+
+.office-name-prompt label {
+  display: grid;
+  gap: 6px;
+  color: #605e5c;
+  font-size: 12px;
+}
+
+.office-name-prompt input,
+.office-name-prompt button {
+  height: 34px;
+  border: 1px solid #c8c6c4;
+  border-radius: 4px;
+  background: #fff;
+  padding: 0 10px;
+  color: #252423;
+  font: inherit;
+}
+
+.office-name-prompt button[type='submit'] {
+  border-color: #a33517;
+  background: #c43e1c;
+  color: #fff;
+}

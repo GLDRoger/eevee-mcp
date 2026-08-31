@@ -52,6 +52,22 @@ export const parseJson = async <Schema extends z.ZodType>(
   return parsed.data
 }
 
+export const readBodyBytes = async (
+  request: Request,
+  maximumBytes: number,
+  message: string,
+): Promise<Uint8Array> => {
+  const declaredLength = Number(request.headers.get('content-length') ?? 0)
+  if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) {
+    throw new RequestFailure(413, 'body_too_large', message)
+  }
+  const bytes = new Uint8Array(await request.arrayBuffer())
+  if (bytes.length > maximumBytes) {
+    throw new RequestFailure(413, 'body_too_large', message)
+  }
+  return bytes
+}
+
 export const errorResponse = (error: unknown): NextResponse => {
   if (error instanceof RequestFailure) {
     return NextResponse.json(

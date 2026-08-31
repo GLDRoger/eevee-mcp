@@ -1,0 +1,490 @@
+.office-docs .ink-swatches {
+  display: flex;
+  gap: 3px;
+}
+
+.office-docs .ink-swatch {
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.office-docs .ink-swatch.active {
+  outline: 2px solid var(--accent, #185abd);
+  outline-offset: 1px;
+}
+
+.office-docs .ink-widths {
+  display: flex;
+  gap: 3px;
+}
+
+.office-docs .ink-width {
+  width: 24px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.office-docs .ink-width:hover {
+  background: var(--hover, rgba(0, 0, 0, 0.06));
+}
+
+.office-docs .ink-width.active {
+  border-color: var(--accent, #185abd);
+  background: var(--hover, rgba(24, 90, 189, 0.08));
+}
+
+.office-docs .ink-width-dot {
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Page Number Format dialog */
+.office-docs .pgnum-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.office-docs .pgnum-row select,
+.office-docs .pgnum-row input {
+  width: 180px;
+  padding: 4px 6px;
+}
+
+.office-docs .pgnum-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 6px 0 0;
+}
+
+/* table border / size tools */
+.office-docs .table-border-opts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.office-docs .table-border-opts input[type='color'] {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.office-docs .table-border-opts select {
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.office-docs .table-size-inputs {
+  display: flex;
+  flex-direction: column;
+  /* height/width rows + the reset button must fit in the 84px ribbon-body; too much line spacing stretches it and causes jumps */
+  gap: 2px;
+}
+
+.office-docs .table-size-inputs label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.office-docs .table-size-inputs input {
+  width: 56px;
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.office-docs .table-tool-button.active {
+  background: var(--word-blue-soft, #d5e3f5);
+}
+
+/* styles popup */
+.office-docs .styles-modal {
+  width: 420px;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.office-docs .styles-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .styles-panel-close {
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.office-docs .styles-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 0 10px;
+}
+
+.office-docs .styles-panel-group {
+  padding: 6px 12px 2px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.office-docs .styles-panel-row {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.office-docs .styles-panel-row.active {
+  background: var(--word-blue-soft, #e7effa);
+}
+
+.office-docs .styles-panel-name {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 5px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.office-docs .styles-panel-name:hover {
+  background: var(--hover, #f0f2f5);
+}
+
+.office-docs .styles-panel-update {
+  visibility: hidden;
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.office-docs .styles-panel-row:hover .styles-panel-update {
+  visibility: visible;
+}
+
+.office-docs .styles-panel-new {
+  border-top: 1px solid var(--border);
+  padding: 8px 12px 12px;
+}
+
+.office-docs .styles-panel-new-row {
+  display: flex;
+  gap: 6px;
+}
+
+.office-docs .styles-panel-new-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+}
+
+/* run-level format revision (w:rPrChange): amber underline hint */
+.office-docs .has-rpr-change {
+  text-decoration: underline wavy #c98a00;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+
+/* inline table-break cut point: zero-height dashed page-break marker (spans the page, takes no layout height) */
+.office-docs .page-gap-cut {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  position: relative;
+  pointer-events: none;
+}
+
+/* safety net: a cut marker misplaced as a direct table/row child would otherwise be
+   wrapped in an anonymous table row, adding one line-height of phantom table height
+   that skews pagination measurement (#86 line shear / #93 page-count inflation) */
+.office-docs table > .page-gap-cut,
+.office-docs tbody > .page-gap-cut,
+.office-docs tr > .page-gap-cut {
+  display: none;
+}
+
+.office-docs .page-gap-cut::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100vw;
+  width: 200vw;
+  border-top: 2px dashed #b6c2d2;
+}
+
+/* nested table inside a cell (read-only child table) */
+.office-docs .doc-nested-table {
+  margin: 2px 0;
+}
+
+.office-docs .doc-nested-table .doc-table {
+  max-width: 100%;
+}
+
+/* list library galleries (bullets/numbering/multilevel) */
+.office-docs .list-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 6px;
+  min-width: 180px;
+}
+
+.office-docs .list-gallery-card {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 6px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.office-docs .list-gallery-card:hover {
+  border-color: var(--accent, #2b579a);
+}
+
+.office-docs .list-gallery-multi {
+  grid-template-columns: repeat(3, 1fr);
+  min-width: 320px;
+}
+
+.office-docs .list-gallery-card-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.office-docs .list-gallery-define {
+  grid-column: 1 / -1;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: none;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.office-docs .list-gallery-define:hover {
+  color: var(--accent, #2b579a);
+}
+
+/* Define New Multilevel List dialog */
+.office-docs .list-define-modal {
+  width: 560px;
+  max-width: 90vw;
+}
+
+.office-docs .list-define-head,
+.office-docs .list-define-row {
+  display: grid;
+  grid-template-columns: 36px 110px 1fr 84px 110px;
+  gap: 6px;
+  align-items: center;
+}
+
+.office-docs .list-define-head {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+.office-docs .list-define-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.office-docs .list-define-row input,
+.office-docs .list-define-row select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px 4px;
+}
+
+.office-docs .list-define-preview {
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* table style gallery cards */
+.office-docs .table-style-gallery {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 420px;
+}
+
+.office-docs .table-style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--text-dim);
+  max-width: 86px;
+}
+
+.office-docs .table-style-card span:last-child {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 74px;
+}
+
+.office-docs .table-style-card:hover {
+  border-color: var(--word-blue);
+}
+
+.office-docs .table-style-card-grid {
+  width: 40px;
+  height: 22px;
+  border: 1px solid #b8bcc4;
+  border-top: 5px solid #7f8b9d;
+  background: repeating-linear-gradient(#fff 0 4px, #eef1f5 4px 8px);
+  border-radius: 2px;
+}
+
+.office-docs .table-style-card-grid.plain {
+  border-top: 1px solid #b8bcc4;
+  background: #fff;
+}
+
+/* comment threads: replies and resolution */
+.office-docs .comment-thread {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.office-docs .comment-thread.resolved {
+  opacity: 0.55;
+}
+
+.office-docs .comments-resolved-group {
+  margin-top: 4px;
+}
+
+.office-docs .comments-resolved-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: left;
+}
+
+.office-docs .comments-resolved-toggle:hover {
+  background: var(--hover);
+}
+
+.office-docs .comments-resolved-caret {
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+.office-docs .comments-resolved-caret.open {
+  transform: rotate(90deg);
+}
+
+.office-docs .comment-resolved-badge {
+  font-size: 10px;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.office-docs .comment-reply {
+  margin: 4px 8px 4px 26px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--border);
+  background: var(--surface);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.office-docs .comment-thread-actions {
+  display: flex;
+  gap: 8px;
+  margin: 2px 8px 0 26px;
+}
+
+.office-docs .comment-thread-actions > button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--text-dim);
+}
+
+.office-docs .comment-reply-compose {
+  flex: 1;
+}
+
+.office-docs .comment-reply-compose textarea {
+  width: 100%;
+  min-height: 48px;
+  font-size: 12px;
+  padding: 6px;
+  box-sizing: border-box;
+}

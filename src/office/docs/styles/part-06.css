@@ -1,0 +1,591 @@
+.office-docs .modal-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.office-docs .modal-row input {
+  flex: 1;
+}
+
+.office-docs .modal-error {
+  color: #c00000;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.office-docs .bookmark-list {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.office-docs .bookmark-empty {
+  padding: 14px;
+  color: var(--text-dim, #888);
+  font-size: 13px;
+}
+
+.office-docs .bookmark-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.office-docs .bookmark-row:last-child {
+  border-bottom: none;
+}
+
+.office-docs .bookmark-name {
+  background: none;
+  border: none;
+  color: var(--word-blue);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+}
+
+.office-docs .bookmark-preview {
+  flex: 1;
+  color: var(--text-dim, #888);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.office-docs .bookmark-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim, #888);
+  font-size: 15px;
+}
+
+/* text wrap: square uses a real CSS float so following paragraphs wrap automatically; tight/through display approximately as square */
+.office-docs .doc-protected.img-wrap-square-left,
+.office-docs .doc-protected.img-wrap-tight-left,
+.office-docs .doc-protected.img-wrap-through-left {
+  float: left;
+  width: fit-content;
+  max-width: 60%;
+  margin: 2px 14px 6px 0;
+}
+
+.office-docs .doc-protected.img-wrap-square-right,
+.office-docs .doc-protected.img-wrap-tight-right,
+.office-docs .doc-protected.img-wrap-through-right {
+  float: right;
+  width: fit-content;
+  max-width: 60%;
+  margin: 2px 0 6px 14px;
+}
+
+.office-docs .doc-protected.img-wrap-topBottom {
+  text-align: center;
+}
+
+/* behind text / in front of text: the flowing canvas has no absolutely positioned layer; reduced opacity as an approximation */
+.office-docs .doc-protected.img-wrap-behind {
+  opacity: 0.45;
+}
+
+.office-docs .doc-protected[data-doc-protected='image'].ProseMirror-selectednode .doc-img-wrap {
+  outline: 2px solid var(--word-blue);
+}
+
+.office-docs .img-resize-handle {
+  display: none;
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  background: #fff;
+  border: 2px solid var(--word-blue);
+  border-radius: 50%;
+  cursor: nwse-resize;
+  z-index: 2;
+}
+
+.office-docs
+  .doc-protected[data-doc-protected='image'].ProseMirror-selectednode
+  .img-resize-handle {
+  display: block;
+}
+
+/* Crop owns the active image controls while its modal is open. */
+.office-docs.docs-crop-active
+  .doc-protected[data-doc-protected='image'].ProseMirror-selectednode
+  .doc-img-wrap {
+  outline: none;
+}
+
+.office-docs.docs-crop-active
+  .doc-protected[data-doc-protected='image'].ProseMirror-selectednode
+  .img-resize-handle,
+.office-docs.docs-crop-active
+  .doc-protected[data-doc-protected='image'].ProseMirror-selectednode
+  > .doc-move-handle {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Generated-content diff highlight */
+.office-docs .doc-page .generated-changed {
+  background: var(--generated-highlight);
+  box-shadow: -3px 0 0 var(--generated-highlight-border);
+}
+
+/* ================= start screen ================= */
+
+.office-docs .start-screen {
+  width: 100%;
+  min-height: 100%;
+  padding: 9vh 24px 40px;
+  text-align: center;
+  background: var(--surface);
+  font-family: 'Segoe UI', var(--ui-cjk), sans-serif;
+}
+
+.office-docs .editor-scroll:has(> .start-screen) {
+  padding: 0;
+  background: var(--surface);
+}
+
+/* Starting up (while the pending-open check runs): lightweight placeholder, don't flash the start screen */
+.office-docs .start-booting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.office-docs .btn-primary {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 4px;
+  background: var(--word-blue);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.office-docs .btn-primary:hover:not(:disabled) {
+  background: var(--word-blue-dark);
+}
+
+.office-docs .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.office-docs .btn-ghost {
+  border: none;
+  background: none;
+  color: var(--word-blue);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.office-docs .btn-ghost:hover {
+  background: var(--hover);
+}
+
+.office-docs .btn-sm {
+  font-size: 12px;
+  padding: 2px 10px;
+  height: 26px;
+}
+
+.office-docs .recent {
+  margin-top: 44px;
+  text-align: left;
+}
+
+.office-docs .recent-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.office-docs .recent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  margin-bottom: 3px;
+  border: none;
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.office-docs .recent-item:hover {
+  background: var(--active-bg);
+}
+
+.office-docs .recent-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================= status bar ================= */
+
+.office-docs .status-bar {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  height: 24px;
+  font-size: 11.5px;
+  /* neutral chrome, unified with slides/sheets — no app-brand tint */
+  color: #605e5c;
+  background: #f3f4f6;
+  border-top: 1px solid #e1e4e8;
+}
+
+.office-docs .status-left {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.office-docs .status-item {
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+/* Word: clicking the word count in the status bar opens the word-count dialog */
+.office-docs .status-wordcount {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
+.office-docs .status-wordcount:hover {
+  text-decoration: underline;
+}
+
+.office-docs .status-msg {
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.office-docs .status-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.office-docs .zoom-btn {
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.office-docs .zoom-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.office-docs .zoom-slider {
+  width: 110px;
+  accent-color: #8a8886;
+  height: 3px;
+}
+
+.office-docs .zoom-value {
+  min-width: 38px;
+  text-align: right;
+}
+
+/* ================= modal ================= */
+
+.office-docs .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.office-docs .modal {
+  width: 440px;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 22px 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.office-docs .modal h2 {
+  margin: 0 0 16px;
+  font-size: 17px;
+}
+
+.office-docs .modal label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.office-docs .modal input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.office-docs .modal input:focus {
+  border-color: var(--word-blue);
+}
+
+.office-docs .modal select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 13px;
+  outline: none;
+  background: var(--surface);
+}
+
+.office-docs .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.office-docs .modal select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  height: 34px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 13px;
+  outline: none;
+  background: var(--surface);
+}
+
+.office-docs .modal select:focus {
+  border-color: var(--word-blue);
+}
+
+/* ProseMirror basics */
+
+.office-docs .ProseMirror {
+  white-space: pre-wrap;
+}
+
+.office-docs .ProseMirror:focus {
+  outline: none;
+}
+
+/* ---- find & replace ---- */
+
+.office-docs .find-panel {
+  position: absolute;
+  top: 8px;
+  right: 20px;
+  z-index: 60;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.office-docs .workspace {
+  position: relative;
+}
+
+.office-docs .find-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.office-docs .find-input {
+  width: 200px;
+  height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.office-docs .find-input:focus {
+  border-color: var(--word-blue);
+}
+
+.office-docs .find-count {
+  min-width: 44px;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.office-docs .find-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text);
+}
+
+.office-docs .find-btn:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .find-btn:disabled {
+  color: var(--border-strong);
+  cursor: default;
+}
+
+.office-docs .find-close {
+  font-size: 12px;
+}
+
+.office-docs .find-action {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.office-docs .find-action:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+.office-docs .find-action:disabled {
+  color: var(--border-strong);
+  cursor: default;
+}
+
+.office-docs .search-hit {
+  background: #ffe28a;
+  border-radius: 2px;
+}
+
+.office-docs .search-hit-active {
+  background: #ff9632;
+  color: #fff;
+}
+
+/* ---- autosave toggle (pill in the title bar) ---- */
+
+.office-docs .autosave-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  margin-right: 4px;
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+.office-docs .autosave-toggle input {
+  display: none;
+}
+
+.office-docs .autosave-knob {
+  width: 26px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--border-strong);
+  position: relative;
+  transition: background 0.15s;
+}
+
+.office-docs .autosave-knob::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transition: left 0.15s;
+}
+
+.office-docs .autosave-toggle.on .autosave-knob {
+  background: var(--word-blue);
+}
+
+.office-docs .autosave-toggle.on .autosave-knob::after {
+  left: 14px;
+}
+
+.office-docs .autosave-text {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ---- editable table cells ---- */
+
+.office-docs .doc-table td[contenteditable='true'] {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.office-docs .doc-table td[contenteditable='true']:focus {
+  outline: 2px solid var(--word-blue);
+  outline-offset: -2px;
+}
+
+/* ---- print: only the document itself ---- */

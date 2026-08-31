@@ -1,0 +1,708 @@
+@scope (.office-sheets) {
+  @media (max-width: 1600px) {
+    .ribbon-tool small {
+      display: none;
+    }
+
+    .ribbon-tool,
+    .ribbon-tool.accent {
+      min-width: 0;
+    }
+
+    .ribbon-tool.compact-icon span:not(.tool-symbol) {
+      display: none;
+    }
+
+    .ribbon {
+      gap: 1px;
+      /* Keep the same band padding as Documents and Slides. */
+    }
+
+    .ribbon-group {
+      padding: 2px 6px;
+    }
+
+    .number-format {
+      min-width: 60px;
+    }
+  }
+
+  .inline-tools {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    /* inline glyphs, letterforms and trigger labels share one ink color,
+     a touch off the app's --text (#242424) */
+    color: #232425;
+  }
+
+  /* Two stacked control rows inside one group.
+   Row spacing matches the slides ribbon's .rb-col (4px). */
+  .ribbon-rows {
+    display: grid;
+    gap: 4px;
+    align-content: center;
+    justify-items: start;
+  }
+
+  /* Cut / Copy / Format Painter column beside the tall Paste button. */
+  .tool-stack {
+    display: grid;
+    align-content: center;
+    gap: 0;
+  }
+
+  .tool-stack button {
+    display: grid;
+    min-width: 24px;
+    /* 3 stacked mini rows line up with one tall button, as in the slides ribbon's
+     .rb-clip-col (cut / copy / format painter): 24×20 buttons, gap 0, ~16px glyph */
+    height: 20px;
+    place-items: center;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: var(--radius-small);
+    font-size: 14px;
+  }
+
+  /* cut / copy / format painter glyphs match the slides ribbon's 16px svgs */
+  .tool-stack .tool-symbol svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tool-stack button:hover {
+    background: var(--ribbon-hover);
+  }
+
+  .inline-tools button.labeled {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .select-like,
+  .number-format {
+    display: inline-flex;
+    align-items: center;
+    /* control metrics from the slides ribbon's .rb-font-btn: 28px tall,
+     0 7px padding, 13px type */
+    height: 28px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 0 7px;
+    background: var(--surface);
+    font-size: 13px;
+  }
+
+  .select-like {
+    min-width: 104px;
+  }
+
+  .select-like.compact {
+    min-width: 44px;
+  }
+
+  /* font family / size dropdowns share the slides ribbon's fixed widths
+   (.rb-font-name 178px / .rb-font-size 68px) instead of sizing to the
+   longest option */
+  .select-like.font-name {
+    width: 178px;
+    min-width: 0;
+  }
+
+  .select-like.font-size {
+    width: 68px;
+    min-width: 0;
+  }
+
+  /* the font combos are buttons inside .inline-tools, whose flat-toggle reset
+   (border: none / transparent) outranks the base .select-like chrome — put
+   the combobox border back on just these two; .compact triggers stay flat */
+  .select-like.font-name,
+  .select-like.font-size {
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+  }
+
+  .number-format {
+    min-width: 76px;
+  }
+
+  .inline-tools span,
+  .inline-tools button {
+    display: grid;
+    /* compact toggle metrics from the slides ribbon's .rb-icon */
+    min-width: 28px;
+    height: 30px;
+    place-items: center;
+    /* UA button padding would widen every 28px toggle; triggers that need
+     horizontal padding get it back via .menu-select > .select-like /
+     .labeled below */
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: var(--radius-small);
+    font-size: 15px;
+  }
+
+  .inline-tools span:hover,
+  .inline-tools button:hover {
+    background: var(--ribbon-hover);
+  }
+
+  /* Selection echo: the active cell's B/I/U/S state shows as pressed
+   toggles (same neutral pressed gray as the slides ribbon). */
+  .inline-tools button.is-active,
+  .inline-tools button.is-active:hover {
+    background: var(--ribbon-active);
+  }
+
+  /* alignment glyphs use the shared 15px inline size (slides .rb-icon) */
+
+  /* the glyph span nested inside a toggle / trigger / swatch must not re-apply
+   the 28px toggle box (the `.inline-tools span` rule above also matches it),
+   or every icon button inflates to 28px content + UA button padding ≈ 40px;
+   width auto drops the 20px glyph box so the svg size rules above govern */
+  .inline-tools .tool-symbol {
+    min-width: 0;
+    width: auto;
+    height: auto;
+  }
+
+  /* Color swatches: the glyph is the SAME size as its siblings (15px letter /
+   18px svg) so the row's cap line stays level, and the 16×4 bar hangs below
+   it out of flow (docs' colored-icon pattern) instead of pushing the whole
+   stack taller than the neighbouring glyphs. */
+  .inline-tools .swatch-letter {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    height: auto;
+    line-height: 1;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .swatch-letter i {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 4px;
+    border-radius: 1px;
+  }
+
+  /* the 24-canvas svgs carry ~3px of box padding below their ink — tuck the
+   bar into it so it hugs the glyph like it hugs the letterforms */
+  .swatch-letter .tool-symbol ~ i {
+    top: calc(100% - 3px);
+  }
+
+  .ribbon-tool.as-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+  }
+
+  .ribbon-tool.as-button:not(.large):hover {
+    background: var(--ribbon-hover);
+  }
+
+  .ribbon-tool.as-button:not(.large).active {
+    background: var(--ribbon-active);
+  }
+
+  .ribbon-tool.large.as-button.active .tool-icon-row {
+    background: var(--ribbon-active);
+  }
+
+  .ribbon-tool.as-button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .ribbon-tool.as-button:disabled:hover {
+    background: transparent;
+  }
+
+  /* Reserved ribbon slots that are not implemented yet. */
+  .ribbon-tool.reserved {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .ribbon-tool.reserved:hover {
+    background: transparent;
+  }
+
+  /* dropdown chevron svg (copied from the slides ribbon's RbCaret) */
+  .chev {
+    flex-shrink: 0;
+    margin-left: 3px;
+    color: var(--text-muted);
+    vertical-align: -1px;
+  }
+
+  /* View tab's stacked show/hide checkboxes (the Show group). */
+  /* Home Styles group: three stacked dropdown rows. */
+  .styles-stack {
+    display: grid;
+    gap: 1px;
+    opacity: 0.55;
+  }
+
+  .styles-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 4px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* row icons keep a compact box so labels stay close, with the slides
+   ribbon's .rb-small 14px svg size; letterform fallbacks match at 13px */
+  .styles-row .tool-symbol {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    font-size: 13px;
+  }
+
+  .styles-row b {
+    font-weight: 400;
+  }
+
+  /* Stacked small command rows beside a large button (Insert/Formulas tabs). */
+  .row-stack {
+    display: grid;
+    gap: 1px;
+    align-content: center;
+    justify-items: start;
+  }
+
+  /* Clickable rows keep the same small type as reserved ones (the generic
+   .styles-row.as-button rule resets font to the page default). */
+  .ribbon .styles-row.as-button {
+    font-size: 12px;
+    padding: 1px 4px;
+    color: inherit;
+  }
+
+  .ribbon .styles-row.as-button:hover {
+    color: inherit;
+    background: var(--ribbon-hover);
+    border-radius: var(--radius-small);
+  }
+
+  .styles-row.reserved {
+    opacity: 0.45;
+  }
+
+  /* Invisible native select stretched over its host, so a styled row or large
+   button gets a real dropdown menu. */
+  .cover-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  /* ── MenuSelect: custom dropdown replacing native selects ──────────────────
+   The panel is fixed + anchored below its trigger (slides .rb-drop pattern),
+   so it escapes the ribbon's scroll clip and never covers ribbon content.
+   anchor-scope keeps each panel bound to its own wrap. */
+
+  .menu-select {
+    position: relative;
+    display: inline-flex;
+    anchor-name: --menu-select;
+    anchor-scope: --menu-select;
+  }
+
+  /* invisible trigger stretched over the host tool (old cover-select markup) */
+  .menu-select-cover {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* combobox-look trigger: a button wearing the old select's classes */
+  .menu-select > .select-like {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    height: 28px;
+    /* restore the trigger inset that the .inline-tools button padding reset strips */
+    padding: 0 7px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: 12px;
+    color: inherit;
+  }
+
+  .menu-select .menu-select-value {
+    display: inline;
+    min-width: 0;
+    height: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    /* the `.inline-tools span` toggle rule would bump this to 15px — keep the
+     trigger label on the button's 12px ribbon type */
+    font: inherit;
+  }
+
+  /* compact triggers hold an icon beside a short label — flex keeps the pair
+   centered; the wide font/number combos stay inline so their labels keep
+   ellipsizing */
+  .select-like.compact .menu-select-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* editable combobox trigger (font name/size, #160): a span wearing the
+   .select-like chrome hosting a free-text input + caret button */
+  .menu-select > .menu-select-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+    height: 28px;
+    padding: 0 4px 0 7px;
+    cursor: text;
+  }
+
+  .menu-select-edit input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .menu-select .menu-select-edit .menu-select-caret {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    min-width: 16px;
+    width: 16px;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .menu-select-drop {
+    position: fixed;
+    position-anchor: --menu-select;
+    top: calc(anchor(bottom) + 4px);
+    left: anchor(left);
+    /* near the right window edge, right-align to the trigger */
+    position-try-fallbacks: flip-inline;
+    /* trigger scrolled out of the ribbon → hide the panel with it */
+    position-visibility: anchors-visible;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    min-width: 148px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 4px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border-strong, #c8c6c4);
+    border-radius: 8px;
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.14),
+      0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .menu-select-drop button {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 12.5px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text, #222);
+    white-space: nowrap;
+  }
+
+  .menu-select-drop button:hover {
+    background: var(--ribbon-hover, rgba(0, 0, 0, 0.06));
+  }
+
+  .menu-select-drop button.on {
+    background: var(--ribbon-hover, rgba(0, 0, 0, 0.08));
+    font-weight: 600;
+  }
+
+  /* Insert tab's small chart-type buttons, arranged as an icon cluster. */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 26px);
+    gap: 1px;
+    align-content: center;
+  }
+
+  /* the 26×17 grid cells hold a 13px icon */
+  .chart-grid .tool-symbol {
+    flex: 0 0 13px;
+    width: 13px;
+    height: 13px;
+  }
+
+  .chart-grid .tool-symbol svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .chart-grid button,
+  .chart-grid span {
+    display: grid;
+    height: 17px;
+    place-items: center;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    border-radius: var(--radius-small);
+    font-size: 11px;
+  }
+
+  .chart-grid button:hover {
+    background: var(--surface-hover);
+  }
+
+  .chart-grid .reserved {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .check-column {
+    display: grid;
+    gap: 2px;
+    align-content: center;
+  }
+
+  /* Page Layout's Gridlines/Headings column captions. */
+  .check-head {
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 0;
+    padding: 1px 6px;
+    border-radius: var(--radius-small);
+    background: transparent;
+    color: var(--text);
+    font-size: 11px;
+    text-align: left;
+  }
+
+  button.check-item:hover {
+    background: var(--surface-hover);
+  }
+
+  .check-box {
+    display: grid;
+    width: 13px;
+    height: 13px;
+    place-items: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    background: var(--surface);
+    color: #232425;
+    font-size: 9px;
+    font-style: normal;
+  }
+
+  .reserved-check {
+    opacity: 0.45;
+  }
+
+  select.select-like {
+    border: 1px solid var(--border-color, #d0d0d0);
+    background: var(--surface, #fff);
+    font: inherit;
+    font-size: 12px;
+  }
+
+  /* Workbook surface between the ribbon and status bar. */
+  .sheet-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* formula-bar row + spreadsheet */
+  .sheet-main {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .workbook-area {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ================= status bar (unified with docs/slides) ================= */
+
+  .status-bar {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    height: 24px;
+    font-size: 11.5px;
+    color: #605e5c;
+    background: #f3f4f6;
+    border-top: 1px solid #e1e4e8;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-msg {
+    opacity: 0.85;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .zoom-btn {
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    line-height: 1;
+  }
+
+  .zoom-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .zoom-slider {
+    width: 110px;
+    accent-color: #8a8886;
+    height: 3px;
+  }
+
+  .zoom-value {
+    min-width: 38px;
+    text-align: right;
+  }
+
+
+  .spreadsheet {
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+  }
+
+  #univer-container {
+    contain: layout;
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-medium);
+    padding: 10px;
+    color: var(--text);
+    background: var(--surface);
+    line-height: 1.4;
+  }
+
+  textarea:focus {
+    border-color: var(--excel-green);
+  }
+
+  .primary-action,
+  .secondary {
+    min-height: 34px;
+    border-radius: var(--radius-medium);
+    padding: 7px 12px;
+  }
+
+  .primary-action {
+    border: 1px solid var(--excel-green);
+    color: #ffffff;
+    background: var(--excel-green);
+  }
+
+  .primary-action:hover {
+    background: var(--excel-green-dark);
+  }
+
+  .secondary {
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    background: var(--surface);
+  }
+
+
+}

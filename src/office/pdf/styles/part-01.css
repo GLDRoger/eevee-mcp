@@ -1,0 +1,7 @@
+.office-pdf {
+  height: min(76dvh, 760px);
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

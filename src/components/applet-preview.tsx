@@ -1,37 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import type { WebAppRunOutput } from '@/domain/applet'
-import { jsonValueSchema, type JsonValue } from '@/domain/json'
+import { createBoundedMemoryStore } from '@/domain/applet-store'
 import { api } from '@/client/api'
+import { appletMessageSchema } from '@/client/applet-messages'
 
-const messageBase = {
-  source: z.literal('eevee-applet'),
-  channel: z.uuid(),
+const encodeBase64 = (bytes: Uint8Array): string => {
+  let binary = ''
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000))
+  }
+  return btoa(binary)
 }
-const appletMessageSchema = z.discriminatedUnion('action', [
-  z.strictObject({ ...messageBase, action: z.literal('ready') }),
-  z.strictObject({ ...messageBase, action: z.literal('revoke') }),
-  z.strictObject({
-    ...messageBase,
-    id: z.string().min(1).max(100),
-    action: z.literal('get'),
-    payload: z.strictObject({ key: z.string().min(1).max(128) }),
-  }),
-  z.strictObject({
-    ...messageBase,
-    id: z.string().min(1).max(100),
-    action: z.literal('set'),
-    payload: z.strictObject({ key: z.string().min(1).max(128), value: jsonValueSchema }),
-  }),
-  z.strictObject({
-    ...messageBase,
-    id: z.string().min(1).max(100),
-    action: z.literal('all'),
-    payload: z.strictObject({}),
-  }),
-])
 
 export function AppletPreview({
   appletId,
@@ -51,7 +32,7 @@ export function AppletPreview({
   const frameRef = useRef<HTMLIFrameElement>(null)
   const bridgeActive = useRef(true)
   const loadCount = useRef(0)
-  const memory = useRef(new Map<string, JsonValue>())
+  const memory = useRef(createBoundedMemoryStore())
   const reportedReady = useRef(false)
   const reportedRevoked = useRef(false)
   const [ready, setReady] = useState(false)
@@ -100,17 +81,60 @@ export function AppletPreview({
       }
       void (async () => {
         try {
+          if (message.action === 'files-list') {
+            const listed = await api.listFiles()
+            respond({
+              ok: true,
+              value: listed.files.map(({ id, name, medium, version, size }) => ({
+                id,
+                name,
+                medium,
+                version,
+                size,
+              })),
+            })
+            return
+          }
+          if (message.action === 'files-read') {
+            const [inspected, bytes] = await Promise.all([
+              api.inspectFile(message.payload.fileId),
+              api.readFile(message.payload.fileId),
+            ])
+            respond({
+              ok: true,
+              value: {
+                id: inspected.detail.file.id,
+                name: inspected.detail.file.name,
+                medium: inspected.detail.file.medium,
+                version: inspected.detail.file.version,
+                contentBase64: encodeBase64(bytes),
+              },
+            })
+            return
+          }
+          if (message.action === 'files-table') {
+            const table = await api.readFileTable(message.payload.fileId)
+            respond({ ok: true, value: table.sheets })
+            return
+          }
+          if (message.action === 'files-text') {
+            const text = await api.readFileText(message.payload.fileId)
+            respond({ ok: true, value: text.text })
+            return
+          }
           if (storage === 'ephemeral') {
             if (message.action === 'all') {
-              respond({ ok: true, value: Object.fromEntries(memory.current) })
+              respond({ ok: true, value: memory.current.all() })
               return
             }
             if (message.action === 'get') {
-              respond({ ok: true, value: memory.current.get(message.payload.key) ?? null })
+              respond({ ok: true, value: memory.current.get(message.payload.key) })
               return
             }
-            memory.current.set(message.payload.key, message.payload.value)
-            respond({ ok: true, value: message.payload.value })
+            respond({
+              ok: true,
+              value: memory.current.set(message.payload.key, message.payload.value),
+            })
             return
           }
           if (message.action === 'all') {
@@ -149,7 +173,7 @@ export function AppletPreview({
       <iframe
         ref={frameRef}
         title="Applet output"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-forms"
         referrerPolicy="no-referrer"
         srcDoc={output.html}
         onLoad={() => {

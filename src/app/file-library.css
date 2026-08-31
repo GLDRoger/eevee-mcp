@@ -1,0 +1,62 @@
+.library-upload {
+  width: calc(100% - var(--space-4));
+  margin: 0 var(--space-2) var(--space-6);
+  padding: 0.72rem var(--space-3);
+  border: 1px solid var(--rule-strong);
+  background: var(--paper);
+  color: var(--pine);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.library-upload:hover {
+  border-color: var(--pine);
+  background: var(--pine-pale);
+}
+
+.studio-create {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.studio-create .library-upload {
+  margin: 0 var(--space-2);
+}
+
+.file-explorer {
+  display: grid;
+  max-width: 75rem;
+  gap: var(--space-8);
+  margin: 0 auto;
+}
+
+.file-explorer-actions {
+  display: grid;
+  justify-items: end;
+  gap: var(--space-3);
+}
+
+.file-version-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.file-inspector,
+.office-editor-shell {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.office-editor-shell {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.file-preview {
+  min-height: 42rem;
+  border: 1px solid var(--rule-strong);
+  background: var(--paper);
+}

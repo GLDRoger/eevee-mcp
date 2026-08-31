@@ -1,0 +1,706 @@
+@scope (.office-sheets) {
+
+  .secondary:hover {
+    background: var(--surface-hover);
+  }
+
+  .preview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-medium);
+    padding: 12px;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 4%);
+  }
+
+  .preview h3 {
+    margin: 0;
+    font-size: 13px;
+  }
+
+  .change {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 7px;
+    font-size: 11px;
+  }
+
+  .change span {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .preview-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheet-body {
+      transition: none;
+    }
+  }
+
+  .xlsx-chart,
+  .xlsx-image,
+  .xlsx-shape,
+  .xlsx-visual-loading,
+  .xlsx-visual-error {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .xlsx-chart {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #c9cdd1;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+    color: #333;
+    font-family: Calibri, 'Segoe UI', sans-serif;
+  }
+
+  .chart-edit-button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 3;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: rgb(255 255 255 / 92%);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .chart-edit-button:hover {
+    color: var(--excel-green-dark);
+    background: #ffffff;
+  }
+
+  .shape-editable .chart-edit-button {
+    top: 2px;
+    right: 26px;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .chart-editor {
+    position: absolute;
+    inset: 6px 6px auto auto;
+    z-index: 4;
+    display: grid;
+    gap: 6px;
+    max-width: 230px;
+    max-height: calc(100% - 12px);
+    overflow: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-medium);
+    padding: 10px;
+    background: #ffffff;
+    box-shadow: var(--shadow-panel);
+    font-size: 11px;
+  }
+
+  .chart-editor label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+  }
+
+  .chart-editor input[type='text'],
+  .chart-editor .chart-editor-title,
+  .chart-editor select {
+    min-width: 120px;
+    height: 24px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  .chart-editor input[type='color'] {
+    width: 34px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: none;
+  }
+
+  .chart-editor-series {
+    display: grid;
+    gap: 4px;
+  }
+
+  .chart-editor-series-name {
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  .chart-editor input.chart-editor-range {
+    height: 22px;
+    min-width: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  .chart-editor-error {
+    color: #b42318;
+    font-size: 10px;
+    max-width: 210px;
+  }
+
+  /* Sticky footer: with many series the panel scrolls, but Apply/Cancel must
+   stay reachable without scrolling to the end. */
+  .chart-editor-actions {
+    position: sticky;
+    bottom: -10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: -2px -10px -10px;
+    padding: 8px 10px 10px;
+    border-top: 1px solid var(--border);
+    background: #ffffff;
+  }
+
+  .chart-editor-actions button {
+    min-height: 24px;
+    border-radius: var(--radius-small);
+    padding: 2px 10px;
+    font-size: 11px;
+  }
+
+  .chart-editor-cancel {
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .chart-editor-apply {
+    border: 1px solid var(--excel-green);
+    background: var(--excel-green);
+    color: #ffffff;
+  }
+
+  .xlsx-chart {
+    position: relative;
+  }
+
+  .xlsx-chart figcaption {
+    flex: 0 0 auto;
+    padding: 10px 12px 2px;
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chart-svg {
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .chart-svg text {
+    fill: #555;
+    font-size: 10px;
+  }
+
+  .chart-svg .axis-label {
+    fill: #888;
+    font-size: 9px;
+  }
+
+  .xlsx-shape-drawn {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .xlsx-shape-drawn svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .xlsx-shape-drawn .shape-text {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 6px;
+    text-align: center;
+    font-size: 12px;
+    color: #333;
+    overflow: hidden;
+  }
+
+  .shape-editable {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: move;
+    touch-action: none;
+    outline: none;
+  }
+
+  /* Children (chart body) paint over an outline, so the selection frame is an
+   overlay pseudo-element stacked above them. */
+  .shape-editable.selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid #1f5aa8;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .shape-editable.selected .shape-delete-button {
+    opacity: 1;
+  }
+
+  /* Selection handles: white dots on the frame, selected only. */
+  .shape-editable .shape-handle {
+    position: absolute;
+    display: none;
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid #1f5aa8;
+    border-radius: 50%;
+    background: #fff;
+    box-sizing: border-box;
+    z-index: 2;
+  }
+
+  .shape-editable.selected .shape-handle {
+    display: block;
+  }
+
+  /* The float container clips its box, so handles sit just inside the frame. */
+  .shape-editable .handle-nw {
+    top: -1px;
+    left: -1px;
+    cursor: nwse-resize;
+  }
+  .shape-editable .handle-n {
+    top: -1px;
+    left: calc(50% - 4px);
+    cursor: ns-resize;
+  }
+  .shape-editable .handle-ne {
+    top: -1px;
+    right: -1px;
+    cursor: nesw-resize;
+  }
+  .shape-editable .handle-e {
+    top: calc(50% - 4px);
+    right: -1px;
+    cursor: ew-resize;
+  }
+  .shape-editable .handle-se {
+    right: -1px;
+    bottom: -1px;
+    cursor: nwse-resize;
+  }
+  .shape-editable .handle-s {
+    bottom: -1px;
+    left: calc(50% - 4px);
+    cursor: ns-resize;
+  }
+  .shape-editable .handle-sw {
+    bottom: -1px;
+    left: -1px;
+    cursor: nesw-resize;
+  }
+  .shape-editable .handle-w {
+    top: calc(50% - 4px);
+    left: -1px;
+    cursor: ew-resize;
+  }
+
+  .shape-editable .shape-delete-button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    z-index: 3;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-small);
+    background: rgb(255 255 255 / 92%);
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .shape-editable:hover .shape-delete-button {
+    opacity: 1;
+  }
+
+  .shape-editable .shape-delete-button:hover {
+    color: #b42318;
+    background: #ffffff;
+  }
+
+  /* Body-level clone shown while moving a visual: escapes the float
+   container's overflow clipping so the drag preview stays above the grid. */
+  .shape-drag-ghost {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .shape-editable .shape-resize-outline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1.5px dashed #1f5aa8;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+
+  .shape-text-editor {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 6px;
+    text-align: center;
+    font-size: 12px;
+    color: #333;
+    outline: 2px solid #1f5aa8;
+    outline-offset: -2px;
+    cursor: text;
+    overflow: hidden;
+    white-space: pre-wrap;
+  }
+
+  .trace-precedent-box {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid #1f5aa8;
+    background: rgb(31 90 168 / 6%);
+    pointer-events: none;
+  }
+
+  .trace-arrow-layer {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .pie-layout {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 10px 18px 18px;
+  }
+
+  .pie-svg {
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .pie-svg .pie-label-inside {
+    font-size: 11px;
+    fill: #fff;
+    paint-order: stroke;
+    stroke: rgb(0 0 0 / 25%);
+    stroke-width: 0.6px;
+  }
+
+  .pie-svg .pie-label-outside {
+    font-size: 10px;
+    fill: #444;
+  }
+
+  /* In-cell sparkline minicharts */
+  .sparkline-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Element-level chart selection (title / legend) */
+  .chart-el-selected {
+    outline: 2px solid #107c41;
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+
+  /* Chart context menu (portaled to body — the float DOM clips overflow) */
+  .chart-menu-backdrop {
+    position: fixed;
+    z-index: 4000;
+    inset: 0;
+  }
+
+  .chart-menu {
+    position: fixed;
+    z-index: 4001;
+    display: flex;
+    min-width: 168px;
+    flex-direction: column;
+    padding: 4px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 18%);
+  }
+
+  .chart-menu button {
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .chart-menu button:hover {
+    background: #eef6f0;
+  }
+
+  /* Chart format pane, docked to the right edge as a task pane */
+  .chart-format-pane {
+    position: fixed;
+    z-index: 900;
+    top: 140px;
+    right: 12px;
+    bottom: 40px;
+    display: flex;
+    width: 250px;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 12px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    background: #fdfdfd;
+    box-shadow: 0 4px 18px rgb(0 0 0 / 12%);
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .chart-format-pane header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+  }
+
+  .chart-format-pane header button {
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .chart-format-pane .pane-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid #ececec;
+  }
+
+  .chart-format-pane .pane-section > strong {
+    font-size: 11px;
+    color: #555;
+  }
+
+  .chart-format-pane label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .chart-format-pane input[type='number'],
+  .chart-format-pane input[type='text'],
+  .chart-format-pane select {
+    width: 120px;
+    padding: 3px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .chart-format-pane input[type='range'] {
+    width: 110px;
+  }
+
+  /* Select Data dialog */
+  .select-data-dialog {
+    width: 560px;
+  }
+
+  .select-data-rows {
+    display: flex;
+    max-height: 300px;
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 6px;
+  }
+
+  .select-data-row {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 1.1fr 1.4fr 1.4fr auto;
+    gap: 6px;
+  }
+
+  .select-data-head {
+    margin-bottom: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .select-data-row input {
+    min-width: 0;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .select-data-row input:focus {
+    outline: none;
+    border-color: var(--excel-green);
+  }
+
+  .select-data-row input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  .select-data-row > span:last-child {
+    display: flex;
+    gap: 4px;
+  }
+
+  .select-data-row button {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .select-data-row button:hover:not(:disabled) {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+
+  .select-data-actions {
+    display: flex;
+    padding-top: 8px;
+    gap: 8px;
+  }
+
+  .select-data-actions button {
+    padding: 5px 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .select-data-actions button:hover:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  /* Legend placement around the pie (right is the classic default). */
+  .pie-legend-bottom {
+    flex-direction: column;
+  }
+
+  .pie-legend-top {
+    flex-direction: column-reverse;
+  }
+
+  .pie-legend-left {
+    flex-direction: row-reverse;
+  }
+
+  /* Legend placement for axis charts; default keeps the legacy below-chart row. */
+  .chart-body {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .chart-body > .chart-svg {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+
+  .chart-body.chart-legend-default > .chart-legend,
+  .chart-body.chart-legend-bottom > .chart-legend,
+  .chart-body.chart-legend-top > .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 12px;
+    padding: 0 10px 6px;
+  }
+
+  .chart-body.chart-legend-top {
+    flex-direction: column-reverse;
+  }
+
+  .chart-body.chart-legend-right,
+  .chart-body.chart-legend-left {
+    align-items: center;
+  }
+
+  .chart-body.chart-legend-right {
+    flex-direction: row;
+  }
+
+  .chart-body.chart-legend-left {
+    flex-direction: row-reverse;
+  }
+
+
+}

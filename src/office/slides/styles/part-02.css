@@ -1,0 +1,719 @@
+@scope (.office-slides) {
+  :scope {
+    height: min(76dvh, 760px);
+    max-height: 760px;
+    min-width: 0;
+    min-height: 600px;
+    overflow: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    /* ribbon-body keeps overflow visible for dropdowns; stop that overflow here
+     so a wide tab (e.g. Animations) can't become a document-level scroll */
+    overflow: hidden;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  /* ================= title bar ================= */
+
+  .autosave-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-right: 4px;
+    -webkit-app-region: no-drag;
+    user-select: none;
+  }
+
+  .autosave-toggle input {
+    display: none;
+  }
+
+  .autosave-knob {
+    width: 26px;
+    height: 14px;
+    border-radius: 7px;
+    background: var(--border-strong);
+    position: relative;
+    transition: background 0.15s;
+  }
+
+  .autosave-knob::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left 0.15s;
+  }
+
+  .autosave-toggle.on .autosave-knob {
+    background: var(--accent);
+  }
+
+  .autosave-toggle.on .autosave-knob::after {
+    left: 14px;
+  }
+
+  .autosave-text {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .qa-btn {
+    width: 30px;
+    height: 28px;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .qa-btn svg {
+    display: block;
+    margin: 0 auto;
+  }
+
+  .qa-btn:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .qa-btn:disabled {
+    /* saved state stays clearly visible, just muted enough to read as inactive */
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  /* ================= ribbon ================= */
+
+  .ribbon {
+    flex-shrink: 0;
+    background: var(--chrome-bg);
+    border-bottom: 1px solid var(--border-strong);
+    user-select: none;
+    /* shared toolbar ink (glyphs, letterforms, labels) — same as the sheets ribbon */
+    color: #232425;
+  }
+
+  .ribbon-tabs {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px 0;
+    gap: 2px;
+    /* Title bar row removed; the tab row doubles as the frameless-window drag region */
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  .ribbon-tabs button,
+  .ribbon-tabs .file-tab-wrap,
+  .ribbon-tabs .autosave-toggle,
+  .ribbon-tabs .qa-btn {
+    -webkit-app-region: no-drag;
+  }
+
+  .ribbon-tabs-mac {
+    padding-left: 84px; /* room for traffic lights */
+  }
+
+  .ribbon-tabs-win {
+    padding-right: 150px; /* room for windows caption buttons overlay */
+  }
+
+  .ribbon-file {
+    max-width: 40%;
+    font-size: 12px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+
+  .ribbon-tab {
+    position: relative;
+    border: none;
+    background: none;
+    padding: 7px 9px 6px;
+    font-size: 13px;
+    /* every tab label is semibold, not just the active one */
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    /* transparent border keeps the row height; the visible underline is the
+   * ::after below, sized to the label text rather than the padded button */
+    border-bottom: 2.5px solid transparent;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .ribbon-tab:hover {
+    color: var(--accent);
+  }
+
+  .ribbon-tab.active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* active underline: exactly the text width (insets = horizontal padding),
+ * ends slightly rounded — not a full capsule */
+  .ribbon-tab.active::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    right: 13px;
+    bottom: -2.5px;
+    height: 2.5px;
+    border-radius: 1px;
+    background: var(--accent);
+  }
+
+  .ribbon-tab-file {
+    color: #fff;
+    background: var(--accent);
+    border-radius: 4px;
+    padding: 6px 16px;
+    margin-right: 6px;
+  }
+
+  .ribbon-tab-file:hover,
+  .ribbon-tab-file.open {
+    background: var(--accent-dark);
+  }
+
+  .file-tab-wrap {
+    position: relative;
+  }
+
+  .file-menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    z-index: 60;
+    min-width: 210px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    padding: 5px;
+  }
+
+  .file-menu button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border: none;
+    background: none;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  .file-menu button:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .file-menu button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .file-menu-key {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  .ribbon-tabs-spacer {
+    flex: 1;
+  }
+  /* ---- ribbon body ---- */
+
+  .ribbon-body {
+    display: flex;
+    /* groups stretch to the full ribbon height, buttons fill it:
+   * the icon area grows (hover paints edge to edge), labels sit at the bottom */
+    align-items: stretch;
+    padding: 6px 12px 6px;
+    /* HARD-fixed height, not min-height: constant ribbon height across tabs,
+     so switching/auto-jumping to contextual tabs never pushes the canvas
+     below (root cause of the selected-element jitter). min-height still let any
+     taller tab stretch the row — a tab that outgrows this must compact its own
+     content instead. Sized to the tallest tab content: the font group's two 30px
+     rows + gaps/padding = 80px. */
+    height: 80px;
+    /* Groups never shrink (flex-shrink: 0 below), so a narrow window overflows
+     the row: scroll it inside the ribbon instead of stretching the document
+     (matching the sheets ribbon). Dropdown panels are NOT clipped by this —
+     .rb-drop escapes the scroll container via anchor positioning. */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .ribbon-body::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ribbon-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2px 4px;
+    flex-shrink: 0;
+  }
+
+  .ribbon-group-items {
+    display: flex;
+    /* center like docs/sheets — stretch made tall buttons grow to the group
+     height, sitting their glyphs ~1px lower than the other apps' */
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .ribbon-group-label {
+    display: none;
+  }
+
+  .ribbon-sep {
+    width: 1px;
+    flex-shrink: 0;
+    /* separators keep spanning the full ribbon height while groups center */
+    align-self: stretch;
+    background: var(--border);
+    margin: 8px 6px;
+  }
+
+  .ribbon-placeholder {
+    align-self: center;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    padding: 0 14px;
+  }
+
+  .rb-big {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    border-radius: 4px;
+    /* PowerPoint-density: minimal side padding; the icon row flexes to fill */
+    padding: 4px 7px 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: inherit;
+    /* Don't compress button width when space is tight, avoiding CJK labels wrapping character by character (table → vertical) */
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .rb-big-icon {
+    min-height: 28px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #232425;
+  }
+
+  /* the dropdown chevron sits beside the icon (top row), not the label */
+  .rb-caret {
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .rb-big-icon .rb-caret {
+    margin-left: 3px;
+    color: #605e5c;
+  }
+
+  .rb-big:hover:not(:disabled) .rb-big-icon {
+    background: var(--hover);
+  }
+
+  .rb-big:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .rb-big.active {
+    color: var(--accent);
+  }
+
+  .rb-big.active .rb-big-icon {
+    background: var(--active-bg);
+  }
+
+  /* PowerPoint-style: hover/open paint only the icon row — the label below
+ * stays outside the gray. The box spans the whole button width (align-self
+ * stretch + horizontal bleed), not just the icon content. Negative margins
+ * cancel the bleed so button layout/alignment is unchanged. */
+  .rb-big .rb-big-icon {
+    align-self: stretch;
+    border-radius: 4px;
+    padding: 3px 4px;
+    margin: 0 -4px;
+  }
+
+  .rb-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  /* compact stacked mini buttons (cut/copy/format painter ONLY): 3 × 18px lines up with a big button (57px).
+   Scoped to .rb-clip-col — .rb-col is also the font group's row container and must keep normal sizing. */
+  .rb-clip-col {
+    gap: 0;
+  }
+  .rb-clip-col .rb-icon {
+    height: 20px;
+    min-width: 24px;
+    padding: 0 4px;
+  }
+
+  .rb-small {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    background: none;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+    white-space: nowrap;
+  }
+
+  .rb-small svg {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    color: #232425;
+    /* CSS resizes these below their attr size — re-pin the painted stroke
+     (2.15 units × 14/24 ≈ 1.25px) */
+    stroke-width: 2.15;
+  }
+
+  .rb-small:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .rb-small.active {
+    background: var(--active-bg);
+  }
+
+  .rb-small.active svg {
+    color: var(--accent);
+  }
+
+  .rb-small:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* Checkbox rows (View tab's Show group) */
+  .rb-check-col {
+    align-items: stretch;
+  }
+
+  .rb-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: none;
+    border-radius: 3px;
+    padding: 3px 8px 3px 6px;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    color: inherit;
+    white-space: nowrap;
+  }
+
+  .rb-check:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .rb-check:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .rb-check-box {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 13px;
+    height: 13px;
+    border: 1px solid #8a8886;
+    border-radius: 2px;
+    background: #fff;
+    color: #fff;
+  }
+
+  .rb-check.on .rb-check-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .rb-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .rb-icon {
+    min-width: 28px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    border-radius: 3px;
+    font-size: 15px;
+    cursor: pointer;
+    color: inherit;
+    padding: 0 4px;
+  }
+
+  .rb-icon:hover:not(:disabled) {
+    background: var(--hover);
+  }
+
+  .rb-icon.active {
+    background: var(--active-bg);
+    color: var(--accent);
+  }
+
+  .rb-icon:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .rb-icon svg {
+    display: block;
+  }
+
+  /* pushes an item to the row's right edge (MS: Clear Formatting aligns with row 2's end) */
+  .rb-push-right {
+    margin-left: auto;
+  }
+
+  /* dropdown chevron inside compact toggle buttons hugs the glyph */
+  .rb-icon .rb-caret {
+    margin-left: 1px;
+    flex-shrink: 0;
+  }
+
+  .rb-mini-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 5px;
+  }
+
+  /* ================= workspace ================= */
+
+  .workspace {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    background: var(--canvas);
+  }
+
+  .slide-list {
+    width: 120px; /* fallback; App drives the actual width via inline style (drag-resizable) */
+    flex-shrink: 0;
+    min-height: 0;
+    align-self: stretch;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  /* drag handle between the thumbnail list and the canvas — resize the sidebar
+ * horizontally (overlaps the list's right border; cursor-only affordance) */
+  .thumb-resizer {
+    width: 6px;
+    margin-left: -3px;
+    flex-shrink: 0;
+    cursor: col-resize; /* horizontal double-arrow on the splitter */
+    z-index: 20;
+    background: transparent;
+  }
+
+  /* macOS vibrancy (body.vib set at bootstrap): the thumbnail pane goes
+ * transparent so the window's 'sidebar' material shows the desktop
+ * through. The workspace must stop painting behind the pane, so
+ * each mode container that relied on the workspace canvas paints itself. */
+  body.vib {
+    background: transparent;
+  }
+
+  body.vib .workspace {
+    background: transparent;
+  }
+
+  body.vib .stage-col,
+  body.vib .sorter-view {
+    background: var(--canvas);
+  }
+
+  body.vib .slide-list {
+    background: transparent;
+  }
+
+  .thumb {
+    background: #fff;
+    border: 2px solid var(--border-strong);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    cursor: pointer;
+    position: relative;
+    display: block;
+    line-height: 0;
+  }
+
+  /* Thumbnail drag-to-reorder: source page translucent, insertion line shown on the drop target's top/bottom edge (box-shadow not clipped by overflow) */
+  .thumb.dragging {
+    opacity: 0.4;
+  }
+
+  .thumb.drop-before {
+    box-shadow: 0 -7px 0 -2.5px var(--accent);
+  }
+
+  .thumb.drop-after {
+    box-shadow: 0 7px 0 -2.5px var(--accent);
+  }
+
+  .thumb.active {
+    border-color: var(--accent);
+  }
+
+  .thumb-num {
+    position: absolute;
+    left: 4px;
+    bottom: 3px;
+    font-size: 11px;
+    color: #fff;
+    line-height: 1;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+
+  /* Paste-options floater button on the just-pasted slide's thumbnail (PowerPoint-style) */
+  .paste-floater-btn {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 2px 3px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    line-height: 0;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  }
+
+  .paste-floater-btn:hover {
+    background: var(--hover);
+  }
+
+  .paste-floater-caret {
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  /* ── Sidebar section grouping ─────────────────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px -4px 8px;
+    padding: 3px 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-secondary, #555);
+    cursor: pointer;
+    user-select: none;
+    line-height: 1.3;
+  }
+
+  .section-header:hover {
+    background: var(--surface-hover, rgba(0, 0, 0, 0.05));
+  }
+
+  .section-header-none {
+    cursor: default;
+    opacity: 0.7;
+  }
+
+  .section-header-none:hover {
+    background: none;
+  }
+
+  .section-arrow {
+    flex-shrink: 0;
+    font-size: 10px;
+    transition: transform 0.12s ease;
+  }
+
+  .section-arrow.open {
+    transform: rotate(90deg);
+  }
+
+  .section-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .section-count {
+    flex-shrink: 0;
+    font-size: 11px;
+    opacity: 0.65;
+  }
+}

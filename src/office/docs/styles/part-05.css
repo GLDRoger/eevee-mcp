@@ -1,0 +1,731 @@
+.office-docs .doc-li.ilvl-1.doc-li-bullet::before {
+  content: '◦';
+}
+
+.office-docs .doc-li.ilvl-2.doc-li-bullet::before {
+  content: '▪';
+}
+
+.office-docs .doc-page {
+  counter-reset: doc-ol;
+}
+
+.office-docs .doc-li-ordered {
+  counter-increment: doc-ol;
+}
+
+.office-docs .doc-li-ordered::before {
+  content: counter(doc-ol) '.';
+}
+
+/* restart numbering after any non-ordered block; counter-set (applied after
+   increment) mutates the page-scoped counter, while a sibling counter-reset
+   would nest a new instance and desync the numbers from the 2nd item on */
+.office-docs .doc-page > :not(.doc-li-ordered) + .doc-li-ordered {
+  counter-set: doc-ol 1;
+}
+
+/* real multilevel numbering: items defined in numbering.xml get data-marker computed by ListNumberingExtension,
+   overriding the bullet/CSS-counter fallbacks above (selector includes .doc-page for higher specificity and comes later) */
+.office-docs .doc-page .doc-li[data-marker] {
+  counter-increment: none;
+}
+
+.office-docs .doc-page .doc-li[data-marker]::before {
+  content: attr(data-marker);
+}
+
+/* protected blocks (table / image / chart / math ...) */
+.office-docs .doc-protected {
+  position: relative;
+  border: 1px dashed var(--border-strong);
+  border-radius: 3px;
+  padding: 10px 14px;
+  margin: 0 0 8pt;
+  background: #fafafa;
+  cursor: grab;
+  user-select: none;
+}
+
+.office-docs .doc-move-handle {
+  position: absolute;
+  z-index: 4;
+  top: -14px;
+  left: -14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--word-blue);
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--word-blue);
+  font: 13px/1 sans-serif;
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.office-docs .doc-protected:hover > .doc-move-handle,
+.office-docs .doc-protected.ProseMirror-selectednode > .doc-move-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Native ProseMirror tables */
+.office-docs .doc-page > .doc-table {
+  margin: 2px 0;
+}
+
+.office-docs .doc-protected[data-doc-protected='table'] {
+  border-color: transparent;
+  background: transparent;
+  padding: 2px;
+}
+
+.office-docs .doc-protected[data-doc-protected='table']:hover {
+  border-color: var(--border-strong);
+}
+
+.office-docs .doc-table {
+  /* fallback when there are no absolute grid widths; tables with w:tblGrid are overridden by inline width.
+     font size/line spacing inherit the document defaults (.doc-page, i.e. the Normal style) */
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.office-docs .doc-table td,
+.office-docs .doc-table th {
+  position: relative;
+  box-sizing: border-box;
+  /* default grid lines; tables with w:tblBorders override via --doc-b-h/--doc-b-v, the outer frame wins through the table element's border collapse */
+  border-top: var(--doc-b-h, 1px solid #808080);
+  border-bottom: var(--doc-b-h, 1px solid #808080);
+  border-left: var(--doc-b-v, 1px solid #808080);
+  border-right: var(--doc-b-v, 1px solid #808080);
+  /* Word default cell margins: 108 twips (7.2px) sides / 0 top-bottom; w:tblCellMar overrides via table-level variables */
+  padding: var(--doc-cell-pad, 0 7.2px);
+  vertical-align: top;
+  /* a word wider than the cell's line box overflows the cell
+     instead of stacking letter-by-letter; prosemirror-view's built-in
+     .ProseMirror { word-wrap: break-word } would otherwise inherit in */
+  overflow-wrap: normal;
+}
+
+.office-docs .doc-table th {
+  font-weight: 600;
+}
+
+.office-docs .doc-table .selectedCell {
+  position: relative;
+}
+
+.office-docs .doc-table .selectedCell::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: color-mix(in srgb, var(--word-blue) 18%, transparent);
+}
+
+.office-docs .doc-page.resize-cursor {
+  cursor: col-resize;
+}
+
+.office-docs .column-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  bottom: -2px;
+  width: 4px;
+  pointer-events: none;
+  background: var(--word-blue);
+}
+
+.office-docs .table-ribbon-body {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.office-docs .table-tool-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 66px;
+  padding: 2px 6px;
+}
+
+.office-docs .table-tool-row,
+.office-docs .table-tool-grid {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+}
+
+.office-docs .table-tool-grid {
+  display: grid;
+}
+
+.office-docs .table-tool-grid-four {
+  grid-template-columns: repeat(2, minmax(66px, auto));
+}
+
+.office-docs .table-tool-grid-two {
+  grid-template-columns: repeat(2, minmax(58px, auto));
+}
+
+.office-docs .table-tool-group button {
+  min-height: 26px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* icon + label buttons (insert/delete/merge/align/borders) */
+.office-docs .table-tool-row > button,
+.office-docs .table-tool-grid > button,
+.office-docs .table-tool-delete > .table-tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+.office-docs .table-tool-row > button svg,
+.office-docs .table-tool-grid > button svg,
+.office-docs .table-tool-delete > .table-tool-button svg {
+  flex: none;
+  opacity: 0.9;
+}
+
+.office-docs .table-tool-delete > .table-tool-button {
+  justify-content: center;
+}
+
+.office-docs .table-tool-group button:hover:not(:disabled) {
+  border-color: var(--border);
+  background: var(--hover);
+}
+
+.office-docs .table-tool-group button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.office-docs .table-tool-group button.danger {
+  color: #a12622;
+}
+
+.office-docs .table-tool-delete {
+  min-width: 72px;
+}
+
+.office-docs .table-style-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 28px);
+  gap: 3px;
+  align-content: center;
+  flex: 1;
+}
+
+.office-docs .table-tool-group .table-style-swatch {
+  box-sizing: border-box;
+  min-width: 28px;
+  min-height: 24px;
+  padding: 0;
+  border-color: #a6a6a6;
+}
+
+.office-docs .table-tool-group .table-style-clear {
+  grid-column: span 2;
+  min-height: 22px;
+  padding: 1px 5px;
+}
+
+/* anchored textboxes (code boxes, callout cards): render the box itself,
+   text edits happen in place */
+.office-docs .doc-protected-textboxes {
+  border-color: transparent;
+  background: transparent;
+  padding: 2px 0;
+  cursor: default;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.office-docs .doc-protected-textboxes:hover {
+  border-color: var(--border);
+}
+
+.office-docs .doc-protected.doc-protected-textboxes.ProseMirror-selectednode {
+  border-color: var(--word-blue);
+  outline: none;
+  background: transparent;
+}
+
+.office-docs .doc-textbox {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 5px 10px;
+  margin: 2px 0;
+  max-width: 100%;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+  /* fixed-height boxes (noAutofit) clip overflow instead of growing */
+  overflow: hidden;
+}
+
+.office-docs .doc-protected-textboxes:not(.doc-content-editing) .doc-textbox,
+.office-docs .doc-protected[data-doc-protected='table']:not(.doc-content-editing) td {
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.office-docs .doc-content-editing > .doc-move-handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* the nested tiptap editor inside each box */
+.office-docs .doc-textbox .doc-textbox-editor {
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.office-docs .doc-textbox-editor p {
+  margin: 0;
+}
+
+/* Word gives empty w:p elements no line box; only their explicit w:spacing
+   contributes height. Keeping browser-default <br> line boxes made fixed
+   textboxes clip valid content far above their actual bottom edge. */
+.office-docs .doc-textbox-editor p:has(> br.ProseMirror-trailingBreak:only-child),
+.office-docs .doc-textbox-para-empty {
+  height: 0;
+  min-height: 0;
+  line-height: 0;
+}
+
+.office-docs .doc-textbox:focus-within {
+  outline: 2px solid var(--word-blue);
+  outline-offset: 1px;
+}
+
+.office-docs .doc-textbox-para {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* empty section-break paragraphs: invisible unless hovered/selected */
+.office-docs .doc-protected-sectbreak {
+  border-color: transparent;
+  background: transparent;
+  padding: 0 0 2px;
+}
+
+.office-docs .doc-protected-sectbreak:hover {
+  border-color: var(--border-strong);
+}
+
+.office-docs .doc-sectbreak-label {
+  display: block;
+  font-size: 10px;
+  color: transparent;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.office-docs .doc-protected-sectbreak:hover .doc-sectbreak-label,
+.office-docs .doc-protected-sectbreak.ProseMirror-selectednode .doc-sectbreak-label {
+  color: var(--text-dim);
+}
+
+/* decorative rule drawings (heading underlines, dividers): a plain line */
+.office-docs .doc-protected-rule {
+  border-color: transparent;
+  background: transparent;
+  padding: 4px 0;
+}
+
+.office-docs .doc-protected-rule:hover {
+  border-color: var(--border-strong);
+}
+
+.office-docs .doc-rule-line {
+  display: block;
+  height: 1px;
+  background: #333;
+}
+
+/* field paragraphs whose visible result is rendered directly (TOC lines, page
+   fields...): no chip frame, dashed outline only on hover */
+.office-docs .doc-protected-field {
+  border-color: transparent;
+  background: transparent;
+  padding: 2px 4px;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.office-docs .doc-protected-field:hover {
+  border-color: var(--border-strong);
+}
+
+.office-docs .doc-toc-line {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 11pt;
+  line-height: 1.7;
+  cursor: pointer;
+}
+
+.office-docs .doc-toc-line:hover .doc-toc-title {
+  color: var(--accent, #2b579a);
+  text-decoration: underline;
+}
+
+.office-docs .doc-toc-l2 .doc-toc-title {
+  padding-left: 1.5em;
+}
+
+.office-docs .doc-toc-l3 .doc-toc-title {
+  padding-left: 3em;
+}
+
+.office-docs .doc-toc-l4 .doc-toc-title {
+  padding-left: 4.5em;
+}
+
+.office-docs .doc-toc-dots {
+  flex: 1;
+  border-bottom: 2px dotted #555;
+  transform: translateY(-3px);
+  min-width: 24px;
+}
+
+.office-docs .doc-field-pagebreak {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary, #999);
+  font-size: 10px;
+  user-select: none;
+}
+
+.office-docs .doc-field-pagebreak::before,
+.office-docs .doc-field-pagebreak::after {
+  content: '';
+  flex: 1;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.office-docs .doc-field-text {
+  font-size: 11pt;
+  line-height: 1.7;
+}
+
+.office-docs .doc-content-editing .doc-toc-title,
+.office-docs .doc-content-editing .doc-toc-page,
+.office-docs .doc-content-editing .doc-field-text,
+.office-docs .doc-content-editing .doc-formula-token {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+  outline: 1px solid color-mix(in srgb, var(--word-blue) 45%, transparent);
+  border-radius: 2px;
+}
+
+.office-docs .doc-protected-formula {
+  padding: 5px 8px;
+  background: transparent;
+}
+
+.office-docs .doc-formula {
+  display: inline-flex;
+  align-items: baseline;
+  min-height: 24px;
+  font-family: 'Cambria Math', 'STIX Two Math', serif;
+  font-size: 16px;
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.office-docs .doc-content-editing .doc-formula {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.office-docs .doc-formula-token:empty::before {
+  content: '\00a0';
+}
+
+/* 2D MathML rendering: shown by default, swapped for the editable token
+   strip while the block is in content-editing mode */
+.office-docs .doc-formula-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.office-docs .doc-formula-math {
+  display: inline-block;
+  font-family: 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', serif;
+  font-size: 16px;
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.office-docs .doc-formula-math math {
+  font-family: inherit;
+}
+
+.office-docs .doc-formula.doc-formula-has-math {
+  display: none;
+}
+
+.office-docs .doc-content-editing .doc-formula.doc-formula-has-math {
+  display: inline-flex;
+}
+
+.office-docs .doc-content-editing .doc-formula-math {
+  display: none;
+}
+
+/* display equations (oMathPara-style) are centered; inline fallbacks keep flow */
+.office-docs .doc-protected-formula-display {
+  text-align: center;
+}
+
+/* embedded charts: SVG preview + editable data sheet */
+.office-docs .doc-protected-chart {
+  background: var(--surface, #fff);
+}
+
+.office-docs .doc-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.office-docs .doc-chart-title {
+  font-size: 13pt;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text, #333);
+}
+
+.office-docs .doc-chart-svg {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  height: auto;
+}
+
+.office-docs .doc-chart-grid {
+  stroke: var(--border, #e0e0e0);
+  stroke-width: 1;
+}
+
+.office-docs .doc-chart-axis-label {
+  font:
+    10px 'Segoe UI',
+    var(--ui-cjk),
+    sans-serif;
+  fill: var(--text-dim, #888);
+}
+
+.office-docs .doc-chart-data {
+  border-collapse: collapse;
+  align-self: center;
+  font-size: 10pt;
+  line-height: 1.4;
+}
+
+.office-docs .doc-chart-data th,
+.office-docs .doc-chart-data td {
+  border: 1px solid var(--border, #d9d9d9);
+  padding: 2px 10px;
+  min-width: 52px;
+  text-align: right;
+  font-weight: 400;
+}
+
+.office-docs .doc-chart-data th.doc-chart-corner {
+  border: none;
+}
+
+.office-docs .doc-chart-data th.doc-chart-cat {
+  font-weight: 600;
+  text-align: center;
+  background: color-mix(in srgb, var(--word-blue) 6%, transparent);
+}
+
+.office-docs .doc-chart-data th.doc-chart-name {
+  font-weight: 600;
+  text-align: left;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.office-docs .doc-chart-data td.doc-chart-gap {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    #f0f0f0 4px,
+    #f0f0f0 8px
+  );
+}
+
+.office-docs .doc-content-editing .doc-chart-title,
+.office-docs .doc-content-editing .doc-chart-cell {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+  outline: 1px solid color-mix(in srgb, var(--word-blue) 45%, transparent);
+  border-radius: 2px;
+}
+
+.office-docs .doc-protected.ProseMirror-selectednode {
+  border: 1px solid var(--word-blue);
+  outline: 1px solid var(--word-blue);
+  background: var(--active-bg);
+}
+
+.office-docs .doc-protected-label {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 8px;
+  margin-right: 10px;
+  background: var(--surface);
+  font-family: 'Segoe UI', var(--ui-cjk), sans-serif;
+}
+
+.office-docs .doc-protected-preview {
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+  /* SmartArt degrade lists one node label per line */
+  white-space: pre-line;
+}
+
+/* OLE embed degrade: the packaged preview picture + a friendly type caption */
+.office-docs .doc-protected-ole .doc-ole-wrap {
+  display: block;
+}
+
+.office-docs .doc-protected-ole .doc-ole-img {
+  display: block;
+  max-width: 100%;
+  margin-bottom: 4px;
+}
+
+.office-docs .doc-protected-img {
+  max-width: 100%;
+  display: block;
+}
+
+/* image blocks: no chip chrome, selection border with resize handle */
+.office-docs .doc-protected[data-doc-protected='image'] {
+  border-color: transparent;
+  background: none;
+  padding: 2px 0;
+}
+
+.office-docs .doc-protected[data-doc-protected='image']:hover {
+  border-color: var(--border);
+}
+
+.office-docs .doc-protected[data-doc-protected='image'].ProseMirror-selectednode {
+  border-color: transparent;
+  outline: none;
+  background: none;
+}
+
+.office-docs .doc-img-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* find option toggles (match case / whole word) */
+.office-docs .find-opt {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 3px;
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: var(--text-dim, #777);
+}
+
+.office-docs .find-opt.on {
+  background: var(--word-blue);
+  border-color: var(--word-blue);
+  color: #fff;
+}
+
+/* data grid of the Insert Chart dialog */
+.office-docs .modal-chart {
+  min-width: 460px;
+}
+
+.office-docs .chart-data-grid {
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.office-docs .chart-data-grid th,
+.office-docs .chart-data-grid td {
+  border: 1px solid var(--border);
+  padding: 0;
+}
+
+.office-docs .chart-data-grid input {
+  border: none;
+  background: transparent;
+  width: 90px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.office-docs .chart-data-grid thead input {
+  font-weight: 600;
+}
+
+/* cross-reference (REF field): gray field shading */
+.office-docs .doc-ref-field {
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 2px;
+}
+
+.office-docs .workspace-dark .doc-ref-field {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Bookmark / Cross-reference dialogs */
