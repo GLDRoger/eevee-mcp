@@ -47,6 +47,8 @@ describe('registerEeveeTools', () => {
     expect(tools.map(({ name }) => name)).toEqual([
       'list_files',
       'inspect_file',
+      'scan_document_review',
+      'request_redaction_review',
       'create_office_file',
       'replace_office_file',
       'edit_spreadsheet',

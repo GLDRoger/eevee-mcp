@@ -17,6 +17,10 @@ import { LibraryLedger } from './library-ledger'
 import { StudioLedger } from './studio-ledger'
 
 const reviewEventSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uuid() })
+const fileReviewEventSchema = z.strictObject({
+  fileId: z.uuid(),
+  findingIds: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(250),
+})
 type WorkspaceSurface = 'applets' | 'library' | 'studio'
 
 export function Workbench() {
@@ -27,6 +31,7 @@ export function Workbench() {
   const [detail, setDetail] = useState<AppletDetail | null>(null)
   const [run, setRun] = useState<AppletRun | null>(null)
   const [reviewVersionId, setReviewVersionId] = useState<string | null>(null)
+  const [fileReviewFindingIds, setFileReviewFindingIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toolsLive, setToolsLive] = useState<boolean | null>(null)
@@ -129,9 +134,18 @@ export function Workbench() {
         setError(reason instanceof Error ? reason.message : 'EEVEE could not refresh the Library')
       })
     }
+    const reviewFile = (event: Event) => {
+      if (!(event instanceof CustomEvent)) return
+      const parsed = fileReviewEventSchema.safeParse(event.detail)
+      if (!parsed.success) return
+      setSurface('library')
+      setFileReviewFindingIds(parsed.data.findingIds)
+      void refreshFiles(parsed.data.fileId)
+    }
     window.addEventListener('eevee:changed', changed)
     window.addEventListener('eevee:review-version', review)
     window.addEventListener('eevee:files-changed', filesChanged)
+    window.addEventListener('eevee:review-file', reviewFile)
     void api
       .session(controller.signal)
       .then(() => {
@@ -162,6 +176,7 @@ export function Workbench() {
       window.removeEventListener('eevee:changed', changed)
       window.removeEventListener('eevee:review-version', review)
       window.removeEventListener('eevee:files-changed', filesChanged)
+      window.removeEventListener('eevee:review-file', reviewFile)
     }
   }, [refresh, refreshFiles])
 
@@ -174,6 +189,7 @@ export function Workbench() {
   }
 
   const selectFile = (fileId: string) => {
+    setFileReviewFindingIds([])
     setError('')
     void openFile(fileId).catch((reason) => {
       setError(reason instanceof Error ? reason.message : 'This file could not be opened')
@@ -293,6 +309,7 @@ export function Workbench() {
                   )
                 })
               }}
+              reviewFindingIds={fileReviewFindingIds}
             />
           ) : surface === 'applets' && detail ? (
             <AppletInspector

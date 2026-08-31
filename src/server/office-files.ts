@@ -163,6 +163,7 @@ export const saveOfficeFile = async (
   fileId: string,
   baseVersionId: string,
   bytes: Uint8Array,
+  note = 'Edited in EEVEE',
 ): Promise<OfficeFileSummary> => {
   const current = await getOfficeFileSummary(workspaceId, fileId)
   validateOfficeFile(current.name, bytes)
@@ -200,7 +201,7 @@ export const saveOfficeFile = async (
       bytes,
       size: bytes.length,
       sha256,
-      note: 'Edited in EEVEE',
+      note,
     })
     await transaction
       .update(officeFile)

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { OfficeFileDetail } from '@/domain/office-file'
 import { api } from '@/client/api'
+import { DocumentReview } from './document-review'
 
 const mediumLabel = {
   document: 'Word document',
@@ -29,10 +30,12 @@ export function FileExplorer({
   detail,
   onOpenInStudio,
   onChanged,
+  reviewFindingIds,
 }: {
   detail: OfficeFileDetail
   onOpenInStudio: () => void
   onChanged: () => void
+  reviewFindingIds?: readonly string[]
 }) {
   const { file, versions } = detail
   const [restoringId, setRestoringId] = useState<string | null>(null)
@@ -79,6 +82,13 @@ export function FileExplorer({
           </a>
         </div>
       </header>
+      {file.medium === 'document' ? (
+        <DocumentReview
+          file={file}
+          requestedFindingIds={reviewFindingIds}
+          onChanged={onChanged}
+        />
+      ) : null}
       <section className="version-register" aria-labelledby="file-versions-title">
         <header>
           <h3 id="file-versions-title">Version register</h3>

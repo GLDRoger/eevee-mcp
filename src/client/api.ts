@@ -36,6 +36,7 @@ import {
   officeFileListResponseSchema,
   officeFileResponseSchema,
 } from '@/domain/office-file'
+import { documentReviewResponseSchema } from '@/domain/document-review'
 import type { PdfEdit } from '@/domain/pdf'
 import type { WorkbookSaveRequest } from '@/office/sheets/shared/desktop-api'
 
@@ -128,6 +129,23 @@ export const api = {
       }`,
       fileTextResponseSchema,
       signal ? { signal } : undefined,
+    ),
+  scanDocumentReview: (fileId: string, signal?: AbortSignal) =>
+    requestJson(
+      `/api/files/${encodeURIComponent(fileId)}/review`,
+      documentReviewResponseSchema,
+      signal ? { signal } : undefined,
+    ),
+  applyDocumentRedactions: (
+    fileId: string,
+    baseVersionId: string,
+    findingIds: string[],
+    signal?: AbortSignal,
+  ) =>
+    requestJson(
+      `/api/files/${encodeURIComponent(fileId)}/review`,
+      officeFileResponseSchema,
+      jsonMutation('POST', { baseVersionId, findingIds }, signal),
     ),
   uploadFile: (name: string, bytes: Uint8Array, signal?: AbortSignal) =>
     requestJson(

@@ -24,6 +24,10 @@ const evaluationToolSchema = startEvaluationSchema.extend({ appletId: z.uuid() }
 const evaluationRunToolSchema = z.strictObject({ runId: z.uuid() })
 const actionRequestToolSchema = z.strictObject({ requestId: z.uuid() })
 const officeFileToolSchema = z.strictObject({ fileId: z.uuid() })
+const requestRedactionReviewSchema = z.strictObject({
+  fileId: z.uuid(),
+  findingIds: z.array(z.string().regex(/^[a-f0-9]{64}$/)).min(1).max(250),
+})
 const pdfEditToolSchema = pdfEditRequestSchema.extend({ fileId: z.uuid() })
 const officeBytesSchema = z
   .string()
@@ -92,7 +96,7 @@ const spreadsheetEditToolSchema = z
     'A spreadsheet edit needs at least one operation',
   )
 
-export const EEVEE_TOOL_COUNT = 19
+export const EEVEE_TOOL_COUNT = 21
 
 const inputSchema = (schema: z.ZodType): object =>
   z.toJSONSchema(schema, { target: 'draft-7', io: 'input' })
@@ -205,6 +209,45 @@ export const registerEeveeTools = (): {
               window.location.origin,
             ).href,
           })),
+        }
+      },
+    },
+    {
+      name: 'scan_document_review',
+      title: 'Scan document privately',
+      description:
+        'Scan the current DOCX version for supported sensitive patterns. Returns only masked findings and stable ids; original values remain inside EEVEE.',
+      inputSchema: inputSchema(officeFileToolSchema),
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
+      execute: async (input, { signal }) => {
+        const { fileId } = officeFileToolSchema.parse(input)
+        return api.scanDocumentReview(fileId, signal)
+      },
+    },
+    {
+      name: 'request_redaction_review',
+      title: 'Request redaction review',
+      description:
+        'Open selected masked DOCX findings for a person to review. This tool never redacts or saves; only the visible EEVEE control can create the new immutable version.',
+      inputSchema: inputSchema(requestRedactionReviewSchema),
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
+      execute: async (input, { signal }) => {
+        const { fileId, findingIds } = requestRedactionReviewSchema.parse(input)
+        const { review } = await api.scanDocumentReview(fileId, signal)
+        if (!review.supported) throw new Error(review.limitation)
+        const available = new Set(review.findings.map(({ id }) => id))
+        if (findingIds.some((id) => !available.has(id))) {
+          throw new Error('One or more findings are stale; scan the current document version again')
+        }
+        window.dispatchEvent(
+          new CustomEvent('eevee:review-file', { detail: { fileId, findingIds } }),
+        )
+        return {
+          status: 'requires-human-approval',
+          fileId,
+          versionId: review.versionId,
+          findingCount: findingIds.length,
+          message: 'The masked findings are open in Private review. A person must choose and save.',
         }
       },
     },
