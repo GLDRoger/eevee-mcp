@@ -85,32 +85,41 @@ const executionFor = (
 ): EvaluationExecution => {
   const validated = validatedCaseInputs(version, evaluationCase)
   const channel = crypto.randomUUID()
+  const output = (() => {
+    switch (version.definition.kind) {
+      case 'video-editor':
+        return {
+          kind: 'video' as const,
+          channel,
+          project: version.definition.project,
+          html: prepareAppletRuntime(
+            version.artifact.html,
+            channel,
+            validated.values,
+            version.definition.actions,
+            { project: version.definition.project },
+          ),
+        }
+      case 'react-app':
+        return {
+          kind: 'web-app' as const,
+          channel,
+          html: prepareAppletRuntime(
+            version.artifact.html,
+            channel,
+            validated.values,
+            version.definition.actions,
+          ),
+        }
+      default: {
+        const unreachable: never = version.definition
+        return unreachable
+      }
+    }
+  })()
   return {
     caseId: evaluationCase.id,
-    output:
-      version.definition.kind === 'video-editor'
-        ? {
-            kind: 'video',
-            channel,
-            project: version.definition.project,
-            html: prepareAppletRuntime(
-              version.artifact.html,
-              channel,
-              validated.values,
-              version.definition.actions,
-              { project: version.definition.project },
-            ),
-          }
-        : {
-            kind: 'web-app',
-            channel,
-            html: prepareAppletRuntime(
-              version.artifact.html,
-              channel,
-              validated.values,
-              version.definition.actions,
-            ),
-          },
+    output,
   }
 }
 

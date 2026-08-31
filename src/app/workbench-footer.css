@@ -9,16 +9,6 @@
     border-bottom: 1px solid var(--rule-strong);
   }
 
-  .ledger-list {
-    display: flex;
-    gap: 1px;
-    overflow-x: auto;
-  }
-
-  .ledger-list li {
-    min-width: 16rem;
-  }
-
   .bench {
     padding: var(--space-8) var(--space-4) var(--space-12);
   }

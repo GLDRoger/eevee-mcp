@@ -46,12 +46,27 @@ import { listEvaluationSuites } from './evaluation-suites'
 
 const iso = (value: Date): string => value.toISOString()
 
+const mediumForDefinition = (
+  definitionKind: CreateVersionInput['definition']['kind'],
+): AppletMedium => {
+  switch (definitionKind) {
+    case 'react-app':
+      return 'web-app'
+    case 'video-editor':
+      return 'video'
+    default: {
+      const unreachable: never = definitionKind
+      return unreachable
+    }
+  }
+}
+
 const requireVersionTarget = (
   target: { medium: AppletMedium } | undefined,
   definitionKind: CreateVersionInput['definition']['kind'],
 ): void => {
   if (!target) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
-  const expectedMedium: AppletMedium = definitionKind === 'react-app' ? 'web-app' : 'video'
+  const expectedMedium = mediumForDefinition(definitionKind)
   if (target.medium !== expectedMedium) {
     throw new RequestFailure(
       409,
@@ -417,29 +432,35 @@ export const previewVersion = async (
   }
   const channel = crypto.randomUUID()
   const inputs = previewInputs(version.inputs)
-  if (version.definition.kind === 'video-editor') {
-    return {
-      kind: 'video',
-      channel,
-      project: version.definition.project,
-      html: prepareAppletRuntime(
-        version.artifact.html,
+  switch (version.definition.kind) {
+    case 'video-editor':
+      return {
+        kind: 'video',
         channel,
-        inputs,
-        version.definition.actions,
-        { project: version.definition.project },
-      ),
+        project: version.definition.project,
+        html: prepareAppletRuntime(
+          version.artifact.html,
+          channel,
+          inputs,
+          version.definition.actions,
+          { project: version.definition.project },
+        ),
+      }
+    case 'react-app':
+      return {
+        kind: 'web-app',
+        channel,
+        html: prepareAppletRuntime(
+          version.artifact.html,
+          channel,
+          inputs,
+          version.definition.actions,
+        ),
+      }
+    default: {
+      const unreachable: never = version.definition
+      return unreachable
     }
-  }
-  return {
-    kind: 'web-app',
-    channel,
-    html: prepareAppletRuntime(
-      version.artifact.html,
-      channel,
-      inputs,
-      version.definition.actions,
-    ),
   }
 }
 

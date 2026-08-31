@@ -310,10 +310,11 @@ export const appletRun = pgTable(
   },
   (table) => [
     unique('applet_run_workspace_id_id_unique').on(table.workspaceId, table.id),
-    unique('applet_run_workspace_applet_id_id_unique').on(
+    unique('applet_run_workspace_applet_id_version_unique').on(
       table.workspaceId,
       table.appletId,
       table.id,
+      table.appletVersionId,
     ),
     index('applet_run_workspace_applet_created_idx').on(
       table.workspaceId,
@@ -357,18 +358,14 @@ export const appletActionRequest = pgTable(
       table.createdAt,
     ),
     foreignKey({
-      columns: [table.workspaceId, table.appletId, table.runId],
-      foreignColumns: [appletRun.workspaceId, appletRun.appletId, appletRun.id],
-      name: 'applet_action_request_run_tenant_fk',
-    }).onDelete('cascade'),
-    foreignKey({
-      columns: [table.workspaceId, table.appletId, table.appletVersionId],
+      columns: [table.workspaceId, table.appletId, table.runId, table.appletVersionId],
       foreignColumns: [
-        appletVersion.workspaceId,
-        appletVersion.appletId,
-        appletVersion.id,
+        appletRun.workspaceId,
+        appletRun.appletId,
+        appletRun.id,
+        appletRun.appletVersionId,
       ],
-      name: 'applet_action_request_version_tenant_fk',
+      name: 'applet_action_request_run_version_tenant_fk',
     }).onDelete('cascade'),
   ],
 )

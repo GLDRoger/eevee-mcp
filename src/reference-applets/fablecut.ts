@@ -13,6 +13,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './app.css'
 
 const EVENT = 'fablecut:changed'
+const MAX_CLIPS = 32
+const MAX_HISTORY = 8
+const TONES = new Set(['pine', 'vermilion', 'ochre', 'slate', 'paper'])
 const fallbackProject = { width: 1280, height: 720, fps: 30, durationMs: 18000, clips: [] }
 const baseProject = window.eevee.media?.project || fallbackProject
 
@@ -23,7 +26,22 @@ const cleanProject = (candidate) => {
   return {
     ...baseProject,
     clips: candidate.clips
-      .filter((clip) => clip && typeof clip.id === 'string' && typeof clip.durationMs === 'number')
+      .filter((clip) => clip
+        && typeof clip.id === 'string'
+        && /^[a-z][a-z0-9_-]{0,39}$/.test(clip.id)
+        && typeof clip.label === 'string'
+        && clip.label.length > 0
+        && clip.label.length <= 80
+        && Number.isInteger(clip.startMs)
+        && clip.startMs >= 0
+        && Number.isInteger(clip.durationMs)
+        && clip.durationMs >= 100
+        && clip.startMs + clip.durationMs <= baseProject.durationMs
+        && Number.isInteger(clip.track)
+        && clip.track >= 0
+        && clip.track <= 7
+        && TONES.has(clip.tone))
+      .slice(0, MAX_CLIPS)
       .map((clip) => ({ ...clip })),
   }
 }
@@ -33,12 +51,12 @@ const readTimeline = async () => {
   if (!saved || typeof saved !== 'object') return { project: cleanProject(baseProject), history: [] }
   return {
     project: cleanProject(saved.project),
-    history: Array.isArray(saved.history) ? saved.history.slice(-20).map(cleanProject) : [],
+    history: Array.isArray(saved.history) ? saved.history.slice(-MAX_HISTORY).map(cleanProject) : [],
   }
 }
 
 const writeTimeline = async (project, history) => {
-  const timeline = { project: cleanProject(project), history: history.slice(-20).map(cleanProject) }
+  const timeline = { project: cleanProject(project), history: history.slice(-MAX_HISTORY).map(cleanProject) }
   await window.eevee.store.set('timeline', timeline)
   window.dispatchEvent(new Event(EVENT))
   return timeline
@@ -52,6 +70,8 @@ const clipById = (project, clipId) => {
 
 const splitProject = (project, clipId, atMs) => {
   const clip = clipById(project, clipId)
+  if (project.clips.length >= MAX_CLIPS) throw new Error('The timeline already has the maximum 32 clips')
+  if (!Number.isInteger(atMs)) throw new Error('The split position must use whole milliseconds')
   const offset = atMs - clip.startMs
   if (offset < 100 || offset > clip.durationMs - 100) {
     throw new Error('The split must leave at least 100 ms on each side')
@@ -63,6 +83,9 @@ const splitProject = (project, clipId, atMs) => {
     startMs: atMs,
     durationMs: clip.durationMs - offset,
     label: clip.label + ' B',
+  }
+  if (left.id.length > 40 || right.id.length > 40 || left.label.length > 80 || right.label.length > 80) {
+    throw new Error('This clip cannot be split again without exceeding the EDL limits')
   }
   return { ...project, clips: project.clips.flatMap((item) => item.id === clipId ? [left, right] : [item]) }
 }
@@ -116,7 +139,7 @@ export default function App({ inputs, store, media }) {
   const refresh = useCallback(async () => {
     const saved = await store.get('timeline')
     const next = saved && typeof saved === 'object'
-      ? { project: cleanProject(saved.project), history: Array.isArray(saved.history) ? saved.history : [] }
+      ? { project: cleanProject(saved.project), history: Array.isArray(saved.history) ? saved.history.slice(-MAX_HISTORY).map(cleanProject) : [] }
       : { project: cleanProject(initial), history: [] }
     setTimeline(next)
     setSelectedId((current) => next.project.clips.some(({ id }) => id === current)
@@ -137,7 +160,7 @@ export default function App({ inputs, store, media }) {
   )
 
   const persist = async (project) => {
-    const next = { project, history: [...timeline.history, timeline.project].slice(-20) }
+    const next = { project, history: [...timeline.history, timeline.project].slice(-MAX_HISTORY) }
     setTimeline(next)
     await store.set('timeline', next)
   }
@@ -161,7 +184,7 @@ export default function App({ inputs, store, media }) {
     <header className="project-heading">
       <div>
         <p>EEVEE video applet · immutable edit definition</p>
-        <h1 id="project-title">{String(inputs.projectName || 'FableCut')}</h1>
+        <h1 id="project-title">{String(inputs.project_name || 'FableCut')}</h1>
       </div>
       <dl>
         <div><dt>Format</dt><dd>{initial.width} × {initial.height}</dd></div>
@@ -276,7 +299,7 @@ export const fablecutVersion: CreateVersionInput = {
   note: 'Reference video timeline with governed edit actions',
   inputs: [
     {
-      key: 'projectName',
+      key: 'project_name',
       label: 'Project name',
       description: 'Heading shown over the shared edit timeline.',
       kind: 'text',
@@ -308,7 +331,7 @@ export const fablecutVersion: CreateVersionInput = {
         description: 'Propose splitting one clip at an absolute timeline position.',
         inputs: [
           { key: 'clip_id', label: 'Clip id', description: 'Stable clip id from inspect_timeline.', kind: 'text', required: true, maxLength: 40 },
-          { key: 'at_ms', label: 'Split position', description: 'Absolute timeline position in milliseconds.', kind: 'number', required: true, minimum: 0, maximum: 600_000 },
+          { key: 'at_ms', label: 'Split position', description: 'Absolute timeline position in milliseconds.', kind: 'number', required: true, minimum: 0, maximum: 600_000, step: 1 },
         ],
         effects: ['state:read', 'state:write'],
         authority: 'human',
@@ -319,8 +342,8 @@ export const fablecutVersion: CreateVersionInput = {
         description: 'Propose removing bounded time from the start and end of one clip.',
         inputs: [
           { key: 'clip_id', label: 'Clip id', description: 'Stable clip id from inspect_timeline.', kind: 'text', required: true, maxLength: 40 },
-          { key: 'trim_start_ms', label: 'Start trim', description: 'Milliseconds to remove from the clip start.', kind: 'number', required: true, minimum: 0, maximum: 120_000 },
-          { key: 'trim_end_ms', label: 'End trim', description: 'Milliseconds to remove from the clip end.', kind: 'number', required: true, minimum: 0, maximum: 120_000 },
+          { key: 'trim_start_ms', label: 'Start trim', description: 'Milliseconds to remove from the clip start.', kind: 'number', required: true, minimum: 0, maximum: 120_000, step: 1 },
+          { key: 'trim_end_ms', label: 'End trim', description: 'Milliseconds to remove from the clip end.', kind: 'number', required: true, minimum: 0, maximum: 120_000, step: 1 },
         ],
         effects: ['state:read', 'state:write'],
         authority: 'human',
@@ -352,7 +375,7 @@ export const fablecutEvaluation: CreateEvaluationSuiteInput = {
       id: 'split-survives-restart',
       name: 'A person splits a clip and the EDL survives restart',
       criticality: 'required',
-      input: { projectName: 'WebMCP launch cut' },
+      input: { project_name: 'WebMCP launch cut' },
       steps: [
         { action: 'assert-text', selector: '#project-title', contains: 'WebMCP launch cut' },
         { action: 'click', selector: '#split-at-playhead' },

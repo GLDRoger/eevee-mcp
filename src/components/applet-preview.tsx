@@ -52,6 +52,7 @@ export function AppletPreview({
     new Map<
       string,
       {
+        actionName: string
         resolve: (value: JsonValue) => void
         reject: (error: Error) => void
         timer: ReturnType<typeof setTimeout>
@@ -135,8 +136,14 @@ export function AppletPreview({
                     ? 'files:read'
                     : null
           if (message.invocation && requiredEffect) {
+            const invocation = actionWaiters.current.get(message.invocation.requestId)
             const action = actionByName.get(message.invocation.name)
-            if (!action || !action.effects.includes(requiredEffect)) {
+            if (
+              !invocation ||
+              invocation.actionName !== message.invocation.name ||
+              !action ||
+              !action.effects.includes(requiredEffect)
+            ) {
               respond({
                 ok: false,
                 error: `The ${message.invocation.name} action is not allowed to use ${requiredEffect}`,
@@ -256,7 +263,12 @@ export function AppletPreview({
             actionWaiters.current.delete(request.id)
             reject(new Error('The applet action timed out'))
           }, 15_000)
-          actionWaiters.current.set(request.id, { resolve, reject, timer })
+          actionWaiters.current.set(request.id, {
+            actionName: request.action.name,
+            resolve,
+            reject,
+            timer,
+          })
           frame.postMessage(
             {
               source: 'eevee-action',

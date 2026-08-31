@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { z } from 'zod'
 import type { AppletRun } from '@/domain/applet'
 import type { AppletDetail, AppletSummary } from '@/domain/api'
+import { sensitiveFindingIdsSchema } from '@/domain/document-review'
 import type { OfficeFileDetail, OfficeFileSummary } from '@/domain/office-file'
 import { api } from '@/client/api'
 import { EEVEE_TOOL_COUNT, registerEeveeTools } from '@/client/webmcp'
@@ -19,7 +20,7 @@ import { StudioLedger } from './studio-ledger'
 const reviewEventSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uuid() })
 const fileReviewEventSchema = z.strictObject({
   fileId: z.uuid(),
-  findingIds: z.array(z.string().regex(/^[a-f0-9]{64}$/)).max(250),
+  findingIds: sensitiveFindingIdsSchema,
 })
 type WorkspaceSurface = 'applets' | 'library' | 'studio'
 
@@ -348,7 +349,7 @@ export function Workbench() {
               <span>01</span>
               <h2>Give the agent a result worth repeating.</h2>
               <p>
-                Ask it to create a typed web applet and behavioral suite. EEVEE will compile,
+                Ask it to create a typed interactive applet and behavioral suite. EEVEE will compile,
                 compare, keep every result, and wait here for your approval.
               </p>
               <StarterPrompt toolsLive={toolsLive} />

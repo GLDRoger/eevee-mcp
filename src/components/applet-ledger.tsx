@@ -35,7 +35,7 @@ export function AppletLedger({
     try {
       await onInstallReference(slug)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Sparkbench could not be installed')
+      setError(reason instanceof Error ? reason.message : 'The reference applet could not be installed')
     } finally {
       setInstalling(null)
     }
@@ -82,15 +82,28 @@ export function AppletLedger({
         {([
           ['sparkbench', 'Sparkbench', 'Five governed circuit tools and a restart evaluation.'],
           ['fablecut', 'FableCut', 'A video EDL with governed cuts and durable undo.'],
-        ] as const).map(([slug, name, description]) => (
-          <div className="ledger-reference" key={slug}>
-            <strong>{name}</strong>
-            <span>{description}</span>
-            <button type="button" disabled={installing !== null} onClick={() => void install(slug)}>
-              {installing === slug ? 'Installing' : 'Install draft'}
-            </button>
-          </div>
-        ))}
+        ] as const).map(([slug, name, description]) => {
+          const installed = applets.find((applet) => applet.name === name)
+          return (
+            <div className="ledger-reference" key={slug}>
+              <strong>{name}</strong>
+              <span>{description}</span>
+              {installed ? (
+                <button type="button" onClick={() => onSelect(installed.id)}>
+                  Open installed
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={installing !== null}
+                  onClick={() => void install(slug)}
+                >
+                  {installing === slug ? 'Installing' : 'Install draft'}
+                </button>
+              )}
+            </div>
+          )
+        })}
         {error ? <small role="alert">{error}</small> : null}
       </section>
     </aside>

@@ -95,7 +95,7 @@ export default function App({ inputs, store }) {
     <header className="lab-heading">
       <div>
         <p>EEVEE reference applet · governed actions</p>
-        <h1 id="lab-title">{String(inputs.labName || 'Sparkbench')}</h1>
+        <h1 id="lab-title">{String(inputs.lab_name || 'Sparkbench')}</h1>
       </div>
       <span>{loading ? 'Reading bench' : 'Circuit ready'}</span>
     </header>
@@ -207,7 +207,7 @@ export const sparkbenchVersion: CreateVersionInput = {
   note: 'Reference circuit workbench with governed actions',
   inputs: [
     {
-      key: 'labName',
+      key: 'lab_name',
       label: 'Lab name',
       description: 'Heading shown above the shared electronics bench.',
       kind: 'text',
@@ -285,7 +285,7 @@ export const sparkbenchEvaluation: CreateEvaluationSuiteInput = {
       id: 'switch-survives-restart',
       name: 'A person closes the circuit and the state survives restart',
       criticality: 'required',
-      input: { labName: 'WebMCP electronics lab' },
+      input: { lab_name: 'WebMCP electronics lab' },
       steps: [
         { action: 'assert-text', selector: '#lab-title', contains: 'WebMCP electronics lab' },
         { action: 'click', selector: '#bench-switch' },

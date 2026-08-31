@@ -99,7 +99,7 @@ export function DocumentReview({
       </header>
       <p className="document-review-intro">
         EEVEE detects sensitive text without returning the original values to the agent. Selected
-        text is removed from the DOCX XML and saved as a new immutable version.
+        values are replaced with block characters and saved as a new immutable DOCX version.
       </p>
       {review ? (
         review.supported ? (

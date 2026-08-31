@@ -17,6 +17,8 @@ create applet
   -> validate generated-form inputs
   -> create durable run
   -> execute in the medium sandbox
+  -> expose the published version's typed actions while its run is open
+  -> require one human decision before any durable action write
   -> record output and evidence
   -> propose a correction
   -> create another immutable version
@@ -36,9 +38,12 @@ The applet library and the desk read the same API. There is no fixture store or 
 - A candidate and the currently published version run the same suite. Publication requires a passing candidate evaluation bound to the current deployment, so evidence becomes stale when the published baseline changes.
 - Evaluation runs have ten-minute leases and per-applet concurrency limits. Expired browser work is failed before new work starts.
 - Web applets run in a sandboxed iframe. EEVEE injects a restrictive content security policy and a narrow `window.eevee` state bridge. The parent page blocks external frame navigation, and any navigation revokes the bridge. Applet state is capped at 128 keys and 64 KB per key.
+- A version may declare up to twelve typed actions. The sandbox must implement every declaration before it reports ready. EEVEE registers only the published run's actions, prefixes their WebMCP names, validates inputs at the server, serializes execution, caps JSON results at 64 KB, and records each request state.
+- Durable state writes require `human` authority in the version schema. The person approves one exact request in the visible run ledger. The parent verifies every storage or file bridge call against that action's declared effects before forwarding it.
 - A web run stays `running` until the mounted React tree reports ready through the matching private channel. EEVEE records a revoked runtime as `failed`; only a `succeeded` run can receive corrections.
 - Agents can request review. A person publishes a passing version in the interface after seeing the rendered draft.
 - Office files use the same workspace boundary and immutable version register. Raw replacement tools re-run native-format validation. XLSX cell, formula, style, structure, page-layout, chart, table, pivot, and drawing edits pass through one server-side gateway that declares and verifies every changed archive entry.
+- Private review returns only masked sensitive findings. DOCX redaction is recomputed against the selected immutable version, rejects stale finding ids, removes the selected text from the Office XML, revalidates the archive, and saves a new version after a visible human decision.
 - The Documents, Sheets, Slides, and PDF editors contain no model or chat path. Their browser hosts read and save through the Library API.
 
 ## Source map
@@ -53,6 +58,9 @@ The applet library and the desk read the same API. There is no fixture store or 
 | `src/components` | One API-backed library, desk, generated form, preview, evidence, and corrections. |
 | `src/office` | Native Office engines, ported ribbon editors, and browser host contracts. |
 | `src/server/spreadsheet-edits.ts` | Tenant-scoped full XLSX mutation planning and archive verification. |
+| `src/server/applet-actions.ts` | Tenant-scoped action authority, decisions, execution state, and evidence. |
+| `src/server/document-review.ts` | Masked DOCX detection and selected native-text removal. |
+| `src/reference-applets` | Audited source, action contracts, and behavioral suites for Sparkbench and FableCut. |
 | `drizzle` | PostgreSQL schema history. |
 
 ## Adding a medium

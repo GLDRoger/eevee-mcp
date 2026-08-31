@@ -18,6 +18,7 @@ import { workbookSaveRequestSchema } from '@/office/sheets/shared/desktop-api'
 import { referenceAppletSlugSchema } from '@/domain/reference-applet'
 import { reactAppDefinitionSchema } from '@/domain/react-app'
 import { videoEditorDefinitionSchema } from '@/domain/video-editor'
+import { sensitiveFindingIdsSchema } from '@/domain/document-review'
 
 const appletIdSchema = z.strictObject({ appletId: z.uuid() })
 const referenceAppletToolSchema = z.strictObject({ slug: referenceAppletSlugSchema })
@@ -38,7 +39,7 @@ const actionRequestToolSchema = z.strictObject({ requestId: z.uuid() })
 const officeFileToolSchema = z.strictObject({ fileId: z.uuid() })
 const requestRedactionReviewSchema = z.strictObject({
   fileId: z.uuid(),
-  findingIds: z.array(z.string().regex(/^[a-f0-9]{64}$/)).min(1).max(250),
+  findingIds: sensitiveFindingIdsSchema,
 })
 const pdfEditToolSchema = pdfEditRequestSchema.extend({ fileId: z.uuid() })
 const officeBytesSchema = z
@@ -378,7 +379,7 @@ export const registerEeveeTools = (): {
       name: 'inspect_applet_version',
       title: 'Inspect applet version',
       description:
-        'Inspect one immutable version with its typed inputs, React source files, and evaluation evidence before creating a correction or successor. Applet code can read Library files at run time through window.eevee.files: list(), read(fileId) for raw base64 bytes, table(fileId) for typed spreadsheet rows (cached formula results included), and text(fileId) for document, presentation, or spreadsheet text. File reads fail during behavioral evaluation to keep verdicts deterministic, so applets must tolerate that failure.',
+        'Inspect one immutable version with its typed inputs, interactive source files, and evaluation evidence before creating a correction or successor. Applet code can read Library files at run time through window.eevee.files: list(), read(fileId) for raw base64 bytes, table(fileId) for typed spreadsheet rows (cached formula results included), and text(fileId) for document, presentation, or spreadsheet text. File reads fail during behavioral evaluation to keep verdicts deterministic, so applets must tolerate that failure.',
       inputSchema: inputSchema(versionReviewSchema),
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input, { signal }) => {
@@ -433,7 +434,7 @@ export const registerEeveeTools = (): {
       name: 'create_evaluation_suite',
       title: 'Create evaluation suite',
       description:
-        'Create an immutable behavioral scenario suite for a web applet using bounded fill, click, key, restart, storage, and assertion steps.',
+        'Create an immutable behavioral scenario suite for an interactive applet using bounded fill, click, key, restart, storage, and assertion steps.',
       inputSchema: inputSchema(evaluationSuiteToolSchema),
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       execute: async (input, { signal }) => {
@@ -536,7 +537,7 @@ export const registerEeveeTools = (): {
       name: 'record_correction',
       title: 'Record correction',
       description:
-        'Record a person-observed problem and desired result for a successful run. This creates an open proposal: treat it as the brief for the next create_react_app_version call and resolve it there via resolvesCorrections.',
+        'Record a person-observed problem and desired result for a successful run. This creates an open proposal: treat it as the brief for the next matching version call and resolve it there via resolvesCorrections.',
       inputSchema: inputSchema(runCorrectionSchema),
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       execute: async (input, { signal }) => {

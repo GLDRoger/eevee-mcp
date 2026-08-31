@@ -76,9 +76,10 @@ export const runApplet = async (
     )
   }
   const channel = crypto.randomUUID()
-  const output: AppletRunOutput =
-    active.version.definition.kind === 'video-editor'
-      ? {
+  const output: AppletRunOutput = (() => {
+    switch (active.version.definition.kind) {
+      case 'video-editor':
+        return {
           kind: 'video',
           channel,
           project: active.version.definition.project,
@@ -90,7 +91,8 @@ export const runApplet = async (
             { project: active.version.definition.project },
           ),
         }
-      : {
+      case 'react-app':
+        return {
           kind: 'web-app',
           channel,
           html: prepareAppletRuntime(
@@ -100,6 +102,12 @@ export const runApplet = async (
             active.version.definition.actions,
           ),
         }
+      default: {
+        const unreachable: never = active.version.definition
+        return unreachable
+      }
+    }
+  })()
   const [row] = await getDatabase()
     .insert(appletRun)
     .values({

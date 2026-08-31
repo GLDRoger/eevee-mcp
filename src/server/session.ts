@@ -22,6 +22,9 @@ const sessionSecret = (): string => {
 const signature = (workspaceId: string): string =>
   createHmac('sha256', sessionSecret()).update(workspaceId).digest('base64url')
 
+export const privateDigest = (scope: string, value: string): string =>
+  createHmac('sha256', sessionSecret()).update(scope).update('\0').update(value).digest('hex')
+
 const validSignature = (workspaceId: string, candidate: string): boolean => {
   const expected = Buffer.from(signature(workspaceId))
   const received = Buffer.from(candidate)

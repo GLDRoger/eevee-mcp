@@ -358,10 +358,13 @@ export function AppletInspector({
   const active = detail.versions.find(({ id }) => id === detail.applet.activeVersionId)
   const reviewing = detail.versions.find(({ id }) => id === reviewVersionId)
   const qualityVersion = reviewing ?? latest
+  const runVersion = run?.output
+    ? detail.versions.find(({ id }) => id === run.appletVersionId)
+    : undefined
   // The version the stage shows: the published one when it exists, else the
-  // newest draft — so the actual app is the first thing on the page even
-  // before anything is published or run.
-  const stageVersion = active ?? latest
+  // newest draft. An open durable run stays bound to its immutable version,
+  // including that version's governed action contract.
+  const stageVersion = runVersion ?? active ?? latest
   const stageVersionId = stageVersion?.id
   const showDraftPreview = !run?.output && stageVersionId !== undefined
   // A preview is only current when it belongs to the version on stage, so a

@@ -1,5 +1,4 @@
 import 'server-only'
-import { createHash } from 'node:crypto'
 import { unzipSync, zipSync } from 'fflate'
 import type {
   DocumentReview,
@@ -8,6 +7,7 @@ import type {
 } from '@/domain/document-review'
 import { RequestFailure } from './http'
 import { getOfficeFileSummary, readOfficeFileBytes, saveOfficeFile } from './office-files'
+import { privateDigest } from './session'
 
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
@@ -16,6 +16,8 @@ const MAX_FINDINGS = 250
 type FindingMatch = SensitiveFinding & {
   path: string
   nodeIndex: number
+  start: number
+  end: number
   value: string
 }
 
@@ -93,23 +95,38 @@ const partLabel = (path: string): string =>
         .replace(/([a-z])([A-Z])/g, '$1 $2')
         .replace(/^./, (value) => value.toUpperCase())
 
-const findingId = (path: string, nodeIndex: number, type: string, value: string): string =>
-  createHash('sha256').update(`${path}\0${nodeIndex}\0${type}\0${value}`).digest('hex')
+const findingId = (
+  context: string,
+  path: string,
+  nodeIndex: number,
+  start: number,
+  type: string,
+  value: string,
+): string =>
+  privateDigest('document-review-finding', `${context}\0${path}\0${nodeIndex}\0${start}\0${type}\0${value}`)
 
-const matchesInText = (path: string, nodeIndex: number, text: string): FindingMatch[] => {
+const matchesInText = (
+  context: string,
+  path: string,
+  nodeIndex: number,
+  text: string,
+): FindingMatch[] => {
   const matches = detectors.flatMap((detector) =>
     [...text.matchAll(detector.pattern)].flatMap((match) => {
       const value = match[0]
       if (!value || (detector.accepts && !detector.accepts(value))) return []
+      const start = match.index
       return [
         {
-          id: findingId(path, nodeIndex, detector.type, value),
+          id: findingId(context, path, nodeIndex, start, detector.type, value),
           type: detector.type,
           masked: detector.mask(value),
           part: partLabel(path),
           occurrence: 0,
           path,
           nodeIndex,
+          start,
+          end: start + value.length,
           value,
         } satisfies FindingMatch,
       ]
@@ -129,7 +146,7 @@ const reviewableParts = (archive: Record<string, Uint8Array>): string[] =>
     .filter((path) => /^word\/(?:document|header\d+|footer\d+|footnotes|endnotes|comments)\.xml$/.test(path))
     .sort()
 
-const scanArchive = (archive: Record<string, Uint8Array>): FindingMatch[] => {
+const scanArchive = (archive: Record<string, Uint8Array>, context: string): FindingMatch[] => {
   const findings: FindingMatch[] = []
   for (const path of reviewableParts(archive)) {
     const xml = decoder.decode(archive[path])
@@ -137,7 +154,7 @@ const scanArchive = (archive: Record<string, Uint8Array>): FindingMatch[] => {
     const textPattern = /<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g
     let match: RegExpExecArray | null
     while ((match = textPattern.exec(xml)) !== null) {
-      findings.push(...matchesInText(path, nodeIndex, decodeXmlText(match[1] ?? '')))
+      findings.push(...matchesInText(context, path, nodeIndex, decodeXmlText(match[1] ?? '')))
       nodeIndex += 1
       if (findings.length > MAX_FINDINGS) {
         throw new RequestFailure(
@@ -168,8 +185,8 @@ const publicFindings = (findings: readonly FindingMatch[]): SensitiveFinding[] =
     occurrence,
   }))
 
-export const scanDocxBytes = (bytes: Uint8Array): SensitiveFinding[] =>
-  publicFindings(scanArchive(archiveOf(bytes)))
+export const scanDocxBytes = (bytes: Uint8Array, context: string): SensitiveFinding[] =>
+  publicFindings(scanArchive(archiveOf(bytes), context))
 
 export const scanDocumentReview = async (
   workspaceId: string,
@@ -185,7 +202,8 @@ export const scanDocumentReview = async (
       findings: [],
     }
   }
-  const findings = scanDocxBytes(bytes)
+  const context = `${workspaceId}:${fileId}:${file.versionId}`
+  const findings = scanDocxBytes(bytes, context)
   return {
     fileId,
     versionId: file.versionId,
@@ -206,8 +224,11 @@ const redactXmlPart = (
     nodeIndex += 1
     if (!findings?.length) return whole
     let text = decodeXmlText(body)
-    for (const finding of findings) {
-      text = text.replace(finding.value, '█'.repeat(Math.max(4, finding.value.length)))
+    for (const finding of [...findings].sort((left, right) => right.start - left.start)) {
+      if (text.slice(finding.start, finding.end) !== finding.value) {
+        throw new RequestFailure(409, 'finding_set_stale', 'A selected finding moved inside its document part')
+      }
+      text = `${text.slice(0, finding.start)}${'█'.repeat(Math.max(4, finding.value.length))}${text.slice(finding.end)}`
     }
     return `<w:t${attributes}>${encodeXmlText(text)}</w:t>`
   })
@@ -230,7 +251,8 @@ export const applyDocumentRedactions = async (
     )
   }
   const { bytes } = await readOfficeFileBytes(workspaceId, fileId, input.baseVersionId)
-  const { bytes: redacted, redactedCount } = redactDocxBytes(bytes, input.findingIds)
+  const context = `${workspaceId}:${fileId}:${input.baseVersionId}`
+  const { bytes: redacted, redactedCount } = redactDocxBytes(bytes, input.findingIds, context)
   return saveOfficeFile(
     workspaceId,
     fileId,
@@ -243,9 +265,10 @@ export const applyDocumentRedactions = async (
 export const redactDocxBytes = (
   bytes: Uint8Array,
   findingIds: readonly string[],
+  context: string,
 ): { bytes: Uint8Array; redactedCount: number } => {
   const archive = archiveOf(bytes)
-  const findings = scanArchive(archive)
+  const findings = scanArchive(archive, context)
   const selectedIds = new Set(findingIds)
   const selected = findings.filter(({ id }) => selectedIds.has(id))
   if (selected.length !== selectedIds.size) {

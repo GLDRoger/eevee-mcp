@@ -1,6 +1,8 @@
 import 'server-only'
 import { and, eq, sql } from 'drizzle-orm'
 import type { AppletSummary } from '@/domain/api'
+import { createVersionSchema } from '@/domain/applet'
+import { createEvaluationSuiteSchema } from '@/domain/evaluation'
 import type { ReferenceAppletSlug } from '@/domain/reference-applet'
 import { isPublishableQuality } from '@/domain/quality'
 import {
@@ -47,14 +49,16 @@ export const installReferenceApplet = async (
   slug: ReferenceAppletSlug,
 ): Promise<AppletSummary> => {
   const reference = referencePackage(slug)
+  const version = createVersionSchema.parse(reference.version)
+  const evaluation = createEvaluationSuiteSchema.parse(reference.evaluation)
   const existing = (await listApplets(workspaceId)).find(
     ({ name, description }) =>
       name === reference.identity.name && description === reference.identity.description,
   )
   if (existing) return existing
 
-  const compilation = await compileReactApp(reference.version.definition)
-  const quality = await evaluateReactApp(reference.version.definition, compilation)
+  const compilation = await compileReactApp(version.definition)
+  const quality = await evaluateReactApp(version.definition, compilation)
   if (!compilation.artifact || !isPublishableQuality(quality)) {
     throw new Error(`The ${reference.identity.name} reference package did not pass its static gate`)
   }
@@ -91,9 +95,9 @@ export const installReferenceApplet = async (
         workspaceId,
         appletId: created.id,
         version: 1,
-        note: reference.version.note,
-        inputs: reference.version.inputs,
-        definition: reference.version.definition,
+        note: version.note,
+        inputs: version.inputs,
+        definition: version.definition,
         artifact: compilation.artifact,
         qualityReport: quality,
       }),
@@ -101,8 +105,8 @@ export const installReferenceApplet = async (
         workspaceId,
         appletId: created.id,
         revision: 1,
-        name: reference.evaluation.name,
-        cases: reference.evaluation.cases,
+        name: evaluation.name,
+        cases: evaluation.cases,
       }),
     ])
     return created.id
