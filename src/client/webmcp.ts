@@ -15,8 +15,10 @@ import { emitToolActivity } from './tool-activity'
 import { evaluateAppletVersion } from './evaluation-worker'
 import { pdfEditRequestSchema } from '@/domain/pdf'
 import { workbookSaveRequestSchema } from '@/office/sheets/shared/desktop-api'
+import { referenceAppletSlugSchema } from '@/domain/reference-applet'
 
 const appletIdSchema = z.strictObject({ appletId: z.uuid() })
+const referenceAppletToolSchema = z.strictObject({ slug: referenceAppletSlugSchema })
 const runCorrectionSchema = createCorrectionSchema.extend({ runId: z.uuid() })
 const versionReviewSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uuid() })
 const evaluationSuiteToolSchema = createEvaluationSuiteSchema.extend({ appletId: z.uuid() })
@@ -96,7 +98,7 @@ const spreadsheetEditToolSchema = z
     'A spreadsheet edit needs at least one operation',
   )
 
-export const EEVEE_TOOL_COUNT = 21
+export const EEVEE_TOOL_COUNT = 22
 
 const inputSchema = (schema: z.ZodType): object =>
   z.toJSONSchema(schema, { target: 'draft-7', io: 'input' })
@@ -335,6 +337,20 @@ export const registerEeveeTools = (): {
       inputSchema: inputSchema(z.strictObject({})),
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (_input, { signal }) => api.listApplets(signal),
+    },
+    {
+      name: 'install_reference_applet',
+      title: 'Install reference applet',
+      description:
+        'Install an audited EEVEE reference package as a draft with typed source, governed actions, and a behavioral suite. A person must still evaluate, review, and publish it.',
+      inputSchema: inputSchema(referenceAppletToolSchema),
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: async (input, { signal }) => {
+        const { slug } = referenceAppletToolSchema.parse(input)
+        const installed = await api.installReferenceApplet(slug, signal)
+        emitChanged(installed.applet.id)
+        return installed
+      },
     },
     {
       name: 'inspect_applet',

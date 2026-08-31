@@ -138,3 +138,47 @@
   color: var(--pine);
   font-weight: 700;
 }
+
+.ledger-reference {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-8) var(--space-2) 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule-strong);
+}
+
+.ledger-reference p,
+.ledger-reference strong,
+.ledger-reference span,
+.ledger-reference small {
+  margin: 0;
+}
+
+.ledger-reference p {
+  color: var(--stamp);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ledger-reference strong {
+  font-family: var(--display);
+  font-size: 1rem;
+}
+
+.ledger-reference span,
+.ledger-reference small {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.ledger-reference button {
+  width: fit-content;
+  min-height: 2.3rem;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.74rem;
+}
+
+.ledger-reference small {
+  color: var(--error);
+}

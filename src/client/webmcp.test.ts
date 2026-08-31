@@ -55,6 +55,7 @@ describe('registerEeveeTools', () => {
       'inspect_spreadsheet_contract',
       'edit_pdf',
       'list_applets',
+      'install_reference_applet',
       'inspect_applet',
       'inspect_applet_version',
       'create_applet',

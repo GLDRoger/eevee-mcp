@@ -286,6 +286,10 @@ export function Workbench() {
             applets={applets}
             selectedId={detail?.applet.id ?? null}
             onSelect={selectApplet}
+            onInstallSparkbench={async () => {
+              const response = await api.installReferenceApplet('sparkbench')
+              await refresh(response.applet.id)
+            }}
           />
         )}
         <section

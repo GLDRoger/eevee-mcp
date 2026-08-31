@@ -23,6 +23,7 @@ import type {
   CreateVersionInput,
 } from '@/domain/applet'
 import type { AppletActionRequest } from '@/domain/applet-action'
+import type { ReferenceAppletSlug } from '@/domain/reference-applet'
 import type {
   CompleteEvaluationInput,
   CreateEvaluationSuiteInput,
@@ -198,6 +199,12 @@ export const api = {
       '/api/applets',
       appletResponseSchema,
       jsonMutation('POST', input, signal),
+    ),
+  installReferenceApplet: (slug: ReferenceAppletSlug, signal?: AbortSignal) =>
+    requestJson(
+      `/api/reference-applets/${encodeURIComponent(slug)}`,
+      appletResponseSchema,
+      jsonMutation('POST', {}, signal),
     ),
   createVersion: (appletId: string, input: CreateVersionInput, signal?: AbortSignal) =>
     requestJson(
