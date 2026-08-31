@@ -79,7 +79,12 @@ export const runApplet = async (
   const output: WebAppRunOutput = {
     kind: 'web-app',
     channel,
-    html: prepareAppletRuntime(active.version.artifact.html, channel, validated.values),
+    html: prepareAppletRuntime(
+      active.version.artifact.html,
+      channel,
+      validated.values,
+      active.version.definition.actions,
+    ),
   }
   const [row] = await getDatabase()
     .insert(appletRun)

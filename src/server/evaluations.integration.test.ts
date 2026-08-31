@@ -64,6 +64,7 @@ describe.runIf(runIntegration)('behavioral evaluation lifecycle', () => {
       definition: {
         kind: 'react-app',
         entry: 'src/App.tsx',
+        actions: [],
         files: [
           {
             path: 'src/App.tsx',
@@ -187,6 +188,7 @@ describe.runIf(runIntegration)('behavioral evaluation lifecycle', () => {
       definition: {
         kind: 'react-app',
         entry: 'src/App.tsx',
+        actions: [],
         files: [
           {
             path: 'src/App.tsx',

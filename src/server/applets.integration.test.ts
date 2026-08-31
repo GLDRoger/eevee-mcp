@@ -56,6 +56,7 @@ export default function App({ inputs, store }) {
 const definition = (source = appSource): ReactAppDefinition => ({
   kind: 'react-app',
   entry: 'src/App.tsx',
+  actions: [],
   files: [
     { path: 'src/App.tsx', content: source },
     {

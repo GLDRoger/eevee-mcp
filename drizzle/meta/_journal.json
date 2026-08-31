@@ -36,6 +36,13 @@
       "when": 1787751000000,
       "tag": "0004_durable_office_files",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788163200000,
+      "tag": "0005_governed_applet_actions",
+      "breakpoints": true
     }
   ]
 }

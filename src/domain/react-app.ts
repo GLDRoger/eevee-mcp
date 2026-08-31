@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { appletActionDefinitionsSchema } from './applet-action'
 
 export const REACT_APP_ENTRY = 'src/App.tsx'
 export const MAX_REACT_APP_FILES = 16
@@ -22,6 +23,7 @@ export const reactAppDefinitionSchema = z
     kind: z.literal('react-app'),
     entry: z.literal(REACT_APP_ENTRY),
     files: z.array(reactAppFileSchema).min(1).max(MAX_REACT_APP_FILES),
+    actions: appletActionDefinitionsSchema.default([]),
   })
   .superRefine(({ files }, context) => {
     const paths = new Set<string>()

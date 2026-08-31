@@ -392,7 +392,11 @@ export const previewVersion = async (
   versionId: string,
 ): Promise<WebAppRunOutput> => {
   const [version] = await getDatabase()
-    .select({ artifact: appletVersion.artifact, inputs: appletVersion.inputs })
+    .select({
+      artifact: appletVersion.artifact,
+      inputs: appletVersion.inputs,
+      definition: appletVersion.definition,
+    })
     .from(appletVersion)
     .where(
       and(
@@ -414,7 +418,12 @@ export const previewVersion = async (
   return {
     kind: 'web-app',
     channel,
-    html: prepareAppletRuntime(version.artifact.html, channel, previewInputs(version.inputs)),
+    html: prepareAppletRuntime(
+      version.artifact.html,
+      channel,
+      previewInputs(version.inputs),
+      version.definition.actions,
+    ),
   }
 }
 

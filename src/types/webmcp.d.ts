@@ -13,7 +13,7 @@ interface WebMcpTool {
   description: string
   inputSchema?: object
   annotations?: WebMcpToolAnnotations
-  execute(input: object, options: WebMcpExecuteOptions): Promise<unknown>
+  execute(input: Record<string, unknown>, options: WebMcpExecuteOptions): Promise<unknown>
 }
 
 interface WebMcpRegisterOptions {
@@ -53,5 +53,9 @@ interface Window {
       ): Promise<Array<{ name: string; rows: Array<Array<string | number | boolean | null>> }>>
       text(fileId: string): Promise<string>
     }>
+    actions: Readonly<{
+      register(handlers: Readonly<Record<string, (input: Readonly<Record<string, unknown>>) => unknown>>): void
+    }>
   }>
+  __eeveeReady?: () => void
 }

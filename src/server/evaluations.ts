@@ -12,6 +12,7 @@ import type {
 import { validateAppletInputs, type InputDefinition } from '@/domain/input'
 import { prepareAppletRuntime } from '@/domain/applet-runtime'
 import type { WebAppArtifact } from '@/domain/react-app'
+import type { AppletActionDefinition } from '@/domain/applet-action'
 import { getDatabase } from './db/client'
 import {
   appletDeployment,
@@ -60,6 +61,7 @@ type ExecutableVersion = {
   id: string
   inputs: InputDefinition
   artifact: WebAppArtifact
+  actions: AppletActionDefinition[]
 }
 
 const validatedCaseInputs = (
@@ -88,13 +90,13 @@ const executionFor = (
     output: {
       kind: 'web-app',
       channel,
-      html: prepareAppletRuntime(version.artifact.html, channel, validated.values),
+      html: prepareAppletRuntime(version.artifact.html, channel, validated.values, version.actions),
     },
   }
 }
 
 const executableVersion = (
-  row: Pick<typeof appletVersion.$inferSelect, 'id' | 'inputs' | 'artifact'> | undefined,
+  row: Pick<typeof appletVersion.$inferSelect, 'id' | 'inputs' | 'artifact' | 'definition'> | undefined,
   missingCode: string,
 ): ExecutableVersion => {
   if (!row) throw new RequestFailure(404, missingCode, 'This applet version was not found')
@@ -105,7 +107,12 @@ const executableVersion = (
       'The evaluated version has no executable artifact',
     )
   }
-  return { id: row.id, inputs: row.inputs, artifact: row.artifact }
+  return {
+    id: row.id,
+    inputs: row.inputs,
+    artifact: row.artifact,
+    actions: row.definition.actions,
+  }
 }
 
 export const startEvaluation = async (
@@ -164,7 +171,12 @@ export const startEvaluation = async (
     const [suite, candidateRow, deployment] = await Promise.all([
       suiteQuery.then(([row]) => row),
       transaction
-        .select({ id: appletVersion.id, inputs: appletVersion.inputs, artifact: appletVersion.artifact })
+        .select({
+          id: appletVersion.id,
+          inputs: appletVersion.inputs,
+          artifact: appletVersion.artifact,
+          definition: appletVersion.definition,
+        })
         .from(appletVersion)
         .where(
           and(
@@ -198,7 +210,12 @@ export const startEvaluation = async (
     const baselineId = deployment?.versionId === candidate.id ? null : deployment?.versionId ?? null
     const baselineRow = baselineId
       ? await transaction
-          .select({ id: appletVersion.id, inputs: appletVersion.inputs, artifact: appletVersion.artifact })
+          .select({
+            id: appletVersion.id,
+            inputs: appletVersion.inputs,
+            artifact: appletVersion.artifact,
+            definition: appletVersion.definition,
+          })
           .from(appletVersion)
           .where(
             and(
@@ -268,7 +285,12 @@ export const getEvaluationExecution = async (
       )
       .limit(1),
     getDatabase()
-      .select({ id: appletVersion.id, inputs: appletVersion.inputs, artifact: appletVersion.artifact })
+      .select({
+        id: appletVersion.id,
+        inputs: appletVersion.inputs,
+        artifact: appletVersion.artifact,
+        definition: appletVersion.definition,
+      })
       .from(appletVersion)
       .where(
         and(

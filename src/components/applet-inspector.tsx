@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { AppletRun } from '@/domain/applet'
+import type { AppletActionDefinition } from '@/domain/applet-action'
 import type { AppletDetail } from '@/domain/api'
 import { isPublishableQuality } from '@/domain/quality'
 import { api } from '@/client/api'
@@ -191,6 +192,7 @@ function VersionReview({
 }) {
   const [preview, setPreview] = useState<AppletRun['output']>(null)
   const [sourceFiles, setSourceFiles] = useState<Array<{ path: string; content: string }>>([])
+  const [actions, setActions] = useState<AppletActionDefinition[]>([])
   const [openPath, setOpenPath] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
   const [publishing, setPublishing] = useState(false)
@@ -210,6 +212,7 @@ function VersionReview({
       .then(([previewResponse, versionResponse]) => {
         setPreview(previewResponse.preview)
         setSourceFiles(versionResponse.definition.files)
+        setActions(versionResponse.definition.actions)
       })
       .catch((reason) => {
         if (!controller.signal.aborted) {
@@ -313,6 +316,7 @@ function VersionReview({
           appletId={appletId}
           output={preview}
           storage="ephemeral"
+          actions={actions}
           title="Draft specimen"
           onReady={() => setReady(true)}
           onRevoked={() => setReady(false)}
@@ -348,6 +352,7 @@ export function AppletInspector({
     output: NonNullable<AppletRun['output']>
   } | null>(null)
   const [sourceFiles, setSourceFiles] = useState<Array<{ path: string; content: string }>>([])
+  const [stageActions, setStageActions] = useState<AppletActionDefinition[]>([])
   const [openPath, setOpenPath] = useState<string | null>(null)
   const latest = detail.versions[0]
   const active = detail.versions.find(({ id }) => id === detail.applet.activeVersionId)
@@ -376,6 +381,18 @@ export function AppletInspector({
       })
     return () => controller.abort()
   }, [detail.applet.id, stageVersionId, showDraftPreview, view])
+
+  useEffect(() => {
+    if (stageVersionId === undefined) return
+    const controller = new AbortController()
+    void api
+      .inspectAppletVersion(detail.applet.id, stageVersionId, controller.signal)
+      .then((response) => setStageActions(response.definition.actions))
+      .catch(() => {
+        if (!controller.signal.aborted) setStageActions([])
+      })
+    return () => controller.abort()
+  }, [detail.applet.id, stageVersionId])
 
   useEffect(() => {
     if (view !== 'code' || stageVersionId === undefined) return
@@ -522,6 +539,8 @@ export function AppletInspector({
               appletId={detail.applet.id}
               output={run.output}
               storage="durable"
+              runId={run.id}
+              actions={stageActions}
               title={detail.applet.name}
               onReady={() => void completeRuntime()}
               onRevoked={() => void failRuntime()}
@@ -532,6 +551,7 @@ export function AppletInspector({
               appletId={detail.applet.id}
               output={currentDraftPreview}
               storage="ephemeral"
+              actions={stageActions}
               title={detail.applet.name}
             />
           ) : (

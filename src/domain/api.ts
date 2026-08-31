@@ -11,6 +11,7 @@ import {
 } from './applet'
 import { inputDefinitionSchema } from './input'
 import { qualityReportSchema } from './quality'
+import { appletActionRequestSchema } from './applet-action'
 import {
   evaluationExecutionSchema,
   evaluationPlanSchema,
@@ -76,6 +77,12 @@ export const appletVersionResponseSchema = z.strictObject({
   publishable: z.boolean(),
 })
 export const appletRunResponseSchema = z.strictObject({ run: appletRunSchema })
+export const appletActionRequestResponseSchema = z.strictObject({
+  request: appletActionRequestSchema,
+})
+export const appletActionRequestListResponseSchema = z.strictObject({
+  requests: z.array(appletActionRequestSchema),
+})
 export const appletPreviewResponseSchema = z.strictObject({ preview: webAppRunOutputSchema })
 export const correctionResponseSchema = z.strictObject({ correction: correctionSchema })
 export const evaluationSuiteResponseSchema = z.strictObject({ suite: evaluationSuiteSchema })

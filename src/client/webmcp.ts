@@ -22,6 +22,7 @@ const versionReviewSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uu
 const evaluationSuiteToolSchema = createEvaluationSuiteSchema.extend({ appletId: z.uuid() })
 const evaluationToolSchema = startEvaluationSchema.extend({ appletId: z.uuid() })
 const evaluationRunToolSchema = z.strictObject({ runId: z.uuid() })
+const actionRequestToolSchema = z.strictObject({ requestId: z.uuid() })
 const officeFileToolSchema = z.strictObject({ fileId: z.uuid() })
 const pdfEditToolSchema = pdfEditRequestSchema.extend({ fileId: z.uuid() })
 const officeBytesSchema = z
@@ -91,7 +92,7 @@ const spreadsheetEditToolSchema = z
     'A spreadsheet edit needs at least one operation',
   )
 
-export const EEVEE_TOOL_COUNT = 18
+export const EEVEE_TOOL_COUNT = 19
 
 const inputSchema = (schema: z.ZodType): object =>
   z.toJSONSchema(schema, { target: 'draft-7', io: 'input' })
@@ -383,6 +384,18 @@ export const registerEeveeTools = (): {
       execute: async (input, { signal }) => {
         const { runId } = evaluationRunToolSchema.parse(input)
         return api.inspectEvaluation(runId, signal)
+      },
+    },
+    {
+      name: 'inspect_applet_action',
+      title: 'Inspect applet action',
+      description:
+        'Inspect a governed action request after a published applet tool returns its request id. Reports the human decision, execution state, result, and failure evidence.',
+      inputSchema: inputSchema(actionRequestToolSchema),
+      annotations: { readOnlyHint: true, untrustedContentHint: true },
+      execute: async (input, { signal }) => {
+        const { requestId } = actionRequestToolSchema.parse(input)
+        return api.inspectActionRequest(requestId, signal)
       },
     },
     {

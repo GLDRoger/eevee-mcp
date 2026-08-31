@@ -1,5 +1,6 @@
 import { parse, type DefaultTreeAdapterTypes } from 'parse5'
 import type { JsonObject } from './json'
+import type { AppletActionDefinition } from './applet-action'
 
 type Node = DefaultTreeAdapterTypes.Node
 
@@ -25,18 +26,26 @@ const escapeScriptJson = (value: unknown): string =>
     .replaceAll('\u2028', '\\u2028')
     .replaceAll('\u2029', '\\u2029')
 
-const runtimeScript = (channel: string, inputs: JsonObject): string => {
+const runtimeScript = (
+  channel: string,
+  inputs: JsonObject,
+  actions: readonly AppletActionDefinition[],
+): string => {
   const evaluationToken = crypto.randomUUID()
   return `
 <script>
 (() => {
   const channel = ${escapeScriptJson(channel)};
+  const actionDefinitions = ${escapeScriptJson(actions)};
+  const declaredActions = new Map(actionDefinitions.map((action) => [action.name, action]));
+  const actionHandlers = new Map();
   const pending = new Map();
   const activeRequests = new Set();
   const evaluationToken = ${escapeScriptJson(evaluationToken)};
   const parentPostMessage = parent.postMessage.bind(parent);
   let sequence = 0;
   let revoked = false;
+  let activeInvocation = null;
   const post = (message) => parentPostMessage({ source: 'eevee-applet', channel, ...message }, '*');
   const evaluationPost = (message) => parentPostMessage({ source: 'eevee-applet-evaluation', channel, evaluationToken, ...message }, '*');
   const revoke = (event) => {
@@ -60,7 +69,7 @@ const runtimeScript = (channel: string, inputs: JsonObject): string => {
         reject(new Error('EEVEE storage request timed out'));
       }, 5000);
       pending.set(id, { resolve, reject, timer });
-      post({ id, action, payload });
+      post({ id, action, payload, invocation: activeInvocation });
     });
     activeRequests.add(operation);
     return operation.finally(() => activeRequests.delete(operation));
@@ -144,9 +153,62 @@ const runtimeScript = (channel: string, inputs: JsonObject): string => {
         throw new Error('The evaluation command is not supported');
     }
   };
+  const serializableActionResult = (value) => {
+    const encoded = JSON.stringify(value === undefined ? null : value);
+    if (encoded === undefined) throw new Error('The applet action returned a non-JSON value');
+    if (new TextEncoder().encode(encoded).byteLength > 64000) {
+      throw new Error('The applet action result exceeds 64 KB');
+    }
+    return JSON.parse(encoded);
+  };
+  const installActions = (handlers) => {
+    if (!handlers || typeof handlers !== 'object' || Array.isArray(handlers)) {
+      throw new Error('The applet actions export must be an object of functions');
+    }
+    for (const [name, handler] of Object.entries(handlers)) {
+      if (!declaredActions.has(name)) throw new Error('The applet implements an undeclared action: ' + name);
+      if (typeof handler !== 'function') throw new Error('Applet action handlers must be functions: ' + name);
+      actionHandlers.set(name, handler);
+    }
+  };
   addEventListener('message', (event) => {
     const message = event.data;
     if (event.source !== parent) return;
+    if (message && message.source === 'eevee-action' && message.channel === channel) {
+      event.stopImmediatePropagation();
+      if (revoked) return;
+      const definition = declaredActions.get(message.name);
+      const handler = actionHandlers.get(message.name);
+      if (!definition || !handler || activeInvocation !== null) {
+        parentPostMessage({
+          source: 'eevee-applet-action',
+          channel,
+          requestId: message.requestId,
+          ok: false,
+          error: activeInvocation ? 'Another applet action is running' : 'The applet action is unavailable',
+        }, '*');
+        return;
+      }
+      activeInvocation = Object.freeze({ requestId: message.requestId, name: message.name });
+      void Promise.resolve()
+        .then(() => handler(Object.freeze(message.input || {})))
+        .then((value) => parentPostMessage({
+          source: 'eevee-applet-action',
+          channel,
+          requestId: message.requestId,
+          ok: true,
+          value: serializableActionResult(value),
+        }, '*'))
+        .catch((error) => parentPostMessage({
+          source: 'eevee-applet-action',
+          channel,
+          requestId: message.requestId,
+          ok: false,
+          error: error instanceof Error ? error.message.slice(0, 500) : 'The applet action failed',
+        }, '*'))
+        .finally(() => { activeInvocation = null; });
+      return;
+    }
     if (message && message.source === 'eevee-evaluator' && message.channel === channel) {
       event.stopImmediatePropagation();
       if (message.evaluationToken !== evaluationToken) return;
@@ -185,14 +247,21 @@ const runtimeScript = (channel: string, inputs: JsonObject): string => {
       table: (fileId) => request('files-table', { fileId }),
       text: (fileId) => request('files-text', { fileId }),
     }),
+    actions: Object.freeze({ register: installActions }),
   }) });
   Object.defineProperty(window, '__eeveeReady', {
     configurable: false,
     writable: false,
     value: () => void waitForMountWork().then(
-      () => post({ action: 'ready', evaluationToken }),
+      () => {
+        const missing = actionDefinitions.filter(({ name }) => !actionHandlers.has(name));
+        if (missing.length > 0) {
+          throw new Error('Missing applet action handlers: ' + missing.map(({ name }) => name).join(', '));
+        }
+        post({ action: 'ready', evaluationToken });
+      },
       revoke,
-    ),
+    ).catch(revoke),
   });
 })();
 </script>`
@@ -204,8 +273,9 @@ export const prepareAppletRuntime = (
   artifactHtml: string,
   channel: string,
   inputs: JsonObject,
+  actions: readonly AppletActionDefinition[] = [],
 ): string => {
   const insertion = headInsertionOffset(artifactHtml)
   if (insertion === null) throw new Error('The compiled artifact has no explicit head element')
-  return `${artifactHtml.slice(0, insertion)}${csp}${runtimeScript(channel, inputs)}${artifactHtml.slice(insertion)}`
+  return `${artifactHtml.slice(0, insertion)}${csp}${runtimeScript(channel, inputs, actions)}${artifactHtml.slice(insertion)}`
 }

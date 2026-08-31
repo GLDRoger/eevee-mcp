@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import {
   appletDetailResponseSchema,
+  appletActionRequestListResponseSchema,
+  appletActionRequestResponseSchema,
   appletListResponseSchema,
   appletPreviewResponseSchema,
   appletResponseSchema,
@@ -20,6 +22,7 @@ import type {
   CreateRunInput,
   CreateVersionInput,
 } from '@/domain/applet'
+import type { AppletActionRequest } from '@/domain/applet-action'
 import type {
   CompleteEvaluationInput,
   CreateEvaluationSuiteInput,
@@ -269,6 +272,42 @@ export const api = {
       `/api/runs/${encodeURIComponent(runId)}`,
       appletRunResponseSchema,
       signal ? { signal } : undefined,
+    ),
+  listActionRequests: (runId: string, signal?: AbortSignal) =>
+    requestJson(
+      `/api/runs/${encodeURIComponent(runId)}/actions`,
+      appletActionRequestListResponseSchema,
+      signal ? { signal } : undefined,
+    ),
+  createActionRequest: (
+    runId: string,
+    actionName: string,
+    input: Record<string, unknown>,
+    signal?: AbortSignal,
+  ) =>
+    requestJson(
+      `/api/runs/${encodeURIComponent(runId)}/actions`,
+      appletActionRequestResponseSchema,
+      jsonMutation('POST', { actionName, input }, signal),
+    ),
+  inspectActionRequest: (requestId: string, signal?: AbortSignal) =>
+    requestJson(
+      `/api/action-requests/${encodeURIComponent(requestId)}`,
+      appletActionRequestResponseSchema,
+      signal ? { signal } : undefined,
+    ),
+  updateActionRequest: (
+    requestId: string,
+    operation:
+      | { operation: 'approve' | 'reject' | 'start' }
+      | { operation: 'complete'; result: AppletActionRequest['result'] }
+      | { operation: 'fail'; error: string },
+    signal?: AbortSignal,
+  ) =>
+    requestJson(
+      `/api/action-requests/${encodeURIComponent(requestId)}`,
+      appletActionRequestResponseSchema,
+      jsonMutation('POST', operation, signal),
     ),
   readState: async (appletId: string): Promise<Record<string, JsonValue>> => {
     const response = await requestJson(

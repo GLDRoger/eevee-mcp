@@ -23,6 +23,7 @@ import type { JsonObject, JsonValue } from '@/domain/json'
 import type { QualityReport } from '@/domain/quality'
 import type { WebAppArtifact } from '@/domain/react-app'
 import type { EvaluationCaseDefinition, EvaluationReport } from '@/domain/evaluation'
+import type { AppletActionDefinition } from '@/domain/applet-action'
 
 export const appletMedium = pgEnum('applet_medium', [
   'web-app',
@@ -39,6 +40,14 @@ export const versionState = pgEnum('applet_version_state', ['draft', 'approved',
 export const runState = pgEnum('applet_run_state', ['queued', 'running', 'succeeded', 'failed'])
 export const correctionState = pgEnum('correction_state', ['proposed', 'applied', 'dismissed'])
 export const evaluationRunState = pgEnum('evaluation_run_state', ['running', 'passed', 'failed'])
+export const appletActionRequestState = pgEnum('applet_action_request_state', [
+  'pending',
+  'approved',
+  'rejected',
+  'running',
+  'succeeded',
+  'failed',
+])
 export const officeFileMedium = pgEnum('office_file_medium', [
   'document',
   'spreadsheet',
@@ -301,6 +310,11 @@ export const appletRun = pgTable(
   },
   (table) => [
     unique('applet_run_workspace_id_id_unique').on(table.workspaceId, table.id),
+    unique('applet_run_workspace_applet_id_id_unique').on(
+      table.workspaceId,
+      table.appletId,
+      table.id,
+    ),
     index('applet_run_workspace_applet_created_idx').on(
       table.workspaceId,
       table.appletId,
@@ -314,6 +328,47 @@ export const appletRun = pgTable(
         appletVersion.id,
       ],
       name: 'applet_run_version_tenant_fk',
+    }).onDelete('cascade'),
+  ],
+)
+
+export const appletActionRequest = pgTable(
+  'applet_action_request',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id').notNull(),
+    appletId: uuid('applet_id').notNull(),
+    runId: uuid('run_id').notNull(),
+    appletVersionId: uuid('applet_version_id').notNull(),
+    action: jsonb('action').$type<AppletActionDefinition>().notNull(),
+    state: appletActionRequestState('state').notNull(),
+    input: jsonb('input').$type<JsonObject>().notNull(),
+    result: jsonb('result').$type<JsonValue>(),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    unique('applet_action_request_workspace_id_unique').on(table.workspaceId, table.id),
+    index('applet_action_request_run_created_idx').on(
+      table.workspaceId,
+      table.runId,
+      table.createdAt,
+    ),
+    foreignKey({
+      columns: [table.workspaceId, table.appletId, table.runId],
+      foreignColumns: [appletRun.workspaceId, appletRun.appletId, appletRun.id],
+      name: 'applet_action_request_run_tenant_fk',
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [table.workspaceId, table.appletId, table.appletVersionId],
+      foreignColumns: [
+        appletVersion.workspaceId,
+        appletVersion.appletId,
+        appletVersion.id,
+      ],
+      name: 'applet_action_request_version_tenant_fk',
     }).onDelete('cascade'),
   ],
 )

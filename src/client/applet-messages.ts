@@ -4,6 +4,10 @@ import { jsonValueSchema } from '@/domain/json'
 const appletMessageBase = {
   source: z.literal('eevee-applet'),
   channel: z.uuid(),
+  invocation: z
+    .strictObject({ requestId: z.uuid(), name: z.string().min(1).max(23) })
+    .nullable()
+    .optional(),
 }
 
 export const appletMessageSchema = z.discriminatedUnion('action', [
@@ -74,5 +78,20 @@ export const evaluationMessageSchema = z.discriminatedUnion('ok', [
     ...evaluationMessageBase,
     ok: z.literal(false),
     error: z.string().min(1).max(2_000),
+  }),
+])
+
+const appletActionMessageBase = {
+  source: z.literal('eevee-applet-action'),
+  channel: z.uuid(),
+  requestId: z.uuid(),
+}
+
+export const appletActionMessageSchema = z.discriminatedUnion('ok', [
+  z.strictObject({ ...appletActionMessageBase, ok: z.literal(true), value: jsonValueSchema }),
+  z.strictObject({
+    ...appletActionMessageBase,
+    ok: z.literal(false),
+    error: z.string().min(1).max(500),
   }),
 ])

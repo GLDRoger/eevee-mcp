@@ -32,10 +32,13 @@ const isBuildFailure = (error: unknown): error is BuildFailure =>
 const harnessSource = `
 import React, { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './${REACT_APP_ENTRY}';
+import App, * as AppletModule from './${REACT_APP_ENTRY}';
 
 function EeveeHarness() {
-  useEffect(() => window.__eeveeReady(), []);
+  useEffect(() => {
+    window.eevee.actions.register(AppletModule.actions ?? {});
+    window.__eeveeReady();
+  }, []);
   return <App inputs={window.eevee.inputs} store={window.eevee.store} />;
 }
 
