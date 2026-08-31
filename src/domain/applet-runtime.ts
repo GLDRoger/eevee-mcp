@@ -30,6 +30,7 @@ const runtimeScript = (
   channel: string,
   inputs: JsonObject,
   actions: readonly AppletActionDefinition[],
+  media: JsonObject | null,
 ): string => {
   const evaluationToken = crypto.randomUUID()
   return `
@@ -37,6 +38,7 @@ const runtimeScript = (
 (() => {
   const channel = ${escapeScriptJson(channel)};
   const actionDefinitions = ${escapeScriptJson(actions)};
+  const media = ${escapeScriptJson(media)};
   const declaredActions = new Map(actionDefinitions.map((action) => [action.name, action]));
   const actionHandlers = new Map();
   const pending = new Map();
@@ -236,6 +238,7 @@ const runtimeScript = (
   addEventListener('pagehide', revoke, { once: true });
   Object.defineProperty(window, 'eevee', { configurable: false, writable: false, value: Object.freeze({
     inputs: Object.freeze(${escapeScriptJson(inputs)}),
+    media: media === null ? null : Object.freeze(media),
     store: Object.freeze({
       get: (key) => request('get', { key }),
       set: (key, value) => request('set', { key, value }),
@@ -274,8 +277,9 @@ export const prepareAppletRuntime = (
   channel: string,
   inputs: JsonObject,
   actions: readonly AppletActionDefinition[] = [],
+  media: JsonObject | null = null,
 ): string => {
   const insertion = headInsertionOffset(artifactHtml)
   if (insertion === null) throw new Error('The compiled artifact has no explicit head element')
-  return `${artifactHtml.slice(0, insertion)}${csp}${runtimeScript(channel, inputs, actions)}${artifactHtml.slice(insertion)}`
+  return `${artifactHtml.slice(0, insertion)}${csp}${runtimeScript(channel, inputs, actions, media)}${artifactHtml.slice(insertion)}`
 }

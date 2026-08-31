@@ -16,9 +16,19 @@ import { evaluateAppletVersion } from './evaluation-worker'
 import { pdfEditRequestSchema } from '@/domain/pdf'
 import { workbookSaveRequestSchema } from '@/office/sheets/shared/desktop-api'
 import { referenceAppletSlugSchema } from '@/domain/reference-applet'
+import { reactAppDefinitionSchema } from '@/domain/react-app'
+import { videoEditorDefinitionSchema } from '@/domain/video-editor'
 
 const appletIdSchema = z.strictObject({ appletId: z.uuid() })
 const referenceAppletToolSchema = z.strictObject({ slug: referenceAppletSlugSchema })
+const createReactVersionToolSchema = createVersionSchema.extend({
+  appletId: z.uuid(),
+  definition: reactAppDefinitionSchema,
+})
+const createVideoVersionToolSchema = createVersionSchema.extend({
+  appletId: z.uuid(),
+  definition: videoEditorDefinitionSchema,
+})
 const runCorrectionSchema = createCorrectionSchema.extend({ runId: z.uuid() })
 const versionReviewSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uuid() })
 const evaluationSuiteToolSchema = createEvaluationSuiteSchema.extend({ appletId: z.uuid() })
@@ -98,7 +108,7 @@ const spreadsheetEditToolSchema = z
     'A spreadsheet edit needs at least one operation',
   )
 
-export const EEVEE_TOOL_COUNT = 22
+export const EEVEE_TOOL_COUNT = 23
 
 const inputSchema = (schema: z.ZodType): object =>
   z.toJSONSchema(schema, { target: 'draft-7', io: 'input' })
@@ -380,7 +390,7 @@ export const registerEeveeTools = (): {
       name: 'create_applet',
       title: 'Create applet',
       description:
-        'Create a durable draft applet. Web app versions use bounded React source; other media remain typed drafts until their executors are available.',
+        'Create a durable draft applet. Web app and video applets have bounded interactive executors; other media remain reserved until their executors are available.',
       inputSchema: inputSchema(createAppletSchema),
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       execute: async (input, { signal }) => {
@@ -394,10 +404,25 @@ export const registerEeveeTools = (): {
       title: 'Create React app version',
       description:
         'Create an immutable web applet version from a typed React source bundle and input definition. EEVEE compiles and evaluates it before a person can publish it. If this version answers open correction proposals from inspect_applet, pass their ids in resolvesCorrections to mark them applied.',
-      inputSchema: inputSchema(createVersionSchema.extend({ appletId: z.uuid() })),
+      inputSchema: inputSchema(createReactVersionToolSchema),
       annotations: { readOnlyHint: false, untrustedContentHint: true },
       execute: async (input, { signal }) => {
-        const parsed = createVersionSchema.extend({ appletId: z.uuid() }).parse(input)
+        const parsed = createReactVersionToolSchema.parse(input)
+        const { appletId, ...version } = parsed
+        const created = await api.createVersion(appletId, version, signal)
+        emitChanged(appletId)
+        return created
+      },
+    },
+    {
+      name: 'create_video_editor_version',
+      title: 'Create video editor version',
+      description:
+        'Create an immutable video applet version from a bounded edit-decision project and typed React editor. EEVEE compiles it, evaluates browser behavior, and keeps publication under human control.',
+      inputSchema: inputSchema(createVideoVersionToolSchema),
+      annotations: { readOnlyHint: false, untrustedContentHint: true },
+      execute: async (input, { signal }) => {
+        const parsed = createVideoVersionToolSchema.parse(input)
         const { appletId, ...version } = parsed
         const created = await api.createVersion(appletId, version, signal)
         emitChanged(appletId)

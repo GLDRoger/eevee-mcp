@@ -12,7 +12,7 @@ import type {
 import { validateAppletInputs, type InputDefinition } from '@/domain/input'
 import { prepareAppletRuntime } from '@/domain/applet-runtime'
 import type { WebAppArtifact } from '@/domain/react-app'
-import type { AppletActionDefinition } from '@/domain/applet-action'
+import type { AppletVersionDefinition } from '@/domain/applet'
 import { getDatabase } from './db/client'
 import {
   appletDeployment,
@@ -61,7 +61,7 @@ type ExecutableVersion = {
   id: string
   inputs: InputDefinition
   artifact: WebAppArtifact
-  actions: AppletActionDefinition[]
+  definition: AppletVersionDefinition
 }
 
 const validatedCaseInputs = (
@@ -87,11 +87,30 @@ const executionFor = (
   const channel = crypto.randomUUID()
   return {
     caseId: evaluationCase.id,
-    output: {
-      kind: 'web-app',
-      channel,
-      html: prepareAppletRuntime(version.artifact.html, channel, validated.values, version.actions),
-    },
+    output:
+      version.definition.kind === 'video-editor'
+        ? {
+            kind: 'video',
+            channel,
+            project: version.definition.project,
+            html: prepareAppletRuntime(
+              version.artifact.html,
+              channel,
+              validated.values,
+              version.definition.actions,
+              { project: version.definition.project },
+            ),
+          }
+        : {
+            kind: 'web-app',
+            channel,
+            html: prepareAppletRuntime(
+              version.artifact.html,
+              channel,
+              validated.values,
+              version.definition.actions,
+            ),
+          },
   }
 }
 
@@ -111,7 +130,7 @@ const executableVersion = (
     id: row.id,
     inputs: row.inputs,
     artifact: row.artifact,
-    actions: row.definition.actions,
+    definition: row.definition,
   }
 }
 

@@ -139,25 +139,30 @@
   font-weight: 700;
 }
 
-.ledger-reference {
+.ledger-references {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-4);
   margin: var(--space-8) var(--space-2) 0;
   padding-top: var(--space-5);
   border-top: 1px solid var(--rule-strong);
 }
 
-.ledger-reference p,
+.ledger-references > p,
 .ledger-reference strong,
 .ledger-reference span,
-.ledger-reference small {
+.ledger-references small {
   margin: 0;
 }
 
-.ledger-reference p {
+.ledger-references > p {
   color: var(--stamp);
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+.ledger-reference {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .ledger-reference strong {
@@ -166,7 +171,7 @@
 }
 
 .ledger-reference span,
-.ledger-reference small {
+.ledger-references small {
   color: var(--ink-soft);
   font-size: 0.75rem;
   line-height: 1.45;
@@ -179,6 +184,6 @@
   font-size: 0.74rem;
 }
 
-.ledger-reference small {
+.ledger-references small {
   color: var(--error);
 }

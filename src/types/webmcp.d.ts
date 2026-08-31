@@ -32,6 +32,7 @@ interface Document {
 interface Window {
   eevee?: Readonly<{
     inputs: Readonly<Record<string, unknown>>
+    media: Readonly<Record<string, unknown>> | null
     store: Readonly<{
       get(key: string): Promise<unknown>
       set(key: string, value: unknown): Promise<unknown>

@@ -2,7 +2,10 @@ import 'server-only'
 import { parse, type Node } from 'acorn'
 import { transform } from 'esbuild'
 import { aggregateEvaluationVerdict, type QualityCheck, type QualityReport } from '@/domain/quality'
-import type { ReactAppDefinition, ReactCompilation } from '@/domain/react-app'
+import type { ReactAppDefinition, ReactCompilation, ReactSourceDefinition } from '@/domain/react-app'
+import type { VideoEditorDefinition } from '@/domain/video-editor'
+
+type InteractiveDefinition = ReactAppDefinition | VideoEditorDefinition
 
 /**
  * Static quality analysis over the applet's React source.
@@ -234,7 +237,7 @@ const isNamedControl = (control: ControlFact, facts: SourceFacts, jsxNames: Read
   return false
 }
 
-const analyzeSource = async (definition: ReactAppDefinition): Promise<SourceFacts> => {
+const analyzeSource = async (definition: ReactSourceDefinition): Promise<SourceFacts> => {
   const facts: SourceFacts = {
     tags: new Set(),
     controls: [],
@@ -286,7 +289,7 @@ const check = (
   detail: string,
 ): QualityCheck => ({ id, label, verdict, criticality, detail })
 
-const sourceText = (definition: ReactAppDefinition): string =>
+const sourceText = (definition: ReactSourceDefinition): string =>
   definition.files.map(({ content }) => content).join('\n')
 
 const hasUnsafeCapability = (source: string): boolean =>
@@ -302,7 +305,7 @@ const boundedDetail = (diagnostics: readonly string[]): string => {
 }
 
 export const evaluateReactApp = async (
-  definition: ReactAppDefinition,
+  definition: InteractiveDefinition,
   compilation: ReactCompilation,
   evaluatedAt = new Date(),
 ): Promise<QualityReport> => {
@@ -313,7 +316,7 @@ export const evaluateReactApp = async (
   const facts = await analyzeSource(definition)
   const hasLandmarks = facts.tags.has('main') && facts.tags.has('h1')
   const { controls, unnamed } = namedControlVerdict(facts)
-  const usesRuntime = /\b(?:inputs|store|files)\b/.test(source)
+  const usesRuntime = /\b(?:inputs|store|files|media|actions)\b/.test(source)
   const hasPresentation =
     definition.files.some(({ path, content }) => path.endsWith('.css') && content.trim()) ||
     facts.presentationAttribute
@@ -390,6 +393,17 @@ export const evaluateReactApp = async (
         ? 'The source includes a stylesheet, class names, or inline presentation rules.'
         : 'The source has no explicit presentation layer yet.',
     ),
+    ...(definition.kind === 'video-editor'
+      ? [
+          check(
+            'video-project',
+            'Bounded video project',
+            definition.project.clips.length > 0 ? 'pass' : 'fail',
+            'required',
+            `${definition.project.clips.length} clip${definition.project.clips.length === 1 ? '' : 's'} across ${definition.project.durationMs} ms at ${definition.project.fps} fps.`,
+          ),
+        ]
+      : []),
   ]
   const requiredFailures = checks.filter(
     ({ criticality, verdict }) => criticality === 'required' && verdict === 'fail',

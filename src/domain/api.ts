@@ -3,7 +3,7 @@ import {
   appletVersionDefinitionSchema,
   appletMediumSchema,
   appletRunSchema,
-  webAppRunOutputSchema,
+  appletRunOutputSchema,
   appletStateSchema,
   correctionSchema,
   runStateSchema,
@@ -40,7 +40,7 @@ export const appletVersionSummarySchema = z.strictObject({
   state: versionStateSchema,
   note: z.string(),
   inputs: inputDefinitionSchema,
-  definitionKind: z.literal('react-app'),
+  definitionKind: z.enum(['react-app', 'video-editor']),
   qualityReport: qualityReportSchema,
   createdAt: z.iso.datetime({ offset: true }),
 })
@@ -83,7 +83,7 @@ export const appletActionRequestResponseSchema = z.strictObject({
 export const appletActionRequestListResponseSchema = z.strictObject({
   requests: z.array(appletActionRequestSchema),
 })
-export const appletPreviewResponseSchema = z.strictObject({ preview: webAppRunOutputSchema })
+export const appletPreviewResponseSchema = z.strictObject({ preview: appletRunOutputSchema })
 export const correctionResponseSchema = z.strictObject({ correction: correctionSchema })
 export const evaluationSuiteResponseSchema = z.strictObject({ suite: evaluationSuiteSchema })
 export const evaluationPlanResponseSchema = z.strictObject({ plan: evaluationPlanSchema })

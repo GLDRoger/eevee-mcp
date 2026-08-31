@@ -16,7 +16,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import type {
   AppletVersionDefinition,
-  WebAppRunOutput,
+  AppletRunOutput,
 } from '@/domain/applet'
 import type { InputDefinition } from '@/domain/input'
 import type { JsonObject, JsonValue } from '@/domain/json'
@@ -303,7 +303,7 @@ export const appletRun = pgTable(
     appletVersionId: uuid('applet_version_id').notNull(),
     state: runState('state').notNull().default('queued'),
     input: jsonb('input').$type<JsonObject>().notNull(),
-    output: jsonb('output').$type<WebAppRunOutput>(),
+    output: jsonb('output').$type<AppletRunOutput>(),
     error: text('error'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true }),

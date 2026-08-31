@@ -53,11 +53,11 @@ export const createEvaluationSuite = async (
       .where(and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId)))
       .limit(1)
     if (!target) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
-    if (target.medium !== 'web-app') {
+    if (target.medium !== 'web-app' && target.medium !== 'video') {
       throw new RequestFailure(
         409,
         'evaluation_medium_unsupported',
-        'Behavioral scenarios currently support web applets',
+        'Behavioral scenarios currently support interactive web and video applets',
       )
     }
     const [latest] = await transaction

@@ -60,6 +60,7 @@ describe('registerEeveeTools', () => {
       'inspect_applet_version',
       'create_applet',
       'create_react_app_version',
+      'create_video_editor_version',
       'create_evaluation_suite',
       'evaluate_applet_version',
       'inspect_evaluation_run',

@@ -1,7 +1,7 @@
 'use client'
 
 import { z } from 'zod'
-import type { WebAppRunOutput } from '@/domain/applet'
+import type { AppletRunOutput } from '@/domain/applet'
 import type {
   EvaluationCaseDefinition,
   EvaluationCaseEvidenceInput,
@@ -78,7 +78,7 @@ const equalJson = (left: JsonValue | undefined, right: JsonValue): boolean => {
 }
 
 const createCaseHarness = (
-  output: WebAppRunOutput,
+  output: AppletRunOutput,
   memory: BoundedMemoryStore,
   signal: AbortSignal,
 ) => {
@@ -349,7 +349,7 @@ const executeStep = async (
 
 const runCase = async (
   definition: EvaluationCaseDefinition,
-  output: WebAppRunOutput,
+  output: AppletRunOutput,
   signal: AbortSignal,
 ): Promise<EvaluationCaseEvidenceInput> => {
   const memory = createBoundedMemoryStore()

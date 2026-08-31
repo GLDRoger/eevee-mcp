@@ -18,14 +18,10 @@ export const reactAppFileSchema = z.strictObject({
   content: z.string().max(MAX_REACT_APP_SOURCE_BYTES),
 })
 
-export const reactAppDefinitionSchema = z
-  .strictObject({
-    kind: z.literal('react-app'),
-    entry: z.literal(REACT_APP_ENTRY),
-    files: z.array(reactAppFileSchema).min(1).max(MAX_REACT_APP_FILES),
-    actions: appletActionDefinitionsSchema.default([]),
-  })
-  .superRefine(({ files }, context) => {
+export const validateReactSourceFiles = (
+  files: readonly z.infer<typeof reactAppFileSchema>[],
+  context: z.RefinementCtx,
+): void => {
     const paths = new Set<string>()
     let sourceBytes = 0
     for (const [index, file] of files.entries()) {
@@ -61,7 +57,16 @@ export const reactAppDefinitionSchema = z
         path: ['files'],
       })
     }
+}
+
+export const reactAppDefinitionSchema = z
+  .strictObject({
+    kind: z.literal('react-app'),
+    entry: z.literal(REACT_APP_ENTRY),
+    files: z.array(reactAppFileSchema).min(1).max(MAX_REACT_APP_FILES),
+    actions: appletActionDefinitionsSchema.default([]),
   })
+  .superRefine(({ files }, context) => validateReactSourceFiles(files, context))
 
 export const webAppArtifactSchema = z.strictObject({
   kind: z.literal('compiled-react-app'),
@@ -75,6 +80,7 @@ export const webAppArtifactSchema = z.strictObject({
 
 export type ReactAppDefinition = z.infer<typeof reactAppDefinitionSchema>
 export type ReactAppFile = z.infer<typeof reactAppFileSchema>
+export type ReactSourceDefinition = Pick<ReactAppDefinition, 'entry' | 'files'>
 export type WebAppArtifact = z.infer<typeof webAppArtifactSchema>
 export type ReactCompilation = {
   artifact: WebAppArtifact | null

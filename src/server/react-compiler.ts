@@ -5,7 +5,7 @@ import {
   MAX_REACT_APP_BUNDLE_BYTES,
   REACT_APP_ENTRY,
   type ReactCompilation,
-  type ReactAppDefinition,
+  type ReactSourceDefinition,
 } from '@/domain/react-app'
 
 const VIRTUAL_NAMESPACE = 'eevee-source'
@@ -39,7 +39,7 @@ function EeveeHarness() {
     window.eevee.actions.register(AppletModule.actions ?? {});
     window.__eeveeReady();
   }, []);
-  return <App inputs={window.eevee.inputs} store={window.eevee.store} />;
+  return <App inputs={window.eevee.inputs} store={window.eevee.store} media={window.eevee.media} />;
 }
 
 const root = document.getElementById('root');
@@ -125,7 +125,7 @@ const artifactHtml = (javascript: string, stylesheet: string): string => `<!doct
 </html>`
 
 export const compileReactApp = async (
-  definition: ReactAppDefinition,
+  definition: ReactSourceDefinition,
   compiledAt = new Date(),
 ): Promise<ReactCompilation> => {
   const files = new Map(definition.files.map(({ path, content }) => [path, content]))

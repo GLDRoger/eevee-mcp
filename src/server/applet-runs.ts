@@ -5,7 +5,7 @@ import type {
   CompleteRunInput,
   CreateRunInput,
   FailRunInput,
-  WebAppRunOutput,
+  AppletRunOutput,
 } from '@/domain/applet'
 import { validateAppletInputs } from '@/domain/input'
 import { prepareAppletRuntime } from '@/domain/applet-runtime'
@@ -76,16 +76,30 @@ export const runApplet = async (
     )
   }
   const channel = crypto.randomUUID()
-  const output: WebAppRunOutput = {
-    kind: 'web-app',
-    channel,
-    html: prepareAppletRuntime(
-      active.version.artifact.html,
-      channel,
-      validated.values,
-      active.version.definition.actions,
-    ),
-  }
+  const output: AppletRunOutput =
+    active.version.definition.kind === 'video-editor'
+      ? {
+          kind: 'video',
+          channel,
+          project: active.version.definition.project,
+          html: prepareAppletRuntime(
+            active.version.artifact.html,
+            channel,
+            validated.values,
+            active.version.definition.actions,
+            { project: active.version.definition.project },
+          ),
+        }
+      : {
+          kind: 'web-app',
+          channel,
+          html: prepareAppletRuntime(
+            active.version.artifact.html,
+            channel,
+            validated.values,
+            active.version.definition.actions,
+          ),
+        }
   const [row] = await getDatabase()
     .insert(appletRun)
     .values({

@@ -6,7 +6,7 @@ import type {
   CreateAppletInput,
   CreateCorrectionInput,
   CreateVersionInput,
-  WebAppRunOutput,
+  AppletRunOutput,
 } from '@/domain/applet'
 import type {
   AppletDetail,
@@ -46,12 +46,13 @@ import { listEvaluationSuites } from './evaluation-suites'
 
 const iso = (value: Date): string => value.toISOString()
 
-const requireReactVersionTarget = (
+const requireVersionTarget = (
   target: { medium: AppletMedium } | undefined,
-  definitionKind: 'react-app',
+  definitionKind: CreateVersionInput['definition']['kind'],
 ): void => {
   if (!target) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
-  if (target.medium !== 'web-app') {
+  const expectedMedium: AppletMedium = definitionKind === 'react-app' ? 'web-app' : 'video'
+  if (target.medium !== expectedMedium) {
     throw new RequestFailure(
       409,
       'medium_mismatch',
@@ -241,7 +242,7 @@ export const createVersion = async (
     .from(applet)
     .where(and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId)))
     .limit(1)
-  requireReactVersionTarget(target, value.definition.kind)
+  requireVersionTarget(target, value.definition.kind)
   const compilation = await compileReactApp(value.definition)
   const qualityReport = await evaluateReactApp(value.definition, compilation)
   const created = await database.transaction(async (transaction) => {
@@ -251,7 +252,7 @@ export const createVersion = async (
       .from(applet)
       .where(and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId)))
       .limit(1)
-    requireReactVersionTarget(owned, value.definition.kind)
+    requireVersionTarget(owned, value.definition.kind)
     const [current] = await transaction
       .select({ version: max(appletVersion.version) })
       .from(appletVersion)
@@ -390,7 +391,7 @@ export const previewVersion = async (
   workspaceId: string,
   appletId: string,
   versionId: string,
-): Promise<WebAppRunOutput> => {
+): Promise<AppletRunOutput> => {
   const [version] = await getDatabase()
     .select({
       artifact: appletVersion.artifact,
@@ -415,13 +416,28 @@ export const previewVersion = async (
     )
   }
   const channel = crypto.randomUUID()
+  const inputs = previewInputs(version.inputs)
+  if (version.definition.kind === 'video-editor') {
+    return {
+      kind: 'video',
+      channel,
+      project: version.definition.project,
+      html: prepareAppletRuntime(
+        version.artifact.html,
+        channel,
+        inputs,
+        version.definition.actions,
+        { project: version.definition.project },
+      ),
+    }
+  }
   return {
     kind: 'web-app',
     channel,
     html: prepareAppletRuntime(
       version.artifact.html,
       channel,
-      previewInputs(version.inputs),
+      inputs,
       version.definition.actions,
     ),
   }

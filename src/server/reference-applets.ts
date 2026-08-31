@@ -8,6 +8,11 @@ import {
   sparkbenchEvaluation,
   sparkbenchVersion,
 } from '@/reference-applets/sparkbench'
+import {
+  FABLECUT_REFERENCE,
+  fablecutEvaluation,
+  fablecutVersion,
+} from '@/reference-applets/fablecut'
 import { getDatabase } from './db/client'
 import { applet, appletVersion, evaluationSuite } from './db/schema'
 import { compileReactApp } from './react-compiler'
@@ -22,6 +27,13 @@ const referencePackage = (slug: ReferenceAppletSlug) => {
         medium: 'web-app' as const,
         version: sparkbenchVersion,
         evaluation: sparkbenchEvaluation,
+      }
+    case 'fablecut':
+      return {
+        identity: FABLECUT_REFERENCE,
+        medium: 'video' as const,
+        version: fablecutVersion,
+        evaluation: fablecutEvaluation,
       }
     default: {
       const unreachable: never = slug

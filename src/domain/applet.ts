@@ -3,6 +3,7 @@ import { inputDefinitionSchema } from './input'
 import { jsonObjectSchema, jsonValueSchema } from './json'
 import { qualityReportSchema } from './quality'
 import { reactAppDefinitionSchema } from './react-app'
+import { videoEditorDefinitionSchema, videoProjectSchema } from './video-editor'
 
 export const appletMediumSchema = z.enum([
   'web-app',
@@ -21,7 +22,7 @@ export const appletMediumSchema = z.enum([
  * to media with a working executor so nobody mints a draft that can never
  * run. Widen this list as executors land.
  */
-export const creatableAppletMediumSchema = z.enum(['web-app'])
+export const creatableAppletMediumSchema = z.enum(['web-app', 'video'])
 
 export const appletStateSchema = z.enum(['active', 'archived'])
 export const versionStateSchema = z.enum(['draft', 'approved', 'rejected'])
@@ -30,6 +31,7 @@ export const correctionStateSchema = z.enum(['proposed', 'applied', 'dismissed']
 
 export const appletVersionDefinitionSchema = z.discriminatedUnion('kind', [
   reactAppDefinitionSchema,
+  videoEditorDefinitionSchema,
 ])
 
 export const createAppletSchema = z.strictObject({
@@ -93,13 +95,25 @@ export const webAppRunOutputSchema = z.strictObject({
   channel: z.uuid(),
 })
 
+export const videoRunOutputSchema = z.strictObject({
+  kind: z.literal('video'),
+  html: z.string(),
+  channel: z.uuid(),
+  project: videoProjectSchema,
+})
+
+export const appletRunOutputSchema = z.discriminatedUnion('kind', [
+  webAppRunOutputSchema,
+  videoRunOutputSchema,
+])
+
 export const appletRunSchema = z.strictObject({
   id: z.uuid(),
   appletId: z.uuid(),
   appletVersionId: z.uuid(),
   state: runStateSchema,
   input: jsonObjectSchema,
-  output: webAppRunOutputSchema.nullable(),
+  output: appletRunOutputSchema.nullable(),
   error: z.string().nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   completedAt: z.iso.datetime({ offset: true }).nullable(),
@@ -129,3 +143,5 @@ export type AppletVersion = z.infer<typeof appletVersionSchema>
 export type AppletRun = z.infer<typeof appletRunSchema>
 export type Correction = z.infer<typeof correctionSchema>
 export type WebAppRunOutput = z.infer<typeof webAppRunOutputSchema>
+export type VideoRunOutput = z.infer<typeof videoRunOutputSchema>
+export type AppletRunOutput = z.infer<typeof appletRunOutputSchema>

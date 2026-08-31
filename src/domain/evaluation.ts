@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { webAppRunOutputSchema } from './applet'
+import { appletRunOutputSchema } from './applet'
 import { jsonObjectSchema, jsonValueSchema } from './json'
 import { qualityCheckSchema } from './quality'
 
@@ -217,7 +217,7 @@ export const evaluationRunSchema = z.strictObject({
 
 export const evaluationExecutionSchema = z.strictObject({
   caseId: evaluationIdSchema,
-  output: webAppRunOutputSchema,
+  output: appletRunOutputSchema,
 })
 
 export const evaluationTargetSchema = z.enum(['candidate', 'baseline'])

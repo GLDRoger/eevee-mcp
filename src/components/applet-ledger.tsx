@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { AppletSummary } from '@/domain/api'
+import type { ReferenceAppletSlug } from '@/domain/reference-applet'
 
 const mediumLabel: Record<AppletSummary['medium'], string> = {
   'web-app': 'Web app',
@@ -18,25 +19,25 @@ export function AppletLedger({
   applets,
   selectedId,
   onSelect,
-  onInstallSparkbench,
+  onInstallReference,
 }: {
   applets: readonly AppletSummary[]
   selectedId: string | null
   onSelect: (appletId: string) => void
-  onInstallSparkbench: () => Promise<void>
+  onInstallReference: (slug: ReferenceAppletSlug) => Promise<void>
 }) {
-  const [installing, setInstalling] = useState(false)
+  const [installing, setInstalling] = useState<ReferenceAppletSlug | null>(null)
   const [error, setError] = useState('')
 
-  const install = async () => {
-    setInstalling(true)
+  const install = async (slug: ReferenceAppletSlug) => {
+    setInstalling(slug)
     setError('')
     try {
-      await onInstallSparkbench()
+      await onInstallReference(slug)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Sparkbench could not be installed')
     } finally {
-      setInstalling(false)
+      setInstalling(null)
     }
   }
 
@@ -76,13 +77,20 @@ export function AppletLedger({
           })}
         </ol>
       )}
-      <section className="ledger-reference" aria-labelledby="sparkbench-reference-title">
-        <p>Reference applet</p>
-        <strong id="sparkbench-reference-title">Sparkbench</strong>
-        <span>Five governed circuit tools and a restart evaluation.</span>
-        <button type="button" disabled={installing} onClick={() => void install()}>
-          {installing ? 'Installing' : 'Install draft'}
-        </button>
+      <section className="ledger-references" aria-labelledby="reference-applets-title">
+        <p id="reference-applets-title">Reference applets</p>
+        {([
+          ['sparkbench', 'Sparkbench', 'Five governed circuit tools and a restart evaluation.'],
+          ['fablecut', 'FableCut', 'A video EDL with governed cuts and durable undo.'],
+        ] as const).map(([slug, name, description]) => (
+          <div className="ledger-reference" key={slug}>
+            <strong>{name}</strong>
+            <span>{description}</span>
+            <button type="button" disabled={installing !== null} onClick={() => void install(slug)}>
+              {installing === slug ? 'Installing' : 'Install draft'}
+            </button>
+          </div>
+        ))}
         {error ? <small role="alert">{error}</small> : null}
       </section>
     </aside>

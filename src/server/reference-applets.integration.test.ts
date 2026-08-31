@@ -43,4 +43,21 @@ describeDatabase('reference applets', () => {
       'reset_bench',
     ])
   })
+
+  it('installs FableCut as a video applet with a bounded EDL', async () => {
+    const installed = await installReferenceApplet(workspaceId, 'fablecut')
+    const detail = await getApplet(workspaceId, installed.id)
+    expect(detail).toMatchObject({
+      applet: { name: 'FableCut', medium: 'video', versionCount: 1 },
+      evaluationSuites: [{ name: 'FableCut timeline behavior' }],
+    })
+    const version = detail.versions[0]
+    const stored = await getDatabase().query.appletVersion.findFirst({
+      where: (table, { eq: equals }) => equals(table.id, version?.id ?? ''),
+    })
+    expect(stored?.definition.kind).toBe('video-editor')
+    if (stored?.definition.kind !== 'video-editor') throw new Error('FableCut has no video definition')
+    expect(stored.definition.project).toMatchObject({ durationMs: 18_000, fps: 30 })
+    expect(stored.definition.actions).toHaveLength(5)
+  })
 })

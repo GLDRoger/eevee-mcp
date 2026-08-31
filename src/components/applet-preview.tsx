@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { WebAppRunOutput } from '@/domain/applet'
+import type { AppletRunOutput } from '@/domain/applet'
 import {
   APPLET_ACTION_TOOL_PREFIX,
   appletActionInputSchema,
@@ -34,7 +34,7 @@ export function AppletPreview({
   onRevoked,
 }: {
   appletId: string
-  output: WebAppRunOutput
+  output: AppletRunOutput
   storage: 'durable' | 'ephemeral'
   runId?: string
   actions?: readonly AppletActionDefinition[]
