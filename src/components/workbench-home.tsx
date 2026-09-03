@@ -36,7 +36,7 @@ const MAP: ReadonlyArray<{
     name: 'Studio',
     where: 'Top bar',
     surface: 'studio',
-    what: 'Word, Sheets, and Slides without the subscription. Start blank or open a Library file. Saving makes a version, not a mess.',
+    what: 'Documents, Sheets, and Slides without the subscription. Start blank or open a Library file. Saving makes a version, not a mess.',
   },
   {
     name: 'Guide',
@@ -193,7 +193,7 @@ export function AppletsHome({
         </p>
         <ol className="home-loop" aria-label="How the loop works">
           <li><b>Build</b><span>the agent writes a small app</span></li>
-          <li><b>Prove</b><span>browser scenarios run it end to end</span></li>
+          <li><b>Prove</b><span>browser scenarios run the whole app</span></li>
           <li><b>Key</b><span>your passkey publishes the exact version</span></li>
           <li><b>Tools</b><span>its actions register as agent tools</span></li>
           <li><b>Rehearse</b><span>every write shows its diff and waits</span></li>

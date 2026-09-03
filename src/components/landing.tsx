@@ -314,8 +314,11 @@ function Scenery() {
 }
 
 export function Landing() {
-  const videoUrl = process.env.EEVEE_DEMO_VIDEO_URL;
-  const repoUrl = process.env.EEVEE_REPO_URL;
+  const videoUrl =
+    process.env.EEVEE_DEMO_VIDEO_URL ??
+    "https://www.youtube.com/watch?v=AviwsWmeq7E";
+  const repoUrl =
+    process.env.EEVEE_REPO_URL ?? "https://github.com/GLDRoger/eevee-mcp";
   return (
     <div className="lp">
       <LandingTools />
@@ -338,7 +341,7 @@ export function Landing() {
         <div className="lp-nav-actions">
           {videoUrl ? (
             <a
-              className="lp-ghost"
+              className="lp-ghost lp-nav-watch"
               href={videoUrl}
               target="_blank"
               rel="noreferrer"
@@ -346,6 +349,14 @@ export function Landing() {
               Watch demo
             </a>
           ) : null}
+          <a
+            className="lp-ghost lp-nav-github"
+            href={repoUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub
+          </a>
           <Link className="primary-action lp-cta" href="/workbench">
             Open demo
           </Link>
@@ -479,8 +490,8 @@ export function Landing() {
               <li className="is-baby" data-reveal="" style={stagger(3)}>
                 <span>What it added</span>
                 <p>
-                  <b>Rehearsals.</b> <b>Approvals.</b> <b>Receipts.</b> The
-                  three things nobody asked for and everybody needed.
+                  <b>Rehearsals.</b> <b>Approvals.</b> <b>Receipts.</b> Nobody
+                  asked for any of them.
                 </p>
               </li>
             </ul>
@@ -538,7 +549,7 @@ export function Landing() {
         <section className="lp-band is-paper lp-benchwork" id="bench">
           <div className="lp-wrap">
             <div className="lp-heading" data-reveal="">
-              <p className="lp-kicker">Not just the demo</p>
+              <p className="lp-kicker">The rest of the bench</p>
               <h2>
                 Meridian Ops is one applet. The bench is for whatever your week
                 needs.
@@ -601,8 +612,7 @@ export function Landing() {
                 built-in pane. EEVEE starts where the second app begins.
               </p>
               <p className="lp-concession">
-                EEVEE is not a better formula bar. It is the part those panes
-                leave out.
+                Even a perfect formula bar is still one pane on one file.
               </p>
             </div>
             <ul className="lp-builtin-grid">
@@ -870,13 +880,11 @@ export function Landing() {
               <li>
                 <Link href="/workbench">Workbench</Link>
               </li>
-              {repoUrl ? (
-                <li>
-                  <a href={repoUrl} target="_blank" rel="noreferrer">
-                    GitHub
-                  </a>
-                </li>
-              ) : null}
+              <li>
+                <a href={repoUrl} target="_blank" rel="noreferrer">
+                  GitHub
+                </a>
+              </li>
               {videoUrl ? (
                 <li>
                   <a href={videoUrl} target="_blank" rel="noreferrer">
