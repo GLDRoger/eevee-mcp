@@ -1,8 +1,8 @@
 # EEVEE MCP
 
-<!-- Fill in the two placeholders below before submitting: <LIVE_URL> is the deployed HTTPS workbench, <DEMO_VIDEO_URL> is the public demo recording. -->
+Agents build the app. You hold the key.
 
-Live workbench: `<LIVE_URL>`. Demo video: `<DEMO_VIDEO_URL>`.
+Live workbench: [eevee-mcp.vercel.app](https://eevee-mcp.vercel.app). Source: [github.com/GLDRoger/eevee-mcp](https://github.com/GLDRoger/eevee-mcp). Demo video: [www.youtube.com/watch?v=AviwsWmeq7E](https://www.youtube.com/watch?v=AviwsWmeq7E).
 
 ## The problem
 
@@ -11,6 +11,8 @@ You run the same office work every week: reconcile an export, chase overdue invo
 ## What EEVEE does
 
 EEVEE gives a browser agent real authority over small business apps in graded steps, and keeps the last step in your hands. The agent builds a small React app (an applet), proves it against a behavioral suite in the browser, and asks you to publish it; your passkey is the only thing that publishes. Once published, the applet's own actions register as WebMCP tools. Reads run at once. Every write the applet performs is rehearsed against current data first, so the decision card shows the exact fields that will change, and it waits for your passkey, or runs under a short lease you granted with it. The workbench has no model or chat of its own; any WebMCP-capable agent discovers the 28 tools on the page and the applet tools that appear when a run opens.
+
+The same key covers your files. The Library keeps DOCX, XLSX, PPTX, and PDF as immutable versions on your own PostgreSQL; Studio opens them in real Documents, Sheets, Slides, and PDF editors, or starts a blank one. The agent edits spreadsheets through a typed tool (cells, formulas, charts, pivots) and each save is a version you can see land in the open editor. A sensitive-text scan hands the agent masked findings only, never the values, and removing them is a new version that needs your passkey.
 
 ## Try it with an agent in 60 seconds
 
@@ -43,6 +45,22 @@ Run the published Meridian Ops applet for "Meridian Ops". Share your plan first.
 ```
 
 You should see: each write appear as a decision card under the preview with a rehearsal showing the exact fields that will change. Approve one with your passkey and the agent's tool call returns with the result. Reject one with a reason and the agent receives your reason. Grant a lease (3 writes over 5 minutes, or 10 over 15) and the next writes run without asking, with the count visible in the header chip.
+
+**4. Files (optional)**
+
+Open **Studio**, click **New spreadsheet**, then paste:
+
+```text
+Build an OEE cost model in the spreadsheet I have open in EEVEE Studio: one row per cell (A, B, C) with planned minutes, downtime, ideal cycle time, pieces, and rejects; formulas for availability, performance, quality, and OEE; then cost per accepted piece from a labour rate. Formulas only, no pasted values.
+```
+
+Import any DOCX with an email address and a phone number in it under **Library**, then paste:
+
+```text
+Scan the document I uploaded to the EEVEE Library for personal names, email addresses, and phone numbers, and open the findings for my review. Do not redact anything yourself; I will approve the redaction with my passkey.
+```
+
+You should see: the sheet fill in while you watch, with a version pill that counts up on every save; then masked findings open in the Library, and **Remove selected** asks for your passkey before writing version 2. The Guide tab in the workbench and the Prompts section of the landing page hold six more, one per industry.
 
 ## Hackathon
 
@@ -150,11 +168,20 @@ agent -> WebMCP tools (page) -> same-origin API -> PostgreSQL
 - Publishing, action decisions, DOCX redaction, and leases require a passkey. Each challenge is single-use and scoped to one exact operation.
 - The server checks every action's declared effects, and the page rejects untagged writes to stored state after an agent action has run unless the person is interacting.
 
-Details: [architecture](docs/architecture.md), [product language](CONTEXT.md), [quality bar](docs/quality-bar.md), [deployment](docs/deployment.md), [provenance](docs/provenance.md).
+Details: [architecture](docs/architecture.md), [product language](CONTEXT.md), [quality bar](docs/quality-bar.md), [deployment](docs/deployment.md), [provenance](docs/provenance.md), [demo video source](video/README.md).
+
+## Known limits
+
+- The passkey cannot make the agent right. It makes the agent ask. Evidence and review do the rest, and a suite only proves what its scenarios cover.
+- The sensitive-text scan covers emails, phone numbers, US government IDs, and checksum-valid payment cards in DOCX paragraph text. Not IBANs, not images, not other formats.
+- A passkey binds to the hostname it was created on. `localhost` passkeys do not work on the deployed host and vice versa.
+- A workspace is this browser's cookie. Leaving it is one way; there are no accounts.
+- Presentations and documents are edited by hand in Studio; the agent writes them only as complete native files (`create_office_file`, `replace_office_file`). Spreadsheet and PDF edits have typed tools.
+- One web replica is assumed; see [deployment](docs/deployment.md).
 
 ## Built during the hackathon vs ported
 
-The repository was created on 26 August 2026. Everything outside `src/office` was written during the submission period: about 23,500 lines across 164 files in `src/` (4,100 of them tests) plus `scripts/`, measured on 3 September 2026. Commit `906dc23` on 31 August 2026 ported 155,594 lines of Office editors (Documents, Sheets, Slides, PDF, and their engines) under `src/office` from the owner's private predecessor. That code predates the hackathon and is released here under Apache-2.0. See [provenance](docs/provenance.md) for the exact paths.
+The repository was created on 26 August 2026. Everything outside `src/office` was written during the submission period: about 28,000 lines across 175 files in `src/` (4,200 of them tests), plus about 2,000 lines in `scripts/` and the Remotion demo in `video/`, measured on 3 September 2026. Commit `906dc23` on 31 August 2026 ported 155,594 lines of Office editors (Documents, Sheets, Slides, PDF, and their engines) under `src/office` from the owner's private predecessor. That code predates the hackathon and is released here under Apache-2.0. See [provenance](docs/provenance.md) for the exact paths.
 
 ## License
 
