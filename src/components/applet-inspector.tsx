@@ -414,6 +414,11 @@ export function AppletInspector({
 
   useEffect(() => {
     if (!showDraftPreview || view !== 'app' || stageVersionId === undefined) return
+    // The preview endpoint mints a fresh channel per call. Fetching again for
+    // a version that already has one (say, after a Code → App toggle) swapped
+    // the iframe's srcdoc under a running applet, which the preview reads as
+    // a reload and revokes: "Runtime stopped" and a storage timeout inside.
+    if (draftPreview?.versionId === stageVersionId) return
     const controller = new AbortController()
     void api
       .previewVersion(detail.applet.id, stageVersionId, controller.signal)
@@ -423,7 +428,7 @@ export function AppletInspector({
         // provenance drawer explains what failed.
       })
     return () => controller.abort()
-  }, [detail.applet.id, stageVersionId, showDraftPreview, view])
+  }, [detail.applet.id, draftPreview?.versionId, stageVersionId, showDraftPreview, view])
 
   useEffect(() => {
     if (stageVersionId === undefined) return
