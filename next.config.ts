@@ -10,8 +10,8 @@ const nextConfig: NextConfig = {
   // require dynamically, so Vercel must carry those files explicitly.
   outputFileTracingIncludes: {
     '/*': [
-      './node_modules/react/cjs/*.js',
-      './node_modules/react-dom/cjs/*.js',
+      './node_modules/react/**/*',
+      './node_modules/react-dom/**/*',
       './node_modules/scheduler/**/*',
     ],
   },
