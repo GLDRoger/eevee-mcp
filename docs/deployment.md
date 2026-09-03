@@ -9,6 +9,8 @@ EEVEE needs one Node 24 web service, PostgreSQL 17, HTTPS, and three environment
 
 HTTPS is required. Passkeys bind to the hostname the browser sees, so a passkey created on `localhost` does not work on the deployed host, and a passkey created on one deployed hostname does not work on another.
 
+On Vercel, connect a PostgreSQL integration as `DATABASE_URL`. The `build` script applies pending migrations before `next build`, so a deployment cannot go live against an outdated schema. Keep production deploys serialized; concurrent builds should not race schema changes.
+
 ## Docker image
 
 The `Dockerfile` builds the app, prunes dev dependencies, applies migrations on start, and runs Next.js on `PORT` (default 3000). It exposes `/api/health` for the container health check.
