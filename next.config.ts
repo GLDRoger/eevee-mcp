@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   // The floating Next badge sat over the workbench corner; errors still surface.
   devIndicators: false,
   serverExternalPackages: ['esbuild'],
+  // Applets compile React source at request time. Next's tracer sees the
+  // CommonJS entry files but cannot infer the production CJS files they
+  // require dynamically, so Vercel must carry those files explicitly.
+  outputFileTracingIncludes: {
+    '/*': ['./node_modules/react/cjs/*.js', './node_modules/react-dom/cjs/*.js'],
+  },
   turbopack: {
     root: process.cwd(),
   },
