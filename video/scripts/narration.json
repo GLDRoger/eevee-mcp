@@ -1,0 +1,52 @@
+{
+  "voice": "Zephyr",
+  "model": "gemini-3.1-flash-tts-preview",
+  "direction": "Style: warm, confident, clear, with a little dry humor. Pace: natural conversational pace, unhurried, short pauses at full stops.",
+  "lines": [
+    {
+      "id": "01-hook",
+      "text": "Agents got good at building software. Trust didn't keep up. This is Eevee: a workbench where a browser agent builds the app you need, proves it works, and nothing ships without your key."
+    },
+    {
+      "id": "02-baby",
+      "text": "Lovable, ChatGPT, and Chrome had a baby. Lovable builds from a sentence. ChatGPT brings the brain, through its in-app browser. Chrome brings WebMCP: tools on the page itself. The baby got the trust issues: it rehearses every write, asks first, and keeps receipts. Compulsively."
+    },
+    {
+      "id": "03-builtin",
+      "text": "Sheets has Gemini now, and Word has Copilot. They help inside one file, and your work crosses apps. A prompt box with undo is not a control. Eevee puts the app, the files, and the decision on one bench, with your agent, not theirs."
+    },
+    {
+      "id": "04-home",
+      "text": "Open the demo and land on an empty bench: Applets, Library, Studio, and a Guide with prompts to paste."
+    },
+    {
+      "id": "05-prove",
+      "text": "Ask for something real. Meridian Ops is a seven-module ERP. The agent installs it, source beside it, file by file, then proves it: the behavioral suite runs in a sandboxed worker in your browser, verdict next to the code."
+    },
+    {
+      "id": "06-publish",
+      "text": "Publishing needs a person. Set up a passkey once, review the evidence, and Approve and publish asks for your fingerprint, bound to this exact version."
+    },
+    {
+      "id": "07-run",
+      "text": "A published applet becomes thirty-two WebMCP tools. Reads run at once. Writes are rehearsed first, and you see the diff: which record, which field, from what, to what. Approve, and the tool call returns to the agent."
+    },
+    {
+      "id": "08-lease",
+      "text": "Approving every write gets old, so grant a lease: three writes, five minutes, revoke any time. Say no and say why; the reason goes back to the agent as the tool result."
+    },
+    {
+      "id": "09-studio",
+      "text": "Studio is Word, Sheets, and Slides without the subscription. Start a blank spreadsheet, and the agent builds the OEE model through a typed tool: cells, formulas, a version for every save, in a real editor."
+    },
+    {
+      "id": "10-library",
+      "text": "The Library keeps your own files, every save a version. Ask for a scan of a contract; the agent gets masked findings, never the values. Removing them is a new version, and that needs your key."
+    },
+    {
+      "id": "11-close",
+      "text": "Eevee MCP. Agents build the app. You hold the key. Try it at eevee dash mcp dot vercel dot app."
+    }
+  ],
+  "tempo": 1.05
+}

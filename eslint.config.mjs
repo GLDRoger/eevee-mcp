@@ -44,6 +44,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "public/pdfjs/**",
     "next-env.d.ts",
+    // The Remotion demo video is its own package with its own lint.
+    "video/**",
   ]),
 ]);
 

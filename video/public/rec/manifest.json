@@ -1,0 +1,250 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "scenes": {
+    "landing": {
+      "file": "rec/landing.mp4",
+      "duration": 45.866667,
+      "marks": [
+        {
+          "label": "scroll",
+          "t": 3.203
+        },
+        {
+          "label": "family",
+          "t": 8.022
+        },
+        {
+          "label": "parents",
+          "t": 14.839
+        },
+        {
+          "label": "builtin",
+          "t": 26.756
+        },
+        {
+          "label": "builtin-list",
+          "t": 34.371
+        }
+      ]
+    },
+    "home": {
+      "file": "rec/home.mp4",
+      "duration": 13.566667,
+      "marks": [
+        {
+          "label": "scroll",
+          "t": 2.6
+        },
+        {
+          "label": "guide",
+          "t": 5.6
+        }
+      ]
+    },
+    "install": {
+      "file": "rec/install.mp4",
+      "duration": 24.966667,
+      "marks": [
+        {
+          "label": "agent:share_plan",
+          "t": 3.4
+        },
+        {
+          "label": "agent:install_reference_applet",
+          "t": 5.1
+        },
+        {
+          "label": "code",
+          "t": 7.1
+        },
+        {
+          "label": "app",
+          "t": 13.8
+        },
+        {
+          "label": "agent:inspect_applet",
+          "t": 16.8
+        },
+        {
+          "label": "evaluate",
+          "t": 17.6
+        },
+        {
+          "label": "agent:evaluate_applet_version",
+          "t": 17.6
+        },
+        {
+          "label": "evaluated",
+          "t": 17.8
+        }
+      ]
+    },
+    "publish": {
+      "file": "rec/publish.mp4",
+      "duration": 15.2,
+      "marks": [
+        {
+          "label": "passkey",
+          "t": 0.7
+        },
+        {
+          "label": "review",
+          "t": 3.7
+        },
+        {
+          "label": "approve",
+          "t": 8.3
+        },
+        {
+          "label": "published",
+          "t": 10.2
+        }
+      ]
+    },
+    "run": {
+      "file": "rec/run.mp4",
+      "duration": 16.233333,
+      "marks": [
+        {
+          "label": "agent:run_applet",
+          "t": 0.5
+        },
+        {
+          "label": "tools-live",
+          "t": 0.9
+        },
+        {
+          "label": "agent:company_snapshot",
+          "t": 2.9
+        },
+        {
+          "label": "agent:low_stock_report",
+          "t": 4.4
+        },
+        {
+          "label": "write",
+          "t": 6.0
+        },
+        {
+          "label": "rehearsed",
+          "t": 6.1
+        },
+        {
+          "label": "centered",
+          "t": 8.0
+        },
+        {
+          "label": "approved",
+          "t": 13.1
+        }
+      ]
+    },
+    "lease": {
+      "file": "rec/lease.mp4",
+      "duration": 20.833333,
+      "marks": [
+        {
+          "label": "lease",
+          "t": 0.6
+        },
+        {
+          "label": "agent:allocate_order",
+          "t": 3.2
+        },
+        {
+          "label": "agent:ship_order",
+          "t": 4.6
+        },
+        {
+          "label": "revoke",
+          "t": 6.1
+        },
+        {
+          "label": "write",
+          "t": 8.3
+        },
+        {
+          "label": "rehearsed",
+          "t": 8.5
+        },
+        {
+          "label": "centered",
+          "t": 10.3
+        },
+        {
+          "label": "reject",
+          "t": 11.3
+        },
+        {
+          "label": "rejected",
+          "t": 17.4
+        }
+      ]
+    },
+    "studio": {
+      "file": "rec/studio.mp4",
+      "duration": 17.766667,
+      "marks": [
+        {
+          "label": "studio",
+          "t": 0.4
+        },
+        {
+          "label": "new",
+          "t": 3.5
+        },
+        {
+          "label": "agent:edit_spreadsheet",
+          "t": 6.8
+        },
+        {
+          "label": "second",
+          "t": 10.4
+        },
+        {
+          "label": "agent:edit_spreadsheet",
+          "t": 10.4
+        }
+      ]
+    },
+    "library": {
+      "file": "rec/library.mp4",
+      "duration": 14.466667,
+      "marks": [
+        {
+          "label": "create",
+          "t": 0.4
+        },
+        {
+          "label": "agent:create_office_file",
+          "t": 0.4
+        },
+        {
+          "label": "scan",
+          "t": 2.0
+        },
+        {
+          "label": "agent:scan_document_review",
+          "t": 2.0
+        },
+        {
+          "label": "review",
+          "t": 3.3
+        },
+        {
+          "label": "agent:request_redaction_review",
+          "t": 3.3
+        },
+        {
+          "label": "remove",
+          "t": 6.7
+        },
+        {
+          "label": "redacted",
+          "t": 7.9
+        }
+      ]
+    }
+  }
+}
