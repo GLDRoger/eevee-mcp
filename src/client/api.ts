@@ -14,6 +14,7 @@ import {
   evaluationPlanResponseSchema,
   evaluationRunResponseSchema,
   evaluationSuiteResponseSchema,
+  workspaceLeaveResponseSchema,
   workspaceSessionResponseSchema,
 } from '@/domain/api'
 import type {
@@ -21,6 +22,7 @@ import type {
   CreateCorrectionInput,
   CreateRunInput,
   CreateVersionInput,
+  ReviseVersionInput,
 } from '@/domain/applet'
 import type { AppletActionRequest } from '@/domain/applet-action'
 import type { ReferenceAppletSlug } from '@/domain/reference-applet'
@@ -40,6 +42,13 @@ import {
 import { documentReviewResponseSchema } from '@/domain/document-review'
 import type { PdfEdit } from '@/domain/pdf'
 import type { WorkbookSaveRequest } from '@/office/sheets/shared/desktop-api'
+import {
+  humanAuthorityOptionsEnvelopeSchema,
+  humanAuthorityResultSchema,
+  humanAuthorityStatusSchema,
+  type HumanAuthorityScope,
+} from '@/domain/human-authority'
+import { autonomyLeaseSpendResponseSchema } from '@/domain/autonomy-lease'
 
 const errorSchema = z.object({ error: z.object({ message: z.string() }) })
 const tableScalarSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
@@ -98,6 +107,45 @@ const requestBytes = async (url: string, signal?: AbortSignal): Promise<Uint8Arr
 export const api = {
   session: (signal?: AbortSignal) =>
     requestJson('/api/session', workspaceSessionResponseSchema, signal ? { signal } : undefined),
+  leaveWorkspace: () => requestJson('/api/session', workspaceLeaveResponseSchema, { method: 'DELETE' }),
+  humanAuthorityStatus: (signal?: AbortSignal) =>
+    requestJson(
+      '/api/human-authority',
+      humanAuthorityStatusSchema,
+      signal ? { signal } : undefined,
+    ),
+  humanAuthorityRegistrationOptions: (signal?: AbortSignal) =>
+    requestJson(
+      '/api/human-authority/registration/options',
+      humanAuthorityOptionsEnvelopeSchema,
+      jsonMutation('POST', {}, signal),
+    ),
+  verifyHumanAuthorityRegistration: (
+    challengeId: string,
+    response: unknown,
+    signal?: AbortSignal,
+  ) =>
+    requestJson(
+      '/api/human-authority/registration/verify',
+      humanAuthorityStatusSchema,
+      jsonMutation('POST', { challengeId, response }, signal),
+    ),
+  humanAuthorizationOptions: (scope: HumanAuthorityScope, signal?: AbortSignal) =>
+    requestJson(
+      '/api/human-authority/authorization/options',
+      humanAuthorityOptionsEnvelopeSchema,
+      jsonMutation('POST', { scope }, signal),
+    ),
+  verifyHumanAuthorization: (
+    challengeId: string,
+    response: unknown,
+    signal?: AbortSignal,
+  ) =>
+    requestJson(
+      '/api/human-authority/authorization/verify',
+      humanAuthorityResultSchema,
+      jsonMutation('POST', { challengeId, response }, signal),
+    ),
   listApplets: (signal?: AbortSignal) =>
     requestJson('/api/applets', appletListResponseSchema, signal ? { signal } : undefined),
   listFiles: (signal?: AbortSignal) =>
@@ -137,6 +185,7 @@ export const api = {
       documentReviewResponseSchema,
       signal ? { signal } : undefined,
     ),
+  /** @deprecated The passkey-authorized UI replaces this direct mutation in the next commit. */
   applyDocumentRedactions: (
     fileId: string,
     baseVersionId: string,
@@ -148,11 +197,18 @@ export const api = {
       officeFileResponseSchema,
       jsonMutation('POST', { baseVersionId, findingIds }, signal),
     ),
-  uploadFile: (name: string, bytes: Uint8Array, signal?: AbortSignal) =>
+  uploadFile: (name: string, bytes: Uint8Array, signal?: AbortSignal, note?: string) =>
     requestJson(
       '/api/files',
       officeFileResponseSchema,
-      fileMutation(bytes, { 'x-eevee-file-name': encodeURIComponent(name) }, signal),
+      fileMutation(
+        bytes,
+        {
+          'x-eevee-file-name': encodeURIComponent(name),
+          ...(note ? { 'x-eevee-file-note': encodeURIComponent(note) } : {}),
+        },
+        signal,
+      ),
     ),
   saveFile: (
     fileId: string,
@@ -212,6 +268,12 @@ export const api = {
       appletVersionResponseSchema,
       jsonMutation('POST', input, signal),
     ),
+  reviseVersion: (appletId: string, input: ReviseVersionInput, signal?: AbortSignal) =>
+    requestJson(
+      `/api/applets/${encodeURIComponent(appletId)}/revisions`,
+      appletVersionResponseSchema,
+      jsonMutation('POST', input, signal),
+    ),
   createEvaluationSuite: (
     appletId: string,
     input: CreateEvaluationSuiteInput,
@@ -267,6 +329,7 @@ export const api = {
       appletPreviewResponseSchema,
       signal ? { signal } : undefined,
     ),
+  /** @deprecated The passkey-authorized UI replaces this direct mutation in the next commit. */
   publishVersion: async (appletId: string, versionId: string): Promise<void> => {
     await requestJson(
       `/api/applets/${encodeURIComponent(appletId)}/versions/${encodeURIComponent(versionId)}/publish`,
@@ -304,6 +367,12 @@ export const api = {
       appletActionRequestListResponseSchema,
       signal ? { signal } : undefined,
     ),
+  listPendingActionRequests: (signal?: AbortSignal) =>
+    requestJson(
+      '/api/action-requests',
+      appletActionRequestListResponseSchema,
+      signal ? { signal } : undefined,
+    ),
   createActionRequest: (
     runId: string,
     actionName: string,
@@ -334,6 +403,19 @@ export const api = {
       appletActionRequestResponseSchema,
       jsonMutation('POST', operation, signal),
     ),
+  spendAutonomyLease: (requestId: string, leaseId: string, signal?: AbortSignal) =>
+    requestJson(
+      `/api/action-requests/${encodeURIComponent(requestId)}/lease`,
+      autonomyLeaseSpendResponseSchema,
+      jsonMutation('POST', { leaseId }, signal),
+    ),
+  revokeAutonomyLease: async (leaseId: string, signal?: AbortSignal): Promise<void> => {
+    await requestJson(
+      `/api/human-authority/leases/${encodeURIComponent(leaseId)}/revoke`,
+      z.strictObject({ revoked: z.literal(true) }),
+      jsonMutation('POST', {}, signal),
+    )
+  },
   readState: async (appletId: string): Promise<Record<string, JsonValue>> => {
     const response = await requestJson(
       `/api/applets/${encodeURIComponent(appletId)}/state`,

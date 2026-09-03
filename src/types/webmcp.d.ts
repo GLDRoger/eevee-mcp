@@ -7,13 +7,19 @@ interface WebMcpExecuteOptions {
   signal: AbortSignal
 }
 
+/**
+ * The shape the browser calls. Chrome 152 invokes execute(input) with no
+ * second argument even though the draft spec describes one, so the options
+ * parameter is optional here and every EEVEE tool goes through a normalizer
+ * before it can rely on a signal.
+ */
 interface WebMcpTool {
   name: string
   title?: string
   description: string
   inputSchema?: object
   annotations?: WebMcpToolAnnotations
-  execute(input: Record<string, unknown>, options: WebMcpExecuteOptions): Promise<unknown>
+  execute(input: Record<string, unknown>, options?: WebMcpExecuteOptions): Promise<unknown>
 }
 
 interface WebMcpRegisterOptions {
@@ -26,6 +32,11 @@ interface WebMcpModelContext {
 }
 
 interface Document {
+  modelContext?: WebMcpModelContext
+}
+
+interface Navigator {
+  /** Pre-Chromium-150 location of the same API; kept as a fallback. */
   modelContext?: WebMcpModelContext
 }
 

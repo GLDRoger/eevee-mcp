@@ -315,7 +315,7 @@ export function AppletPreview({
             readOnlyHint: !action.effects.includes('state:write'),
             untrustedContentHint: action.effects.includes('files:read'),
           },
-          execute: async (input, { signal }) => {
+          execute: async (input, { signal } = { signal: controller.signal }) => {
             const activityId = crypto.randomUUID()
             const startedAt = performance.now()
             emitToolActivity({

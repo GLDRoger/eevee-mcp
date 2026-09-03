@@ -157,7 +157,7 @@ export function Workbench() {
           const registration = registerEeveeTools()
           unregister = registration.unregister
           void registration.ready
-            .then((registered) => setToolsLive(registered))
+            .then((registered) => setToolsLive(registered.live > 0))
             .catch(() => setToolsLive(false))
         }
         return Promise.all([
