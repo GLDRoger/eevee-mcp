@@ -18,6 +18,7 @@ export default function OfficeSheetsEditor({ fileId, onClose }: OfficeEditorProp
   const [files, setFiles] = useState<readonly StoredDriveFile[]>([])
   const [api, setApi] = useState<WebDesktopApi | null>(null)
   const [file, setFile] = useState<WorkbookFile | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const requestOpen = useCallback(async (): Promise<DriveFileHandle | null> => {
     setFiles(
@@ -44,12 +45,16 @@ export default function OfficeSheetsEditor({ fileId, onClose }: OfficeEditorProp
     let active = true
     let opened: WorkbookFile | null = null
     setModuleLang('en')
+    setLoadError(null)
     void (async () => {
       const handle = fileId ? await handleFor(fileId) : null
       opened = handle ? await api.openHandle(handle) : await api.openBlank()
       if (active) setFile(opened)
       else await api.closeWorkbook(opened.sessionId)
-    })()
+    })().catch((reason: unknown) => {
+      if (active)
+        setLoadError(reason instanceof Error ? reason.message : 'The workbook could not be opened.')
+    })
     return () => {
       active = false
       if (opened) void api.closeWorkbook(opened.sessionId)
@@ -59,7 +64,13 @@ export default function OfficeSheetsEditor({ fileId, onClose }: OfficeEditorProp
   return (
     <section className="office-sheets" lang="en" aria-label="Sheets editor">
       <LocaleProvider initial="en">
-        {file ? <App key={file.sessionId} initialFile={file} onClose={onClose} /> : null}
+        {file ? (
+          <App key={file.sessionId} initialFile={file} onClose={onClose} />
+        ) : loadError ? (
+          <section className="file-preview" role="alert">
+            This spreadsheet could not be opened: {loadError}
+          </section>
+        ) : null}
       </LocaleProvider>
       {openRequest ? (
         <OpenFromDrivePicker

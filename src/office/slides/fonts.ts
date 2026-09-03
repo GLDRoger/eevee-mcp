@@ -23,6 +23,8 @@ interface FaceSpec {
   file: string
   bold: boolean
   italic: boolean
+  /** True only when a parseable TrueType/OpenType file is shipped for this face. */
+  opentype?: boolean
 }
 
 const FACES: readonly FaceSpec[] = [
@@ -135,14 +137,17 @@ function canvasFace(family: string, bold: boolean, italic: boolean): OpentypeFon
 }
 
 async function parseFace(spec: FaceSpec): Promise<OpentypeFontLike | null> {
-  const stem = spec.file.replace(/\.ttf$/i, '')
-  for (const file of [spec.file, `${stem}.woff2`]) {
+  // Only the WOFF2 faces ship under public/fonts/office, and opentype.js 2.0
+  // cannot parse WOFF2 without an external decompressor, so the TrueType
+  // fetch was twenty 404s per presentation followed by a fallback. The
+  // fallback is the path: CSS @font-face loads the WOFF2 and canvas measures
+  // it. A .ttf next to the .woff2 re-enables exact opentype metrics.
+  if (typeof fetch === 'function' && spec.opentype) {
     try {
-      const res = await fetch(`${FONT_BASE}/${file}`)
-      if (!res.ok) continue
-      return wrapSafeAdvance(parseOpenType(await res.arrayBuffer()))
+      const res = await fetch(`${FONT_BASE}/${spec.file}`)
+      if (res.ok) return wrapSafeAdvance(parseOpenType(await res.arrayBuffer()))
     } catch {
-      /* woff2 needs an external decompressor; try the next candidate */
+      /* fall through to CSS fonts */
     }
   }
   if (typeof document !== 'undefined' && document.fonts) {

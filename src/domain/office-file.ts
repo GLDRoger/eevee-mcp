@@ -58,9 +58,15 @@ export const officeFileVersionSchema = z.strictObject({
   createdAt: z.iso.datetime({ offset: true }),
 })
 
+export const officeFileSheetSchema = z.strictObject({
+  id: z.string().min(1).describe('The sheetId edit_spreadsheet expects.'),
+  name: z.string(),
+})
+
 export const officeFileDetailSchema = z.strictObject({
   file: officeFileSummarySchema,
   versions: z.array(officeFileVersionSchema),
+  sheets: z.array(officeFileSheetSchema).optional(),
 })
 
 export const officeFileListResponseSchema = z.strictObject({
@@ -85,7 +91,9 @@ export const validateOfficeFileName = (name: string): {
   name: string
   medium: OfficeFileMedium
 } => {
-  const parsed = officeFileNameSchema.parse(name.normalize('NFC'))
+  const checked = officeFileNameSchema.safeParse(name.normalize('NFC'))
+  if (!checked.success) throw new Error(z.prettifyError(checked.error))
+  const parsed = checked.data
   const medium = officeFileMediumForName(parsed)
   if (!medium) throw new Error('EEVEE accepts DOCX, XLSX, PPTX, and PDF files')
   return { name: parsed, medium }

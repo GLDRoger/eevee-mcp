@@ -8,10 +8,14 @@ import type {
 import { RequestFailure } from './http'
 import { getOfficeFileSummary, readOfficeFileBytes, saveOfficeFile } from './office-files'
 import { privateDigest } from './session'
+import { decodeXmlText } from './xml-text'
 
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 const MAX_FINDINGS = 250
+// A fixed-width block: matching the original length would leak how long the
+// removed value was into the redacted immutable version.
+const REDACTION_BLOCK = '█'.repeat(6)
 
 type FindingMatch = SensitiveFinding & {
   path: string
@@ -20,16 +24,6 @@ type FindingMatch = SensitiveFinding & {
   end: number
   value: string
 }
-
-const decodeXmlText = (value: string): string =>
-  value
-    .replaceAll(/&lt;/g, '<')
-    .replaceAll(/&gt;/g, '>')
-    .replaceAll(/&quot;/g, '"')
-    .replaceAll(/&apos;/g, "'")
-    .replaceAll(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replaceAll(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replaceAll(/&amp;/g, '&')
 
 const encodeXmlText = (value: string): string =>
   value
@@ -141,21 +135,67 @@ const matchesInText = (
   })
 }
 
+const isReviewablePart = (path: string): boolean =>
+  /^word\/(?:document|header\d+|footer\d+|footnotes|endnotes|comments)\.xml$/.test(path)
+
 const reviewableParts = (archive: Record<string, Uint8Array>): string[] =>
-  Object.keys(archive)
-    .filter((path) => /^word\/(?:document|header\d+|footer\d+|footnotes|endnotes|comments)\.xml$/.test(path))
-    .sort()
+  Object.keys(archive).filter(isReviewablePart).sort()
+
+type TextRun = { start: number; end: number; attributes: string; body: string }
+type Paragraph = { runs: TextRun[] }
+
+/**
+ * Word splits one sentence across many <w:t> runs whenever formatting,
+ * spell-check state, or revision marks change, so an email can straddle a run
+ * boundary. Runs are grouped by their innermost <w:p> and scanned as one
+ * string: a finding's nodeIndex is the paragraph index and its offsets are
+ * offsets into that paragraph's joined text. Text boxes nest paragraphs inside
+ * runs, so a stack tracks the innermost open paragraph; a run outside any
+ * paragraph forms a group of its own.
+ */
+const paragraphsOf = (xml: string): Paragraph[] => {
+  const groups: Paragraph[] = []
+  const open: Paragraph[] = []
+  // <w:p\b excludes <w:pPr>; <w:t\b excludes <w:tab>, <w:tbl>, <w:tc>, <w:tr>;
+  // the lookbehind skips self-closing <w:t/> and <w:p/>.
+  const token = /<w:p\b(?:[^>]*?)(\/?)>|<\/w:p>|<w:t\b([^>]*?)(?<!\/)>([\s\S]*?)<\/w:t>/g
+  let match: RegExpExecArray | null
+  while ((match = token.exec(xml)) !== null) {
+    const [whole, selfClosing, attributes, body] = match
+    if (whole === '</w:p>') {
+      open.pop()
+      continue
+    }
+    if (whole.startsWith('<w:p')) {
+      if (selfClosing === '/') continue
+      const paragraph: Paragraph = { runs: [] }
+      groups.push(paragraph)
+      open.push(paragraph)
+      continue
+    }
+    const run: TextRun = {
+      start: match.index,
+      end: match.index + whole.length,
+      attributes: attributes ?? '',
+      body: body ?? '',
+    }
+    const current = open.at(-1)
+    if (current) current.runs.push(run)
+    else groups.push({ runs: [run] })
+  }
+  return groups
+}
+
+const paragraphText = (paragraph: Paragraph): string =>
+  paragraph.runs.map((run) => decodeXmlText(run.body)).join('')
 
 const scanArchive = (archive: Record<string, Uint8Array>, context: string): FindingMatch[] => {
   const findings: FindingMatch[] = []
   for (const path of reviewableParts(archive)) {
     const xml = decoder.decode(archive[path])
-    let nodeIndex = 0
-    const textPattern = /<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g
-    let match: RegExpExecArray | null
-    while ((match = textPattern.exec(xml)) !== null) {
-      findings.push(...matchesInText(context, path, nodeIndex, decodeXmlText(match[1] ?? '')))
-      nodeIndex += 1
+    paragraphsOf(xml).forEach((paragraph, nodeIndex) => {
+      if (paragraph.runs.length === 0) return
+      findings.push(...matchesInText(context, path, nodeIndex, paragraphText(paragraph)))
       if (findings.length > MAX_FINDINGS) {
         throw new RequestFailure(
           413,
@@ -163,7 +203,7 @@ const scanArchive = (archive: Record<string, Uint8Array>, context: string): Find
           `Review stops after ${MAX_FINDINGS} sensitive findings`,
         )
       }
-    }
+    })
   }
   return findings
 }
@@ -209,29 +249,141 @@ export const scanDocumentReview = async (
     versionId: file.versionId,
     supported: true,
     limitation:
-      'Detection covers emails, phone numbers, US government IDs, and checksum-valid payment cards stored within individual DOCX text runs.',
+      'Detection covers emails, phone numbers, US government IDs, and checksum-valid payment cards in DOCX paragraph text, including values Word split across formatting runs. Text inside images and embedded objects is not scanned.',
     findings,
   }
 }
 
+const stale = (): RequestFailure =>
+  new RequestFailure(409, 'finding_set_stale', 'A selected finding moved inside its document part')
+
+/**
+ * Rewrite the runs of every paragraph that holds a selected finding. A finding
+ * that spans several runs is cut out of each of them and the block is written
+ * once, into the first run it touched, so the surrounding formatting survives.
+ */
 const redactXmlPart = (
   xml: string,
   selected: ReadonlyMap<number, readonly FindingMatch[]>,
 ): string => {
-  let nodeIndex = 0
-  return xml.replaceAll(/<w:t\b([^>]*)>([\s\S]*?)<\/w:t>/g, (whole, attributes: string, body: string) => {
-    const findings = selected.get(nodeIndex)
-    nodeIndex += 1
-    if (!findings?.length) return whole
-    let text = decodeXmlText(body)
-    for (const finding of [...findings].sort((left, right) => right.start - left.start)) {
-      if (text.slice(finding.start, finding.end) !== finding.value) {
-        throw new RequestFailure(409, 'finding_set_stale', 'A selected finding moved inside its document part')
-      }
-      text = `${text.slice(0, finding.start)}${'█'.repeat(Math.max(4, finding.value.length))}${text.slice(finding.end)}`
+  const paragraphs = paragraphsOf(xml)
+  const rewrites: Array<{ start: number; end: number; markup: string }> = []
+  for (const [nodeIndex, findings] of selected) {
+    const paragraph = paragraphs[nodeIndex]
+    if (!paragraph || findings.length === 0) throw stale()
+    const texts = paragraph.runs.map((run) => decodeXmlText(run.body))
+    const joined = texts.join('')
+    for (const finding of findings) {
+      if (joined.slice(finding.start, finding.end) !== finding.value) throw stale()
     }
-    return `<w:t${attributes}>${encodeXmlText(text)}</w:t>`
+    let offset = 0
+    const bounds = texts.map((text) => {
+      const range = [offset, offset + text.length] as const
+      offset += text.length
+      return range
+    })
+    // Highest offset first, so earlier slice positions stay valid.
+    for (const finding of [...findings].sort((left, right) => right.start - left.start)) {
+      let placed = false
+      texts.forEach((text, index) => {
+        const [runStart, runEnd] = bounds[index] ?? [0, 0]
+        const from = Math.max(finding.start, runStart) - runStart
+        const to = Math.min(finding.end, runEnd) - runStart
+        if (from >= to) return
+        texts[index] = `${text.slice(0, from)}${placed ? '' : REDACTION_BLOCK}${text.slice(to)}`
+        placed = true
+      })
+    }
+    paragraph.runs.forEach((run, index) => {
+      const text = texts[index] ?? ''
+      const needsPreserve = /^\s|\s$/.test(text) && !/xml:space=/.test(run.attributes)
+      const attributes = needsPreserve ? `${run.attributes} xml:space="preserve"` : run.attributes
+      rewrites.push({ start: run.start, end: run.end, markup: `<w:t${attributes}>${encodeXmlText(text)}</w:t>` })
+    })
+  }
+  let output = xml
+  for (const rewrite of rewrites.sort((left, right) => right.start - left.start)) {
+    output = `${output.slice(0, rewrite.start)}${rewrite.markup}${output.slice(rewrite.end)}`
+  }
+  return output
+}
+
+const isWordXmlPart = (path: string): boolean => /^word\/.*\.xml$/.test(path)
+const isWordRelationshipPart = (path: string): boolean => /^word\/_rels\/[^/]+\.rels$/.test(path)
+const isDocumentPropertiesPart = (path: string): boolean => /^docProps\/[^/]+\.xml$/.test(path)
+const isXmlPart = (path: string): boolean => /\.(?:xml|rels)$/i.test(path)
+
+const blockValues = (text: string, values: readonly string[]): string =>
+  values.reduce((current, value) => current.replaceAll(value, REDACTION_BLOCK), text)
+
+// Hyperlink targets are URIs, so the value is dropped (plain or percent
+// encoded) rather than replaced with a block that would not be a valid URI.
+const dropUriValues = (target: string, values: readonly string[]): string =>
+  values.reduce(
+    (current, value) => current.replaceAll(value, '').replaceAll(encodeURIComponent(value), ''),
+    target,
+  )
+
+// Field codes and tracked deletions echo hyperlink and removed text outside
+// <w:t>, where the finding scan does not look.
+const scrubRunText = (xml: string, values: readonly string[]): string =>
+  xml.replaceAll(
+    /<w:(instrText|delText)\b([^>]*)>([\s\S]*?)<\/w:\1>/g,
+    (whole, tag: string, attributes: string, body: string) => {
+      const text = decodeXmlText(body)
+      const scrubbed = blockValues(text, values)
+      return scrubbed === text ? whole : `<w:${tag}${attributes}>${encodeXmlText(scrubbed)}</w:${tag}>`
+    },
+  )
+
+const scrubRelationshipTargets = (xml: string, values: readonly string[]): string =>
+  xml.replaceAll(/\bTarget="([^"]*)"/g, (whole, target: string) => {
+    const decoded = decodeXmlText(target)
+    const scrubbed = dropUriValues(decoded, values)
+    return scrubbed === decoded ? whole : `Target="${encodeXmlText(scrubbed)}"`
   })
+
+const scrubTextNodes = (xml: string, values: readonly string[]): string =>
+  xml.replaceAll(/>([^<]+)</g, (whole, body: string) => {
+    const text = decodeXmlText(body)
+    const scrubbed = blockValues(text, values)
+    return scrubbed === text ? whole : `>${encodeXmlText(scrubbed)}<`
+  })
+
+const scrubSecondaryParts = (archive: Record<string, Uint8Array>, values: readonly string[]): void => {
+  for (const path of Object.keys(archive)) {
+    const scrub = isWordXmlPart(path)
+      ? scrubRunText
+      : isWordRelationshipPart(path)
+        ? scrubRelationshipTargets
+        : isDocumentPropertiesPart(path)
+          ? scrubTextNodes
+          : null
+    if (!scrub) continue
+    const xml = decoder.decode(archive[path])
+    const scrubbed = scrub(xml, values)
+    if (scrubbed !== xml) archive[path] = encoder.encode(scrubbed)
+  }
+}
+
+// Unselected occurrences legitimately survive inside <w:t> of reviewed parts
+// (each is its own finding), so those runs are excluded from the sweep.
+const survivingValue = (path: string, xml: string, values: readonly string[]): string | undefined => {
+  const inspected = isReviewablePart(path) ? xml.replaceAll(/<w:t\b[^>]*>[\s\S]*?<\/w:t>/g, '') : xml
+  const text = decodeXmlText(inspected)
+  return values.find((value) => text.includes(value) || text.includes(encodeURIComponent(value)))
+}
+
+const assertRedactionComplete = (archive: Record<string, Uint8Array>, values: readonly string[]): void => {
+  for (const path of Object.keys(archive)) {
+    if (!isXmlPart(path)) continue
+    if (survivingValue(path, decoder.decode(archive[path]), values) === undefined) continue
+    throw new RequestFailure(
+      409,
+      'redaction_incomplete',
+      `A selected finding still appears in ${path}, so the redacted version was not saved`,
+    )
+  }
 }
 
 export const applyDocumentRedactions = async (
@@ -285,5 +437,8 @@ export const redactDocxBytes = (
     const byNode = Map.groupBy(partFindings, ({ nodeIndex }) => nodeIndex)
     archive[path] = encoder.encode(redactXmlPart(decoder.decode(bytes), byNode))
   }
+  const values = [...new Set(selected.map(({ value }) => value))]
+  scrubSecondaryParts(archive, values)
+  assertRedactionComplete(archive, values)
   return { bytes: zipSync(archive, { level: 6 }), redactedCount: selected.length }
 }

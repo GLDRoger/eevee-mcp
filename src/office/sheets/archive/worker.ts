@@ -504,8 +504,8 @@ function validateRange(range: CellRange, sheet: SheetSession): void {
 }
 
 function resolveWorkbookTarget(target: string): string {
-  if (target.startsWith('/') || target.includes('..'))
-    throw new Error('Workbook contains an unsafe worksheet path.')
+  if (target.includes('..')) throw new Error('Workbook contains an unsafe worksheet path.')
+  if (target.startsWith('/')) return target.replace(/^\/+/, '')
   return `xl/${target.replace(/^\.\//, '')}`
 }
 

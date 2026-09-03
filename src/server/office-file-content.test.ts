@@ -59,6 +59,22 @@ describe('xlsxTable', () => {
     expect(sheets[1]?.rows).toEqual([])
   })
 
+  it('decodes invalid numeric entities instead of failing the read', async () => {
+    const bytes = await workbook([
+      { name: 'Data', xml: '<row r="1"><c r="A1" t="inlineStr"><is><t>bad &#1114112; &#xD800; ok</t></is></c></row>' },
+    ])
+    expect(xlsxTable(bytes)[0]?.rows).toEqual([['bad \uFFFD \uFFFD ok']])
+  })
+
+  it('rejects a used range that would allocate more than the cell budget', async () => {
+    const bytes = await workbook([
+      { name: 'Far', xml: '<row r="1"><c r="A1"><v>1</v></c></row><row r="1048576"><c r="XFD1048576"><v>2</v></c></row>' },
+    ])
+    expect(() => xlsxTable(bytes)).toThrowError(
+      expect.objectContaining({ status: 413, code: 'table_too_large', message: expect.stringContaining('200000') }),
+    )
+  })
+
   it('rejects bytes that are not a readable archive', () => {
     expect(() => xlsxTable(new Uint8Array([1, 2, 3]))).toThrowError(/readable Office archive/)
   })

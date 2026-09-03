@@ -31,7 +31,89 @@ const repeatedEmailBytes = (): Uint8Array =>
     `),
   })
 
+const contentTypes = new TextEncoder().encode(
+  '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"></Types>',
+)
+
+const hyperlinkedBytes = (extraParts: Record<string, string> = {}): Uint8Array =>
+  zipSync({
+    '[Content_Types].xml': contentTypes,
+    'word/document.xml': new TextEncoder().encode(`
+      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+        <w:body><w:p><w:hyperlink r:id="rId1"><w:r><w:t>alex@example.com</w:t></w:r></w:hyperlink></w:p>
+        <w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r>
+        <w:r><w:instrText xml:space="preserve"> HYPERLINK "mailto:alex@example.com" </w:instrText></w:r>
+        <w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>
+        <w:p><w:del><w:r><w:delText>Old alex@example.com</w:delText></w:r></w:del></w:p></w:body>
+      </w:document>
+    `),
+    'word/_rels/document.xml.rels': new TextEncoder().encode(
+      '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="mailto:alex@example.com?subject=Hi" TargetMode="External"/>' +
+        '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+        '</Relationships>',
+    ),
+    'docProps/core.xml': new TextEncoder().encode(
+      '<?xml version="1.0"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/">' +
+        '<dc:creator>alex@example.com</dc:creator><cp:lastModifiedBy>alex@example.com</cp:lastModifiedBy></cp:coreProperties>',
+    ),
+    ...Object.fromEntries(
+      Object.entries(extraParts).map(([path, xml]) => [path, new TextEncoder().encode(xml)]),
+    ),
+  })
+
+const partText = (bytes: Uint8Array, path: string): string =>
+  new TextDecoder().decode(unzipSync(bytes)[path])
+
 describe('private document review', () => {
+  it('tolerates invalid numeric entities inside text runs', () => {
+    const bytes = zipSync({
+      '[Content_Types].xml': contentTypes,
+      'word/document.xml': new TextEncoder().encode(
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+          '<w:body><w:p><w:r><w:t>&#1114112; alex@example.com</w:t></w:r></w:p></w:body></w:document>',
+      ),
+    })
+    expect(scanDocxBytes(bytes, REVIEW_CONTEXT).map(({ type }) => type)).toEqual(['email'])
+  })
+
+  it('removes selected values from hyperlink targets, field codes, tracked deletions, and properties', () => {
+    const findings = scanDocxBytes(hyperlinkedBytes(), REVIEW_CONTEXT)
+    expect(findings.map(({ type, part }) => [type, part])).toEqual([['email', 'Document body']])
+
+    const redacted = redactDocxBytes(hyperlinkedBytes(), [findings[0]!.id], REVIEW_CONTEXT)
+    const document = partText(redacted.bytes, 'word/document.xml')
+    expect(document).not.toContain('alex@example.com')
+    expect(document).toContain('<w:instrText xml:space="preserve"> HYPERLINK &quot;mailto:██████&quot; </w:instrText>')
+    expect(document).toContain('<w:delText>Old ██████</w:delText>')
+
+    const rels = partText(redacted.bytes, 'word/_rels/document.xml.rels')
+    expect(rels).not.toContain('alex@example.com')
+    expect(rels).toContain('Target="mailto:?subject=Hi" TargetMode="External"')
+    expect(rels).toContain('Target="styles.xml"')
+
+    const core = partText(redacted.bytes, 'docProps/core.xml')
+    expect(core).not.toContain('alex@example.com')
+    expect(core).toContain('<dc:creator>██████</dc:creator>')
+  })
+
+  it('refuses to save when a selected value survives in an unreviewed part', () => {
+    const bytes = hyperlinkedBytes({
+      'word/glossary/document.xml':
+        '<w:glossaryDocument xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        '<w:p><w:r><w:t>alex@example.com</w:t></w:r></w:p></w:glossaryDocument>',
+    })
+    const findings = scanDocxBytes(bytes, REVIEW_CONTEXT)
+    expect(() => redactDocxBytes(bytes, [findings[0]!.id], REVIEW_CONTEXT)).toThrowError(
+      expect.objectContaining({
+        status: 409,
+        code: 'redaction_incomplete',
+        message: expect.stringContaining('word/glossary/document.xml'),
+      }),
+    )
+  })
+
   it('returns only masked findings with stable ids', () => {
     const first = scanDocxBytes(documentBytes(), REVIEW_CONTEXT)
     const second = scanDocxBytes(documentBytes(), REVIEW_CONTEXT)
@@ -79,5 +161,49 @@ describe('private document review', () => {
     const xml = new TextDecoder().decode(unzipSync(redacted.bytes)['word/document.xml'])
     expect(xml.match(/same@example\.com/g)).toHaveLength(1)
     expect(xml.indexOf('same@example.com')).toBeLessThan(xml.indexOf('████'))
+  })
+
+  it('finds and removes a value that Word split across formatting runs', () => {
+    const bytes = zipSync({
+      '[Content_Types].xml': new TextEncoder().encode(
+        '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"></Types>',
+      ),
+      'word/document.xml': new TextEncoder().encode(`
+        <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+          <w:body><w:p><w:pPr><w:jc w:val="left"/></w:pPr><w:r><w:t xml:space="preserve">Write to jane.doe@</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r><w:rPr><w:b/></w:rPr><w:t>example.com</w:t></w:r><w:r><w:t xml:space="preserve"> today</w:t></w:r></w:p></w:body>
+        </w:document>
+      `),
+    })
+    const findings = scanDocxBytes(bytes, REVIEW_CONTEXT)
+    expect(findings.map(({ type }) => type)).toEqual(['email'])
+
+    const redacted = redactDocxBytes(bytes, [findings[0]!.id], REVIEW_CONTEXT)
+    const xml = partText(redacted.bytes, 'word/document.xml')
+    expect(xml).not.toContain('jane.doe')
+    expect(xml).not.toContain('example.com')
+    expect(xml.match(/████/g)).toHaveLength(1)
+    expect(xml).toContain('<w:t xml:space="preserve">Write to ██████</w:t>')
+    expect(xml).toContain('<w:rPr><w:b/></w:rPr><w:t></w:t>')
+    expect(xml).toContain('<w:t xml:space="preserve"> today</w:t>')
+  })
+
+  it('scans paragraphs nested in text boxes without losing the outer paragraph tail', () => {
+    const bytes = zipSync({
+      '[Content_Types].xml': new TextEncoder().encode(
+        '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"></Types>',
+      ),
+      'word/document.xml': new TextEncoder().encode(`
+        <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+          <w:body><w:p><w:r><w:t>Outer outer@example.com</w:t></w:r><w:r><w:txbxContent><w:p><w:r><w:t>Inner inner@example.com</w:t></w:r></w:p></w:txbxContent></w:r><w:r><w:t>Tail tail@example.com</w:t></w:r></w:p></w:body>
+        </w:document>
+      `),
+    })
+    const findings = scanDocxBytes(bytes, REVIEW_CONTEXT)
+    expect(findings.map(({ masked }) => masked.startsWith('o') || masked.startsWith('i') || masked.startsWith('t'))).toEqual([true, true, true])
+
+    const redacted = redactDocxBytes(bytes, findings.map(({ id }) => id), REVIEW_CONTEXT)
+    const xml = partText(redacted.bytes, 'word/document.xml')
+    expect(xml).not.toContain('@example.com')
+    expect(xml.match(/████/g)).toHaveLength(3)
   })
 })

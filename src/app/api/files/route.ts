@@ -6,6 +6,17 @@ import { createOfficeFile, listOfficeFiles } from '@/server/office-files'
 import { MAX_OFFICE_FILE_BYTES } from '@/server/office-file-validation'
 import { attachWorkspaceSession, workspaceSession } from '@/server/session'
 
+const decodedFileNote = (request: NextRequest): string | undefined => {
+  const encoded = request.headers.get('x-eevee-file-note')
+  if (!encoded) return undefined
+  try {
+    const note = decodeURIComponent(encoded).trim()
+    return note.length > 0 && note.length <= 120 ? note : undefined
+  } catch {
+    return undefined
+  }
+}
+
 const decodedFileName = (request: NextRequest): string => {
   const encoded = request.headers.get('x-eevee-file-name')
   if (!encoded || encoded.length > 600) {
@@ -41,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       readBodyBytes(request, MAX_OFFICE_FILE_BYTES, 'Office files must be 25 MB or smaller'),
     ])
     const response = NextResponse.json(
-      { file: await createOfficeFile(session.workspaceId, name, bytes) },
+      { file: await createOfficeFile(session.workspaceId, name, bytes, decodedFileNote(request)) },
       { status: 201 },
     )
     return attachWorkspaceSession(response, session)

@@ -204,6 +204,39 @@ export const applySpreadsheetSave = async (
   return { bytes: new Uint8Array(mutation.buffer), touchedEntries: mutation.touchedEntries }
 }
 
+/**
+ * Excel refuses a workbook whose formula has an unclosed parenthesis or
+ * string and asks the person to repair the file; catching the obvious cases
+ * here keeps an agent's typo out of a stored version.
+ */
+const formulaLooksBalanced = (formula: string): boolean => {
+  let depth = 0
+  let quoted = false
+  for (const char of formula) {
+    if (char === '"') quoted = !quoted
+    if (quoted) continue
+    if (char === '(') depth += 1
+    if (char === ')') depth -= 1
+    if (depth < 0) return false
+  }
+  return depth === 0 && !quoted
+}
+
+const editNote = (request: WorkbookSaveRequest): string => {
+  const parts = [
+    [request.edits.length, 'cell edit'],
+    [request.sheetOps.length, 'sheet change'],
+    [request.structuralOps.length, 'row or column change'],
+    [request.chartEdits.length + request.visualAdditions.length + request.visualEdits.length, 'chart or drawing change'],
+    [request.tableAdditions.length + request.pivotAdditions.length, 'table or pivot'],
+    [request.filterStates.length + request.cfStates.length + request.dvStates.length, 'filter, format, or validation rule'],
+  ] as const
+  const described = parts
+    .filter(([count]) => count > 0)
+    .map(([count, label]) => `${count} ${label}${count === 1 ? '' : 's'}`)
+  return described.length > 0 ? `Agent edit: ${described.join(', ')}` : 'Agent edit'
+}
+
 export const editSpreadsheetFile = async (
   workspaceId: string,
   fileId: string,
@@ -221,6 +254,15 @@ export const editSpreadsheetFile = async (
       'This workbook changed after it was opened. Reload before saving your edits.',
     )
   }
+  for (const edit of request.edits) {
+    if (edit.formula !== undefined && !formulaLooksBalanced(edit.formula)) {
+      throw new RequestFailure(
+        400,
+        'invalid_formula',
+        `The formula for row ${edit.row}, column ${edit.column} has unbalanced parentheses or quotes: ${edit.formula}`,
+      )
+    }
+  }
   const { bytes } = await readOfficeFileBytes(workspaceId, fileId, baseVersionId)
   let saved: Awaited<ReturnType<typeof applySpreadsheetSave>>
   try {
@@ -233,7 +275,7 @@ export const editSpreadsheetFile = async (
     )
   }
   return {
-    file: await saveOfficeFile(workspaceId, fileId, baseVersionId, saved.bytes),
+    file: await saveOfficeFile(workspaceId, fileId, baseVersionId, saved.bytes, editNote(request)),
     touchedEntries: saved.touchedEntries,
   }
 }

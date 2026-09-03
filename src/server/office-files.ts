@@ -1,5 +1,6 @@
 import 'server-only'
 import { createHash } from 'node:crypto'
+import { unzipSync } from 'fflate'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import {
   officeFileDetailSchema,
@@ -15,6 +16,7 @@ import { getDatabase } from './db/client'
 import { officeFile, officeFileVersion } from './db/schema'
 import { RequestFailure } from './http'
 import { validateOfficeFile } from './office-file-validation'
+import { decodeXmlText } from './xml-text'
 
 const checksum = (bytes: Uint8Array): string =>
   createHash('sha256').update(bytes).digest('hex')
@@ -98,6 +100,31 @@ export const getOfficeFileSummary = async (
   return serializedSummary(row)
 }
 
+/**
+ * Sheet ids in the form edit_spreadsheet expects (`sheet-<sheetId attribute>`),
+ * read from xl/workbook.xml alone. Without this an agent had no tool that
+ * revealed a sheet id and guessed the sheet name instead.
+ */
+const sheetsOf = (bytes: Uint8Array): Array<{ id: string; name: string }> => {
+  try {
+    const workbook = unzipSync(bytes, { filter: (entry) => entry.name === 'xl/workbook.xml' })['xl/workbook.xml']
+    if (!workbook) return []
+    const xml = new TextDecoder().decode(workbook)
+    const sheets: Array<{ id: string; name: string }> = []
+    const pattern = /<sheet\b([^>]*?)\/?>/g
+    let match: RegExpExecArray | null
+    while ((match = pattern.exec(xml)) !== null) {
+      const attributes = match[1] ?? ''
+      const name = /\bname="([^"]*)"/.exec(attributes)?.[1]
+      const sheetId = /\bsheetId="([^"]*)"/.exec(attributes)?.[1]
+      if (name && sheetId) sheets.push({ id: `sheet-${sheetId}`, name: decodeXmlText(name) })
+    }
+    return sheets
+  } catch {
+    return []
+  }
+}
+
 export const getOfficeFile = async (
   workspaceId: string,
   fileId: string,
@@ -123,11 +150,14 @@ export const getOfficeFile = async (
       )
       .orderBy(desc(officeFileVersion.version)),
   ])
+  const sheets =
+    file.medium === 'spreadsheet' ? sheetsOf((await readOfficeFileBytes(workspaceId, fileId)).bytes) : undefined
   return officeFileDetailSchema.parse({
     file,
     versions: rows.map((row) =>
       officeFileVersionSchema.parse({ ...row, createdAt: row.createdAt.toISOString() }),
     ),
+    ...(sheets ? { sheets } : {}),
   })
 }
 
@@ -135,6 +165,7 @@ export const createOfficeFile = async (
   workspaceId: string,
   unsafeName: string,
   bytes: Uint8Array,
+  note = 'Imported into EEVEE',
 ): Promise<OfficeFileSummary> => {
   const identity = validateOfficeFile(unsafeName, bytes)
   const sha256 = checksum(bytes)
@@ -151,7 +182,7 @@ export const createOfficeFile = async (
       bytes,
       size: bytes.length,
       sha256,
-      note: 'Imported into EEVEE',
+      note,
     })
     return file.id
   })
@@ -265,5 +296,9 @@ export const editPdfFile = async (
       error instanceof Error ? error.message : 'The PDF edit is not valid',
     )
   }
-  return saveOfficeFile(workspaceId, fileId, baseVersionId, edited)
+  const note =
+    edit.type === 'rotate'
+      ? `Rotated page ${edit.pageIndex + 1} ${edit.quarterTurns === 1 ? 'clockwise' : 'counter-clockwise'}`
+      : `Deleted page ${edit.pageIndex + 1}`
+  return saveOfficeFile(workspaceId, fileId, baseVersionId, edited, note)
 }

@@ -2,6 +2,7 @@ import 'server-only'
 import { unzipSync } from 'fflate'
 import type { OfficeFileMedium } from '@/domain/office-file'
 import { RequestFailure } from './http'
+import { decodeXmlText } from './xml-text'
 
 /**
  * Read-only content extraction for the applet files bridge and agents:
@@ -20,16 +21,6 @@ export interface SheetTable {
 const MAX_TABLE_CELLS = 200_000
 
 const decoder = new TextDecoder()
-
-const decodeXmlText = (value: string): string =>
-  value
-    .replaceAll(/&lt;/g, '<')
-    .replaceAll(/&gt;/g, '>')
-    .replaceAll(/&quot;/g, '"')
-    .replaceAll(/&apos;/g, "'")
-    .replaceAll(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replaceAll(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
-    .replaceAll(/&amp;/g, '&')
 
 const attribute = (attributes: string, name: string): string | null => {
   const match = new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`).exec(attributes)
@@ -137,6 +128,15 @@ export const xlsxTable = (bytes: Uint8Array): SheetTable[] => {
       cells.set(address, value)
       maxRow = Math.max(maxRow, rowIndex(address))
       maxColumn = Math.max(maxColumn, columnIndex(address))
+      // The dense grid below spans the used range, so one far-away cell must
+      // not be allowed to allocate billions of empty slots.
+      if ((maxRow + 1) * (maxColumn + 1) > MAX_TABLE_CELLS) {
+        throw new RequestFailure(
+          413,
+          'table_too_large',
+          `This workbook's used range exceeds the ${MAX_TABLE_CELLS}-cell table budget`,
+        )
+      }
     }
     const rows: TableScalar[][] = Array.from({ length: maxRow + 1 }, () =>
       Array.from({ length: maxColumn + 1 }, () => null),
