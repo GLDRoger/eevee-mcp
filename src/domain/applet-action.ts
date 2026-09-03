@@ -3,7 +3,7 @@ import { inputDefinitionSchema, validateAppletInputs } from './input'
 import { jsonObjectSchema, jsonValueSchema } from './json'
 
 export const APPLET_ACTION_TOOL_PREFIX = 'applet_'
-export const MAX_APPLET_ACTIONS = 12
+export const MAX_APPLET_ACTIONS = 32
 
 export const appletActionNameSchema = z
   .string()
@@ -20,12 +20,15 @@ export const appletActionAuthoritySchema = z.enum(['automatic', 'human'])
 
 export const appletActionDefinitionSchema = z
   .strictObject({
-    name: appletActionNameSchema,
-    title: z.string().trim().min(1).max(80),
-    description: z.string().trim().min(1).max(500),
-    inputs: inputDefinitionSchema,
-    effects: z.array(appletActionEffectSchema).max(4),
-    authority: appletActionAuthoritySchema,
+    name: appletActionNameSchema.describe('Tool name suffix; registered as applet_<name>.'),
+    title: z.string().trim().min(1).max(80).describe('Label shown to the person.'),
+    description: z.string().trim().min(1).max(500).describe('What it does and returns; for writes, what changes.'),
+    inputs: inputDefinitionSchema.describe('Typed parameters; [] when none.'),
+    effects: z
+      .array(appletActionEffectSchema)
+      .max(4)
+      .describe('Bridge capabilities the handler may use. state:write requires authority "human".'),
+    authority: appletActionAuthoritySchema.describe('automatic runs at once; human waits for the person\'s passkey.'),
   })
   .superRefine((action, context) => {
     if (new Set(action.effects).size !== action.effects.length) {

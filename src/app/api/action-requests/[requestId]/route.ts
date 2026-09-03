@@ -3,14 +3,13 @@ import { NextResponse } from 'next/server'
 import { appletActionRequestOperationSchema } from '@/domain/applet-action'
 import { ensureWorkspace } from '@/server/applets'
 import {
-  approveAppletActionRequest,
   completeAppletActionRequest,
   failAppletActionRequest,
   getAppletActionRequest,
-  rejectAppletActionRequest,
   startAppletActionRequest,
 } from '@/server/applet-actions'
 import { errorResponse, parseJson, requireSameOrigin } from '@/server/http'
+import { requireHumanAuthority } from '@/server/human-authority'
 import { attachWorkspaceSession, workspaceSession } from '@/server/session'
 
 export async function GET(
@@ -47,9 +46,9 @@ export async function POST(
     const actionRequest = await (async () => {
       switch (input.operation) {
         case 'approve':
-          return approveAppletActionRequest(session.workspaceId, requestId)
+          return requireHumanAuthority()
         case 'reject':
-          return rejectAppletActionRequest(session.workspaceId, requestId)
+          return requireHumanAuthority()
         case 'start':
           return startAppletActionRequest(session.workspaceId, requestId)
         case 'complete':

@@ -1,5 +1,7 @@
 import { sql } from 'drizzle-orm'
 import {
+  bigint,
+  boolean,
   check,
   customType,
   foreignKey,
@@ -24,6 +26,7 @@ import type { QualityReport } from '@/domain/quality'
 import type { WebAppArtifact } from '@/domain/react-app'
 import type { EvaluationCaseDefinition, EvaluationReport } from '@/domain/evaluation'
 import type { AppletActionDefinition } from '@/domain/applet-action'
+import type { HumanAuthorityScope } from '@/domain/human-authority'
 
 export const appletMedium = pgEnum('applet_medium', [
   'web-app',
@@ -55,6 +58,10 @@ export const officeFileMedium = pgEnum('office_file_medium', [
   'pdf',
 ])
 export const officeFileState = pgEnum('office_file_state', ['active', 'archived'])
+export const humanAuthorityChallengeKind = pgEnum('human_authority_challenge_kind', [
+  'registration',
+  'authorization',
+])
 
 const bytea = customType<{ data: Uint8Array; driverData: Uint8Array }>({
   dataType: () => 'bytea',
@@ -65,6 +72,50 @@ export const workspace = pgTable('workspace', {
   id: uuid('id').primaryKey(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const humanAuthorityCredential = pgTable(
+  'human_authority_credential',
+  {
+    workspaceId: uuid('workspace_id')
+      .primaryKey()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull().unique(),
+    publicKey: bytea('public_key').notNull(),
+    counter: bigint('counter', { mode: 'number' }).notNull(),
+    transports: jsonb('transports').$type<string[]>().notNull(),
+    deviceType: text('device_type').notNull(),
+    backedUp: boolean('backed_up').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check('human_authority_counter_check', sql`${table.counter} >= 0`),
+  ],
+)
+
+export const humanAuthorityChallenge = pgTable(
+  'human_authority_challenge',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    kind: humanAuthorityChallengeKind('kind').notNull(),
+    challenge: text('challenge').notNull(),
+    scope: jsonb('scope').$type<HumanAuthorityScope>(),
+    rpId: text('rp_id').notNull(),
+    origin: text('origin').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('human_authority_challenge_workspace_created_idx').on(
+      table.workspaceId,
+      table.createdAt,
+    ),
+    check('human_authority_challenge_length_check', sql`char_length(${table.challenge}) between 16 and 512`),
+  ],
+)
 
 export const applet = pgTable(
   'applet',
@@ -330,6 +381,39 @@ export const appletRun = pgTable(
       ],
       name: 'applet_run_version_tenant_fk',
     }).onDelete('cascade'),
+  ],
+)
+
+export const humanAuthorityLease = pgTable(
+  'human_authority_lease',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    appletId: uuid('applet_id').notNull(),
+    runId: uuid('run_id').notNull(),
+    grantedWrites: integer('granted_writes').notNull(),
+    remainingWrites: integer('remaining_writes').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    grantedAt: timestamp('granted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('human_authority_lease_workspace_run_idx').on(
+      table.workspaceId,
+      table.runId,
+      table.expiresAt,
+    ),
+    foreignKey({
+      columns: [table.workspaceId, table.runId],
+      foreignColumns: [appletRun.workspaceId, appletRun.id],
+      name: 'human_authority_lease_run_tenant_fk',
+    }).onDelete('cascade'),
+    check(
+      'human_authority_lease_write_count_check',
+      sql`${table.grantedWrites} between 1 and 20 and ${table.remainingWrites} between 0 and ${table.grantedWrites}`,
+    ),
   ],
 )
 

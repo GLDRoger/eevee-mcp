@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import {
   appletActionRequestSchema,
   validateAppletActionInput,
@@ -11,7 +11,13 @@ import { appletVersionDefinitionSchema } from '@/domain/applet'
 import { assertStateValueSize, StateLimitError } from '@/domain/applet-store'
 import { jsonValueSchema, type JsonValue } from '@/domain/json'
 import { getDatabase } from './db/client'
-import { appletActionRequest, appletRun, appletVersion } from './db/schema'
+import {
+  appletActionRequest,
+  appletRun,
+  appletVersion,
+  humanAuthorityLease,
+} from './db/schema'
+import { autonomyLeaseSchema, type AutonomyLease } from '@/domain/autonomy-lease'
 import { RequestFailure } from './http'
 
 const iso = (value: Date): string => value.toISOString()
@@ -66,6 +72,33 @@ export const listAppletActionRequests = async (
   return rows.map(requestView)
 }
 
+export const listPendingAppletActionRequests = async (
+  workspaceId: string,
+): Promise<AppletActionRequest[]> => {
+  // Only requests whose run can still host a decision belong in the queue; a
+  // pending request on a dead run would sit in the chip count forever.
+  const rows = await getDatabase()
+    .select({ request: appletActionRequest })
+    .from(appletActionRequest)
+    .innerJoin(
+      appletRun,
+      and(
+        eq(appletRun.workspaceId, appletActionRequest.workspaceId),
+        eq(appletRun.id, appletActionRequest.runId),
+      ),
+    )
+    .where(
+      and(
+        eq(appletActionRequest.workspaceId, workspaceId),
+        eq(appletActionRequest.state, 'pending'),
+        inArray(appletRun.state, ['running', 'succeeded']),
+      ),
+    )
+    .orderBy(desc(appletActionRequest.createdAt))
+    .limit(50)
+  return rows.map(({ request }) => requestView(request))
+}
+
 export const getAppletActionRequest = async (
   workspaceId: string,
   requestId: string,
@@ -91,58 +124,65 @@ export const createAppletActionRequest = async (
   runId: string,
   input: CreateAppletActionRequestInput,
 ): Promise<AppletActionRequest> => {
-  const [run] = await getDatabase()
-    .select({
-      run: appletRun,
-      definition: appletVersion.definition,
-    })
-    .from(appletRun)
-    .innerJoin(
-      appletVersion,
-      and(
-        eq(appletVersion.workspaceId, appletRun.workspaceId),
-        eq(appletVersion.appletId, appletRun.appletId),
-        eq(appletVersion.id, appletRun.appletVersionId),
-      ),
-    )
-    .where(and(eq(appletRun.workspaceId, workspaceId), eq(appletRun.id, runId)))
-    .limit(1)
-  if (!run) throw new RequestFailure(404, 'run_not_found', 'This applet run was not found')
-  if (run.run.state !== 'running' && run.run.state !== 'succeeded') {
-    throw new RequestFailure(409, 'run_not_actionable', 'This applet run is not active')
-  }
-  const action = actionFromVersion(run.definition, input.actionName)
-  const validated = validateAppletActionInput(action, input.input)
-  if (!validated.ok) {
-    throw new RequestFailure(
-      400,
-      'invalid_applet_action_input',
-      validated.issues.map(({ key, message }) => `${key}: ${message}`).join('\n'),
-    )
-  }
-  const automatic = action.authority === 'automatic'
-  const now = new Date()
-  const [created] = await getDatabase()
-    .insert(appletActionRequest)
-    .values({
-      workspaceId,
-      appletId: run.run.appletId,
-      runId: run.run.id,
-      appletVersionId: run.run.appletVersionId,
-      action,
-      state: automatic ? 'approved' : 'pending',
-      input: validated.values,
-      decidedAt: automatic ? now : null,
-    })
-    .returning()
-  if (!created) throw new Error('PostgreSQL did not return the action request')
-  return requestView(created)
+  // The run lock serializes creation against failRun's request sweep; without
+  // it a create could read `running`, lose the race, and commit a pending
+  // request on a failed run that no surface can ever decide.
+  return getDatabase().transaction(async (transaction) => {
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`run:${runId}`}))`)
+    const [run] = await transaction
+      .select({
+        run: appletRun,
+        definition: appletVersion.definition,
+      })
+      .from(appletRun)
+      .innerJoin(
+        appletVersion,
+        and(
+          eq(appletVersion.workspaceId, appletRun.workspaceId),
+          eq(appletVersion.appletId, appletRun.appletId),
+          eq(appletVersion.id, appletRun.appletVersionId),
+        ),
+      )
+      .where(and(eq(appletRun.workspaceId, workspaceId), eq(appletRun.id, runId)))
+      .limit(1)
+    if (!run) throw new RequestFailure(404, 'run_not_found', 'This applet run was not found')
+    if (run.run.state !== 'running' && run.run.state !== 'succeeded') {
+      throw new RequestFailure(409, 'run_not_actionable', 'This applet run is not active')
+    }
+    const action = actionFromVersion(run.definition, input.actionName)
+    const validated = validateAppletActionInput(action, input.input)
+    if (!validated.ok) {
+      throw new RequestFailure(
+        400,
+        'invalid_applet_action_input',
+        validated.issues.map(({ key, message }) => `${key}: ${message}`).join('\n'),
+      )
+    }
+    const automatic = action.authority === 'automatic'
+    const now = new Date()
+    const [created] = await transaction
+      .insert(appletActionRequest)
+      .values({
+        workspaceId,
+        appletId: run.run.appletId,
+        runId: run.run.id,
+        appletVersionId: run.run.appletVersionId,
+        action,
+        state: automatic ? 'approved' : 'pending',
+        input: validated.values,
+        decidedAt: automatic ? now : null,
+      })
+      .returning()
+    if (!created) throw new Error('PostgreSQL did not return the action request')
+    return requestView(created)
+  })
 }
 
 const decideAppletActionRequest = async (
   workspaceId: string,
   requestId: string,
   decision: 'approved' | 'rejected',
+  reason?: string,
 ): Promise<AppletActionRequest> =>
   getDatabase().transaction(async (transaction) => {
     await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`action:${requestId}`}))`)
@@ -169,7 +209,18 @@ const decideAppletActionRequest = async (
     }
     const [updated] = await transaction
       .update(appletActionRequest)
-      .set({ state: decision, decidedAt: new Date(), ...(decision === 'rejected' ? { completedAt: new Date() } : {}) })
+      .set({
+        state: decision,
+        decidedAt: new Date(),
+        ...(decision === 'rejected'
+          ? {
+              completedAt: new Date(),
+              error: reason
+                ? `The person rejected this request: ${reason}`
+                : 'The person rejected this request',
+            }
+          : {}),
+      })
       .where(eq(appletActionRequest.id, requestId))
       .returning()
     if (!updated) throw new Error('PostgreSQL did not return the decided action request')
@@ -179,8 +230,95 @@ const decideAppletActionRequest = async (
 export const approveAppletActionRequest = (workspaceId: string, requestId: string) =>
   decideAppletActionRequest(workspaceId, requestId, 'approved')
 
-export const rejectAppletActionRequest = (workspaceId: string, requestId: string) =>
-  decideAppletActionRequest(workspaceId, requestId, 'rejected')
+export const rejectAppletActionRequest = (
+  workspaceId: string,
+  requestId: string,
+  reason?: string,
+) => decideAppletActionRequest(workspaceId, requestId, 'rejected', reason)
+
+export const spendHumanAuthorityLease = async (
+  workspaceId: string,
+  leaseId: string,
+  requestId: string,
+): Promise<{ request: AppletActionRequest; lease: AutonomyLease }> =>
+  getDatabase().transaction(async (transaction) => {
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`human-lease:${leaseId}`}))`)
+    const [[lease], [request]] = await Promise.all([
+      transaction
+        .select()
+        .from(humanAuthorityLease)
+        .where(
+          and(
+            eq(humanAuthorityLease.workspaceId, workspaceId),
+            eq(humanAuthorityLease.id, leaseId),
+          ),
+        )
+        .limit(1),
+      transaction
+        .select()
+        .from(appletActionRequest)
+        .where(
+          and(
+            eq(appletActionRequest.workspaceId, workspaceId),
+            eq(appletActionRequest.id, requestId),
+          ),
+        )
+        .limit(1),
+    ])
+    if (!lease || lease.revokedAt || lease.expiresAt.getTime() <= Date.now() || lease.remainingWrites < 1) {
+      throw new RequestFailure(409, 'human_authority_lease_inactive', 'This autonomy lease is no longer active')
+    }
+    if (!request || request.state !== 'pending') {
+      throw new RequestFailure(409, 'applet_action_not_pending', 'This action is no longer awaiting authority')
+    }
+    if (request.runId !== lease.runId || request.appletId !== lease.appletId) {
+      throw new RequestFailure(403, 'human_authority_lease_scope_mismatch', 'This lease does not cover the action request')
+    }
+    const decidedAt = new Date()
+    const [[approved], [spent]] = await Promise.all([
+      transaction
+        .update(appletActionRequest)
+        .set({ state: 'approved', decidedAt })
+        .where(
+          and(
+            eq(appletActionRequest.id, request.id),
+            eq(appletActionRequest.state, 'pending'),
+          ),
+        )
+        .returning(),
+      // The decrement re-checks every activity condition in the same
+      // statement, so a revoke that lands between the read above and this
+      // write cannot be overwritten with a stale remaining count.
+      transaction
+        .update(humanAuthorityLease)
+        .set({ remainingWrites: sql`${humanAuthorityLease.remainingWrites} - 1` })
+        .where(
+          and(
+            eq(humanAuthorityLease.id, lease.id),
+            sql`${humanAuthorityLease.remainingWrites} > 0`,
+            sql`${humanAuthorityLease.revokedAt} is null`,
+            sql`${humanAuthorityLease.expiresAt} > now()`,
+          ),
+        )
+        .returning(),
+    ])
+    if (!spent) {
+      throw new RequestFailure(409, 'human_authority_lease_inactive', 'This autonomy lease is no longer active')
+    }
+    if (!approved) throw new Error('PostgreSQL did not spend the human-authorized lease')
+    return {
+      request: requestView(approved),
+      lease: autonomyLeaseSchema.parse({
+        leaseId: spent.id,
+        appletId: spent.appletId,
+        runId: spent.runId,
+        grantedWrites: spent.grantedWrites,
+        remainingWrites: spent.remainingWrites,
+        expiresAt: spent.expiresAt.toISOString(),
+        grantedAt: spent.grantedAt.toISOString(),
+      }),
+    }
+  })
 
 export const startAppletActionRequest = async (
   workspaceId: string,

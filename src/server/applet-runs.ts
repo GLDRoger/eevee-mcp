@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import type {
   AppletRun,
   CompleteRunInput,
@@ -10,7 +10,7 @@ import type {
 import { validateAppletInputs } from '@/domain/input'
 import { prepareAppletRuntime } from '@/domain/applet-runtime'
 import { getDatabase } from './db/client'
-import { appletDeployment, appletRun, appletVersion } from './db/schema'
+import { appletActionRequest, appletDeployment, appletRun, appletVersion } from './db/schema'
 import { RequestFailure } from './http'
 
 const iso = (value: Date): string => value.toISOString()
@@ -35,6 +35,36 @@ export const getRun = async (workspaceId: string, runId: string): Promise<Applet
     .limit(1)
   if (!row) throw new RequestFailure(404, 'run_not_found', 'This run was not found')
   return runView(row)
+}
+
+type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>['transaction']>[0]>[0]
+
+/**
+ * Only the newest run is on the person's screen, so only it can host a
+ * decision or an execution. Open requests on earlier runs of an applet would
+ * otherwise sit in the decisions queue with no card able to approve them.
+ */
+export const supersedeOpenActionRequests = async (
+  transaction: Transaction,
+  workspaceId: string,
+  appletId: string,
+): Promise<number> => {
+  const superseded = await transaction
+    .update(appletActionRequest)
+    .set({
+      state: 'failed',
+      error: 'A newer run of this applet superseded this request before it completed',
+      completedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(appletActionRequest.workspaceId, workspaceId),
+        eq(appletActionRequest.appletId, appletId),
+        inArray(appletActionRequest.state, ['pending', 'approved', 'running']),
+      ),
+    )
+    .returning({ id: appletActionRequest.id })
+  return superseded.length
 }
 
 export const runApplet = async (
@@ -108,19 +138,22 @@ export const runApplet = async (
       }
     }
   })()
-  const [row] = await getDatabase()
-    .insert(appletRun)
-    .values({
-      workspaceId,
-      appletId,
-      appletVersionId: active.version.id,
-      state: 'running',
-      input: validated.values,
-      output,
-    })
-    .returning()
-  if (!row) throw new Error('PostgreSQL did not return the created run')
-  return runView(row)
+  return getDatabase().transaction(async (transaction) => {
+    await supersedeOpenActionRequests(transaction, workspaceId, appletId)
+    const [row] = await transaction
+      .insert(appletRun)
+      .values({
+        workspaceId,
+        appletId,
+        appletVersionId: active.version.id,
+        state: 'running',
+        input: validated.values,
+        output,
+      })
+      .returning()
+    if (!row) throw new Error('PostgreSQL did not return the created run')
+    return runView(row)
+  })
 }
 
 export const completeRun = async (
@@ -193,6 +226,22 @@ export const failRun = async (
       )
       .returning()
     if (!failed) throw new Error('PostgreSQL did not return the failed run')
+    // A dead run can never host a decision or an execution, so its open
+    // action requests resolve now instead of waiting forever in the queue.
+    await transaction
+      .update(appletActionRequest)
+      .set({
+        state: 'failed',
+        error: 'The run ended before this action completed',
+        completedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(appletActionRequest.workspaceId, workspaceId),
+          eq(appletActionRequest.runId, runId),
+          inArray(appletActionRequest.state, ['pending', 'approved', 'running']),
+        ),
+      )
     return runView(failed)
   })
 }
