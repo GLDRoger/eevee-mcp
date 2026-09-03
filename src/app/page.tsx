@@ -1,5 +1,6 @@
-import { Workbench } from '@/components/workbench'
+import { Landing } from '@/components/landing'
+import './landing.css'
 
 export default function Home() {
-  return <Workbench />
+  return <Landing />
 }

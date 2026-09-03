@@ -10,8 +10,9 @@ const avara = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'EEVEE MCP',
-  description: 'A durable workspace for people and browser agents.',
+  title: 'EEVEE | Agents build the app. You hold the key.',
+  description:
+    'A WebMCP workbench where a browser agent builds, tests, and runs small apps, and a person approves publishing and every consequential write with a passkey.',
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
