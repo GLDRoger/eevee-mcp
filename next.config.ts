@@ -9,7 +9,11 @@ const nextConfig: NextConfig = {
   // CommonJS entry files but cannot infer the production CJS files they
   // require dynamically, so Vercel must carry those files explicitly.
   outputFileTracingIncludes: {
-    '/*': ['./node_modules/react/cjs/*.js', './node_modules/react-dom/cjs/*.js'],
+    '/*': [
+      './node_modules/react/cjs/*.js',
+      './node_modules/react-dom/cjs/*.js',
+      './node_modules/scheduler/**/*',
+    ],
   },
   turbopack: {
     root: process.cwd(),
