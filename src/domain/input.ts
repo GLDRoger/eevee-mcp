@@ -7,9 +7,9 @@ const followsStep = (value: number, step: number, minimum = 0): boolean => {
   return Math.abs(position - Math.round(position)) <= 1e-9 * Math.max(1, Math.abs(position))
 }
 const inputBaseSchema = z.strictObject({
-  key: inputKeySchema,
-  label: z.string().trim().min(1).max(80),
-  description: z.string().trim().min(1).max(240),
+  key: inputKeySchema.describe('snake_case identifier used in run input and action input objects.'),
+  label: z.string().trim().min(1).max(80).describe('Field label shown to the person.'),
+  description: z.string().trim().min(1).max(240).describe('Help text under the field.'),
   required: z.boolean(),
 })
 

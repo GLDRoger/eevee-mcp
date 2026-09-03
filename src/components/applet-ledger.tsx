@@ -7,8 +7,8 @@ import type { ReferenceAppletSlug } from '@/domain/reference-applet'
 const mediumLabel: Record<AppletSummary['medium'], string> = {
   'web-app': 'Web app',
   document: 'Document',
-  spreadsheet: 'Sheet',
-  presentation: 'Slides',
+  spreadsheet: 'Spreadsheet',
+  presentation: 'Presentation',
   pdf: 'PDF',
   workflow: 'Workflow',
   image: 'Image',
@@ -49,8 +49,11 @@ export function AppletLedger({
       </div>
       {applets.length === 0 ? (
         <div className="ledger-empty">
-          <p>No applets have been registered.</p>
-          <span>Ask your browser agent to create one through EEVEE.</span>
+          <p>No applets yet.</p>
+          <span>
+            Install the reference applet below (no agent needed), or ask your browser agent to
+            create one.
+          </span>
         </div>
       ) : (
         <ol className="ledger-list">
@@ -80,8 +83,7 @@ export function AppletLedger({
       <section className="ledger-references" aria-labelledby="reference-applets-title">
         <p id="reference-applets-title">Reference applets</p>
         {([
-          ['sparkbench', 'Sparkbench', 'Five governed circuit tools and a restart evaluation.'],
-          ['fablecut', 'FableCut', 'A video EDL with governed cuts and durable undo.'],
+          ['meridian', 'Meridian Ops', 'A seven-module ERP: inventory, orders, credit, invoicing, reports.'],
         ] as const).map(([slug, name, description]) => {
           const installed = applets.find((applet) => applet.name === name)
           return (
@@ -90,7 +92,7 @@ export function AppletLedger({
               <span>{description}</span>
               {installed ? (
                 <button type="button" onClick={() => onSelect(installed.id)}>
-                  Open installed
+                  Open the installed copy
                 </button>
               ) : (
                 <button
@@ -98,7 +100,7 @@ export function AppletLedger({
                   disabled={installing !== null}
                   onClick={() => void install(slug)}
                 >
-                  {installing === slug ? 'Installing' : 'Install draft'}
+                  {installing === slug ? 'Installing…' : 'Install as draft'}
                 </button>
               )}
             </div>

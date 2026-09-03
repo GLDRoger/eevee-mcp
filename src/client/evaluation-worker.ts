@@ -25,9 +25,25 @@ const inspectResultSchema = z.strictObject({
   value: z.string().nullable(),
 })
 
+const settleResultSchema = z.strictObject({
+  settled: z.boolean(),
+  cycles: z.number().int().nonnegative(),
+})
+
 type EvaluationCommand =
   | Extract<EvaluationStep, { action: 'click' | 'fill' | 'press' }>
   | { action: 'inspect'; selector: string }
+  | { action: 'settle' }
+
+/**
+ * The transport a case runs over. The browser worker implements it with a
+ * sandboxed iframe; tests can supply another transport (for example a jsdom
+ * document) and still run the same step semantics.
+ */
+export type EvaluationCaseTransport = {
+  command: (value: EvaluationCommand) => Promise<unknown>
+  restart: () => Promise<void>
+}
 
 type PendingCommand = {
   resolve: (value: unknown) => void
@@ -282,8 +298,31 @@ const evidence = (
   durationMs: Math.min(30_000, Math.max(0, Math.round(performance.now() - startedAt))),
 })
 
-const executeStep = async (
-  harness: ReturnType<typeof createCaseHarness>,
+/**
+ * After an interaction, wait until the applet runtime reports no in-flight
+ * bridge requests (storage reads and writes started by the interaction) so
+ * the next step observes committed state instead of racing a pending write.
+ * Runtimes without the settle command fall back to a fixed grace period.
+ */
+const settleInteraction = async (
+  harness: EvaluationCaseTransport,
+  signal: AbortSignal,
+): Promise<string> => {
+  let outcome: unknown
+  try {
+    outcome = await harness.command({ action: 'settle' })
+  } catch (error) {
+    if (signal.aborted) throw error
+    await delay(50, signal)
+    return '; settled by grace period'
+  }
+  const parsed = settleResultSchema.safeParse(outcome)
+  if (!parsed.success) return ''
+  return parsed.data.settled ? '; bridge requests settled' : '; bridge requests still pending after the settle timeout'
+}
+
+export const executeStep = async (
+  harness: EvaluationCaseTransport,
   memory: BoundedMemoryStore,
   step: EvaluationStep,
   signal: AbortSignal,
@@ -294,13 +333,13 @@ const executeStep = async (
     case 'press':
       {
         const result = await harness.command(step)
-        await delay(50, signal)
+        const settled = await settleInteraction(harness, signal)
         const method = typeof result === 'string'
           ? ` using ${result}`
           : step.action === 'click' && typeof result === 'object' && result !== null && 'submitted' in result
             ? `; form found: ${'formFound' in result ? String(result.formFound) : 'unknown'}; form submitted: ${String(result.submitted)}`
             : ''
-        return `${step.action} completed for ${step.selector}${method}.`
+        return `${step.action} completed for ${step.selector}${method}${settled}.`
       }
     case 'wait':
       await delay(step.milliseconds, signal)

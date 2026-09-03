@@ -2,10 +2,10 @@ import { z } from 'zod'
 import { appletActionDefinitionsSchema } from './applet-action'
 
 export const REACT_APP_ENTRY = 'src/App.tsx'
-export const MAX_REACT_APP_FILES = 16
+export const MAX_REACT_APP_FILES = 48
 export const MAX_REACT_APP_FILE_BYTES = 200_000
-export const MAX_REACT_APP_SOURCE_BYTES = 1_000_000
-export const MAX_REACT_APP_BUNDLE_BYTES = 2_000_000
+export const MAX_REACT_APP_SOURCE_BYTES = 1_500_000
+export const MAX_REACT_APP_BUNDLE_BYTES = 3_000_000
 
 const sourcePath = /^src\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:css|ts|tsx)$/
 
@@ -14,8 +14,9 @@ export const reactAppFileSchema = z.strictObject({
     .string()
     .min(1)
     .max(240)
-    .regex(sourcePath, 'Use a relative src/ path ending in .ts, .tsx, or .css'),
-  content: z.string().max(MAX_REACT_APP_SOURCE_BYTES),
+    .regex(sourcePath, 'Use a relative src/ path ending in .ts, .tsx, or .css')
+    .describe('Relative path under src/, such as src/App.tsx or src/lib/model.ts.'),
+  content: z.string().max(MAX_REACT_APP_FILE_BYTES).describe('Full file text, at most 200 KB. Imports: react and relative paths only.'),
 })
 
 export const validateReactSourceFiles = (
@@ -63,8 +64,14 @@ export const reactAppDefinitionSchema = z
   .strictObject({
     kind: z.literal('react-app'),
     entry: z.literal(REACT_APP_ENTRY),
-    files: z.array(reactAppFileSchema).min(1).max(MAX_REACT_APP_FILES),
-    actions: appletActionDefinitionsSchema.default([]),
+    files: z
+      .array(reactAppFileSchema)
+      .min(1)
+      .max(MAX_REACT_APP_FILES)
+      .describe('Source bundle; must include src/App.tsx with a default-exported component. Use many small files (screens, models, action handlers, styles), not one long App.tsx.'),
+    actions: appletActionDefinitionsSchema
+      .default([])
+      .describe('Actions the app exposes as agent tools; the app must register a handler for each via window.eevee.actions.register.'),
   })
   .superRefine(({ files }, context) => validateReactSourceFiles(files, context))
 

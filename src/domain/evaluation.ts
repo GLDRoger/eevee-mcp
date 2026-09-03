@@ -8,53 +8,71 @@ const selectorSchema = z.string().trim().min(1).max(240).refine((value) => !valu
   message: 'Selectors cannot contain null bytes',
 })
 
-const clickStepSchema = z.strictObject({
-  action: z.literal('click'),
-  selector: selectorSchema,
-})
+const clickStepSchema = z
+  .strictObject({
+    action: z.literal('click'),
+    selector: selectorSchema,
+  })
+  .describe('Click the first element matching a CSS selector.')
 
-const fillStepSchema = z.strictObject({
-  action: z.literal('fill'),
-  selector: selectorSchema,
-  value: z.string().max(10_000),
-})
+const fillStepSchema = z
+  .strictObject({
+    action: z.literal('fill'),
+    selector: selectorSchema,
+    value: z.string().max(10_000),
+  })
+  .describe('Type a value into an input or textarea.')
 
-const pressStepSchema = z.strictObject({
-  action: z.literal('press'),
-  selector: selectorSchema,
-  key: z.enum(['Enter', 'Escape', 'Tab', 'ArrowUp', 'ArrowDown', 'Space']),
-})
+const pressStepSchema = z
+  .strictObject({
+    action: z.literal('press'),
+    selector: selectorSchema,
+    key: z.enum(['Enter', 'Escape', 'Tab', 'ArrowUp', 'ArrowDown', 'Space']),
+  })
+  .describe('Press one key on a focused element.')
 
-const waitStepSchema = z.strictObject({
-  action: z.literal('wait'),
-  milliseconds: z.number().int().min(0).max(2_000),
-})
+const waitStepSchema = z
+  .strictObject({
+    action: z.literal('wait'),
+    milliseconds: z.number().int().min(0).max(2_000),
+  })
+  .describe('Pause; the whole suite may wait at most 20 seconds in total.')
 
-const restartStepSchema = z.strictObject({ action: z.literal('restart') })
+const restartStepSchema = z
+  .strictObject({ action: z.literal('restart') })
+  .describe('Reload the applet with its stored state kept, to prove persistence.')
 
-const assertTextStepSchema = z.strictObject({
-  action: z.literal('assert-text'),
-  selector: selectorSchema,
-  contains: z.string().min(1).max(500),
-})
+const assertTextStepSchema = z
+  .strictObject({
+    action: z.literal('assert-text'),
+    selector: selectorSchema,
+    contains: z.string().min(1).max(500),
+  })
+  .describe('Pass when the matched elements\' text contains the string.')
 
-const assertCountStepSchema = z.strictObject({
-  action: z.literal('assert-count'),
-  selector: selectorSchema,
-  count: z.number().int().nonnegative().max(1_000),
-})
+const assertCountStepSchema = z
+  .strictObject({
+    action: z.literal('assert-count'),
+    selector: selectorSchema,
+    count: z.number().int().nonnegative().max(1_000),
+  })
+  .describe('Pass when exactly count elements match.')
 
-const assertValueStepSchema = z.strictObject({
-  action: z.literal('assert-value'),
-  selector: selectorSchema,
-  value: z.string().max(10_000),
-})
+const assertValueStepSchema = z
+  .strictObject({
+    action: z.literal('assert-value'),
+    selector: selectorSchema,
+    value: z.string().max(10_000),
+  })
+  .describe('Pass when the first matched form control has this value.')
 
-const assertStoredValueStepSchema = z.strictObject({
-  action: z.literal('assert-stored-value'),
-  key: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/),
-  value: jsonValueSchema,
-})
+const assertStoredValueStepSchema = z
+  .strictObject({
+    action: z.literal('assert-stored-value'),
+    key: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/),
+    value: jsonValueSchema,
+  })
+  .describe('Pass when the applet store holds this exact JSON value under key.')
 
 export const evaluationStepSchema = z.discriminatedUnion('action', [
   clickStepSchema,
@@ -70,11 +88,13 @@ export const evaluationStepSchema = z.discriminatedUnion('action', [
 
 export const evaluationCaseDefinitionSchema = z
   .strictObject({
-    id: evaluationIdSchema,
-    name: z.string().trim().min(1).max(100),
-    criticality: z.enum(['required', 'informational']),
-    input: jsonObjectSchema,
-    steps: z.array(evaluationStepSchema).min(1).max(40),
+    id: evaluationIdSchema.describe('Stable slug such as "order-survives-restart".'),
+    name: z.string().trim().min(1).max(100).describe('What the scenario proves, in plain words.'),
+    criticality: z
+      .enum(['required', 'informational'])
+      .describe('required failures block publishing; informational ones are reported only.'),
+    input: jsonObjectSchema.describe('Run inputs for this scenario, keyed by input key.'),
+    steps: z.array(evaluationStepSchema).min(1).max(40).describe('Actions and assertions in order; at least one assertion.'),
   })
   .superRefine(({ steps }, context) => {
     if (!steps.some(({ action }) => action.startsWith('assert-'))) {

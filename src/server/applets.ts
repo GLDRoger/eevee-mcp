@@ -2,12 +2,15 @@ import 'server-only'
 import { and, desc, eq, inArray, max, sql } from 'drizzle-orm'
 import type {
   AppletMedium,
+  AppletVersionDefinition,
   Correction,
   CreateAppletInput,
   CreateCorrectionInput,
   CreateVersionInput,
+  ReviseVersionInput,
   AppletRunOutput,
 } from '@/domain/applet'
+import { appletVersionDefinitionSchema } from '@/domain/applet'
 import type {
   AppletDetail,
   AppletSummary,
@@ -80,7 +83,7 @@ export const ensureWorkspace = async (workspaceId: string): Promise<void> => {
   await getDatabase().insert(workspace).values({ id: workspaceId }).onConflictDoNothing()
 }
 
-const summaryRows = async (workspaceId: string) =>
+const summaryRows = async (workspaceId: string, appletId?: string) =>
   getDatabase()
     .select({
       id: applet.id,
@@ -120,7 +123,11 @@ const summaryRows = async (workspaceId: string) =>
         eq(appletDeployment.appletId, applet.id),
       ),
     )
-    .where(eq(applet.workspaceId, workspaceId))
+    .where(
+      appletId
+        ? and(eq(applet.workspaceId, workspaceId), eq(applet.id, appletId))
+        : eq(applet.workspaceId, workspaceId),
+    )
     .orderBy(desc(applet.updatedAt))
 
 const summary = (
@@ -139,23 +146,46 @@ export const listApplets = async (workspaceId: string): Promise<AppletSummary[]>
   (await summaryRows(workspaceId)).map(summary)
 
 const getSummary = async (workspaceId: string, appletId: string): Promise<AppletSummary> => {
-  const result = (await summaryRows(workspaceId)).find(({ id }) => id === appletId)
+  const [result] = await summaryRows(workspaceId, appletId)
   if (!result) throw new RequestFailure(404, 'applet_not_found', 'This applet was not found')
   return summary(result)
 }
 
+// Version listings skip the definition and artifact columns, which can be
+// megabytes per row, and read the definition kind straight from JSON.
+const versionRows = async (workspaceId: string, appletId: string) =>
+  getDatabase()
+    .select({
+      id: appletVersion.id,
+      version: appletVersion.version,
+      state: appletVersion.state,
+      note: appletVersion.note,
+      inputs: appletVersion.inputs,
+      definitionKind: sql<
+        AppletVersionDefinition['kind']
+      >`${appletVersion.definition}->>'kind'`,
+      qualityReport: appletVersion.qualityReport,
+      createdAt: appletVersion.createdAt,
+    })
+    .from(appletVersion)
+    .where(and(eq(appletVersion.workspaceId, workspaceId), eq(appletVersion.appletId, appletId)))
+    .orderBy(desc(appletVersion.version))
+
 const versionSummary = (
-  row: typeof appletVersion.$inferSelect,
+  row: Awaited<ReturnType<typeof versionRows>>[number],
 ): AppletVersionSummary => ({
   id: row.id,
   version: row.version,
   state: row.state,
   note: row.note,
   inputs: row.inputs,
-  definitionKind: row.definition.kind,
+  definitionKind: row.definitionKind,
   qualityReport: row.qualityReport,
   createdAt: iso(row.createdAt),
 })
+
+const fullVersionSummary = (row: typeof appletVersion.$inferSelect): AppletVersionSummary =>
+  versionSummary({ ...row, definitionKind: row.definition.kind })
 
 const runSummary = (row: typeof appletRun.$inferSelect): RunSummary => ({
   id: row.id,
@@ -182,13 +212,7 @@ export const getApplet = async (
 ): Promise<AppletDetail> => {
   const [appletSummary, versions, runs, corrections, evaluationSuites, evaluationRuns] = await Promise.all([
     getSummary(workspaceId, appletId),
-    getDatabase()
-      .select()
-      .from(appletVersion)
-      .where(
-        and(eq(appletVersion.workspaceId, workspaceId), eq(appletVersion.appletId, appletId)),
-      )
-      .orderBy(desc(appletVersion.version)),
+    versionRows(workspaceId, appletId),
     getDatabase()
       .select()
       .from(appletRun)
@@ -231,7 +255,7 @@ export const getAppletVersion = async (
     )
     .limit(1)
   if (!row) throw new RequestFailure(404, 'version_not_found', 'This version was not found')
-  return { version: versionSummary(row), definition: row.definition }
+  return { version: fullVersionSummary(row), definition: row.definition }
 }
 
 export const createApplet = async (
@@ -311,9 +335,83 @@ export const createVersion = async (
     return row
   })
   return {
-    version: versionSummary(created),
+    version: fullVersionSummary(created),
     publishable: false,
   }
+}
+
+/**
+ * Delta revision: merge changed/deleted files over an existing version's
+ * React definition and create the merged result as a new immutable version.
+ * Validation, compilation, quality gating, and locking all flow through
+ * createVersion so there is exactly one write path.
+ */
+export const reviseVersion = async (
+  workspaceId: string,
+  appletId: string,
+  value: ReviseVersionInput,
+): Promise<{ version: AppletVersionSummary; publishable: boolean }> => {
+  const base = await getAppletVersion(workspaceId, appletId, value.baseVersionId)
+  if (base.definition.kind !== 'react-app') {
+    throw new RequestFailure(
+      422,
+      'unsupported_base',
+      'Only React app versions can be revised by delta; send a full definition instead',
+    )
+  }
+  const merged = new Map(base.definition.files.map((file) => [file.path, file]))
+  const unknownDeletes = value.deletedPaths.filter((path) => !merged.has(path))
+  if (unknownDeletes.length > 0) {
+    throw new RequestFailure(
+      422,
+      'deleted_path_not_found',
+      `deletedPaths names files the base version does not have: ${unknownDeletes.join(', ')}`,
+    )
+  }
+  for (const path of value.deletedPaths) merged.delete(path)
+  for (const file of value.changedFiles) merged.set(file.path, file)
+  if (!merged.has(base.definition.entry)) {
+    throw new RequestFailure(
+      422,
+      'entry_deleted',
+      `${base.definition.entry} is the entry file and must remain in the version`,
+    )
+  }
+  const [baseRow] = await getDatabase()
+    .select({ inputs: appletVersion.inputs })
+    .from(appletVersion)
+    .where(
+      and(
+        eq(appletVersion.workspaceId, workspaceId),
+        eq(appletVersion.appletId, appletId),
+        eq(appletVersion.id, value.baseVersionId),
+      ),
+    )
+    .limit(1)
+  if (!baseRow) throw new RequestFailure(404, 'version_not_found', 'This version was not found')
+  const parsedDefinition = appletVersionDefinitionSchema.safeParse({
+    kind: 'react-app',
+    entry: base.definition.entry,
+    files: [...merged.values()],
+    actions: value.actions ?? base.definition.actions,
+  })
+  if (!parsedDefinition.success) {
+    // The merged tree broke a definition rule (deleted entry file, too many
+    // files, oversized source, invalid actions). The agent needs the reason,
+    // not an opaque 500.
+    throw new RequestFailure(
+      400,
+      'invalid_merged_definition',
+      parsedDefinition.error.issues[0]?.message ?? 'The merged definition is invalid',
+    )
+  }
+  const definition = parsedDefinition.data
+  return createVersion(workspaceId, appletId, {
+    note: value.note,
+    inputs: value.inputs ?? baseRow.inputs,
+    definition,
+    resolvesCorrections: value.resolvesCorrections,
+  })
 }
 
 export const publishVersion = async (

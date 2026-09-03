@@ -4,6 +4,7 @@ import {
   createApplet,
   createCorrection,
   createVersion,
+  reviseVersion,
   ensureWorkspace,
   getApplet,
   getAppletVersion,
@@ -264,8 +265,58 @@ describe.runIf(runIntegration)('durable applet lifecycle', () => {
     })
   })
 
+  it('revises a version by delta: changed files merge, deletions drop, the rest carry over', async () => {
+    const applet = await createApplet(workspaceId, {
+      name: 'Delta register',
+      description: 'Prove delta revision merges files.',
+      medium: 'web-app',
+    })
+    const base = await createVersion(workspaceId, applet.id, {
+      note: 'Base version',
+      inputs: [],
+      definition: definition(appSource.replace('{String(inputs.title)}', 'Base title')),
+    })
+    const revised = await reviseVersion(workspaceId, applet.id, {
+      baseVersionId: base.version.id,
+      note: 'Retitle via delta',
+      changedFiles: [
+        {
+          path: 'src/App.tsx',
+          content: appSource.replace('{String(inputs.title)}', 'Revised title'),
+        },
+      ],
+      deletedPaths: [],
+    })
+    expect(revised.version.version).toBe(2)
+    const stored = await getAppletVersion(workspaceId, applet.id, revised.version.id)
+    if (stored.definition.kind !== 'react-app') throw new Error('expected react-app definition')
+    expect(stored.definition.files).toHaveLength(2)
+    const entry = stored.definition.files.find(({ path }) => path === 'src/App.tsx')
+    expect(entry?.content).toContain('Revised title')
+    const css = stored.definition.files.find(({ path }) => path === 'src/app.css')
+    expect(css?.content).toContain('.register')
+
+    await expect(
+      reviseVersion(workspaceId, applet.id, {
+        baseVersionId: base.version.id,
+        note: 'Delete the entry file',
+        changedFiles: [],
+        deletedPaths: ['src/App.tsx'],
+      }),
+    ).rejects.toThrow(/src\/App\.tsx is the entry file and must remain/)
+    await expect(
+      reviseVersion(workspaceId, applet.id, {
+        baseVersionId: base.version.id,
+        note: 'Delete a file that does not exist',
+        changedFiles: [],
+        deletedPaths: ['src/ghost.ts'],
+      }),
+    ).rejects.toThrow(/does not have: src\/ghost\.ts/)
+  })
+
   it('rejects undeclared run inputs at the boundary', async () => {
-    const [applet] = await listApplets(workspaceId)
+    const applets = await listApplets(workspaceId)
+    const applet = applets.find(({ name }) => name === 'Task register')
     if (!applet) throw new Error('The lifecycle test did not create its applet')
     await expect(
       runApplet(workspaceId, applet.id, { input: { title: 'August', hidden: true } }),

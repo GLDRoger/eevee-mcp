@@ -6,15 +6,10 @@ import { createEvaluationSuiteSchema } from '@/domain/evaluation'
 import type { ReferenceAppletSlug } from '@/domain/reference-applet'
 import { isPublishableQuality } from '@/domain/quality'
 import {
-  SPARKBENCH_REFERENCE,
-  sparkbenchEvaluation,
-  sparkbenchVersion,
-} from '@/reference-applets/sparkbench'
-import {
-  FABLECUT_REFERENCE,
-  fablecutEvaluation,
-  fablecutVersion,
-} from '@/reference-applets/fablecut'
+  MERIDIAN_REFERENCE,
+  meridianEvaluation,
+  meridianVersion,
+} from '@/reference-applets/meridian'
 import { getDatabase } from './db/client'
 import { applet, appletVersion, evaluationSuite } from './db/schema'
 import { compileReactApp } from './react-compiler'
@@ -23,19 +18,12 @@ import { listApplets } from './applets'
 
 const referencePackage = (slug: ReferenceAppletSlug) => {
   switch (slug) {
-    case 'sparkbench':
+    case 'meridian':
       return {
-        identity: SPARKBENCH_REFERENCE,
+        identity: MERIDIAN_REFERENCE,
         medium: 'web-app' as const,
-        version: sparkbenchVersion,
-        evaluation: sparkbenchEvaluation,
-      }
-    case 'fablecut':
-      return {
-        identity: FABLECUT_REFERENCE,
-        medium: 'video' as const,
-        version: fablecutVersion,
-        evaluation: fablecutEvaluation,
+        version: meridianVersion,
+        evaluation: meridianEvaluation,
       }
     default: {
       const unreachable: never = slug
