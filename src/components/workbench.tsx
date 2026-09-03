@@ -4,25 +4,33 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { z } from 'zod'
 import type { AppletRun } from '@/domain/applet'
+import type { AppletActionRequest } from '@/domain/applet-action'
+import { leaseActive, type AutonomyLease } from '@/domain/autonomy-lease'
 import type { AppletDetail, AppletSummary } from '@/domain/api'
 import { sensitiveFindingIdsSchema } from '@/domain/document-review'
 import type { OfficeFileDetail, OfficeFileSummary } from '@/domain/office-file'
+import type { HumanAuthorityStatus } from '@/domain/human-authority'
 import { api } from '@/client/api'
-import { EEVEE_TOOL_COUNT, registerEeveeTools } from '@/client/webmcp'
+import { EEVEE_TOOL_COUNT, registerEeveeTools, type ToolRegistration } from '@/client/webmcp'
+import { publishWorkbenchState } from '@/client/workbench-state'
 import { AgentActivity } from './agent-activity'
 import { AppletInspector } from './applet-inspector'
 import { AppletLedger } from './applet-ledger'
+import { DecisionsChip, DecisionsPanel, useDecisionQueue } from './decisions'
 import { FileExplorer } from './file-explorer'
 import { FileInspector } from './file-inspector'
 import { LibraryLedger } from './library-ledger'
 import { StudioLedger } from './studio-ledger'
+import { HumanAuthorityControl } from './human-authority-control'
+import { WorkspaceMenu } from './workspace-menu'
+import { AppletsHome, Guide, LibraryHome, StudioHome } from './workbench-home'
 
 const reviewEventSchema = z.strictObject({ appletId: z.uuid(), versionId: z.uuid() })
 const fileReviewEventSchema = z.strictObject({
   fileId: z.uuid(),
   findingIds: sensitiveFindingIdsSchema,
 })
-type WorkspaceSurface = 'applets' | 'library' | 'studio'
+type WorkspaceSurface = 'applets' | 'library' | 'studio' | 'guide'
 
 export function Workbench() {
   const [surface, setSurface] = useState<WorkspaceSurface>('applets')
@@ -35,9 +43,47 @@ export function Workbench() {
   const [fileReviewFindingIds, setFileReviewFindingIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [toolsLive, setToolsLive] = useState<boolean | null>(null)
+  const [toolsLive, setToolsLive] = useState<ToolRegistration | null>(null)
+  const [humanAuthority, setHumanAuthority] = useState<HumanAuthorityStatus | null>(null)
+  const [decisionsOpen, setDecisionsOpen] = useState(false)
+  // Escape and a click outside close the decisions panel, like any popover.
+  useEffect(() => {
+    if (!decisionsOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDecisionsOpen(false)
+    }
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target
+      if (target instanceof Element && target.closest('.decisions-panel, .decisions-chip')) return
+      setDecisionsOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onPointer)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onPointer)
+    }
+  }, [decisionsOpen])
+  const [ledgerOpen, setLedgerOpen] = useState(true)
+  const [stageView, setStageView] = useState<'app' | 'code'>('app')
+  // The agent rail starts closed so the app or document owns the width; the
+  // topbar chip still counts live tools and waiting decisions, and the rail
+  // opens on demand for the shared plan and tool activity.
+  const [railOpen, setRailOpen] = useState(false)
+  // The autonomy lease is owned here, not by the preview component, so a
+  // granted lease survives App/Code toggles and surface changes. The lease
+  // names its run; a lease for any other run is simply never active.
+  const [lease, setLease] = useState<AutonomyLease | null>(null)
+  // Set when the person opens a pending decision from the topbar queue; the
+  // mounted preview scrolls that request's card into view.
+  const [focusRequestId, setFocusRequestId] = useState<string | null>(null)
+  const pendingDecisions = useDecisionQueue()
   const selectedRef = useRef<string | null>(null)
   const selectedFileRef = useRef<string | null>(null)
+  // The bench opens on the Applets home, never on whichever applet happens
+  // to be first in the ledger; an explicit target (a click, an agent event, a
+  // decision jump) selects one, and Close returns here.
+  const dismissedRef = useRef(true)
 
   const openFile = useCallback(async (fileId: string, signal?: AbortSignal) => {
     selectedFileRef.current = fileId
@@ -82,6 +128,10 @@ export function Workbench() {
     async (preferredId?: string, signal?: AbortSignal) => {
       const response = await api.listApplets(signal)
       setApplets(response.applets)
+      // An explicit target (agent event, decision jump) overrides dismissal;
+      // a background refresh respects it and keeps the bench bare.
+      if (preferredId) dismissedRef.current = false
+      if (dismissedRef.current) return
       const candidate = preferredId ?? selectedRef.current
       const nextId = response.applets.some(({ id }) => id === candidate)
         ? candidate
@@ -96,6 +146,52 @@ export function Workbench() {
     },
     [openApplet],
   )
+
+  const closeApplet = () => {
+    dismissedRef.current = true
+    selectedRef.current = null
+    setDetail(null)
+    setRun(null)
+    setReviewVersionId(null)
+  }
+
+  // The agent's get_workbench_state tool reads this; it is the same picture
+  // the person has, published on every change.
+  useEffect(() => {
+    const latestVersionId = detail?.versions[0]?.id ?? null
+    publishWorkbenchState({
+      surface,
+      applet: detail
+        ? {
+            id: detail.applet.id,
+            name: detail.applet.name,
+            activeVersionId: detail.applet.activeVersionId,
+            latestVersionId,
+            view: stageView,
+          }
+        : null,
+      run: run ? { id: run.id, state: run.state, appletVersionId: run.appletVersionId } : null,
+      reviewVersionId,
+      file: fileDetail
+        ? { id: fileDetail.file.id, name: fileDetail.file.name, medium: fileDetail.file.medium }
+        : null,
+      pendingDecisions: pendingDecisions.length,
+      lease: lease && leaseActive(lease) ? lease : null,
+      passkeyEnrolled: humanAuthority?.enrolled ?? null,
+      toolsLive: toolsLive?.live ?? null,
+    })
+  }, [
+    detail,
+    fileDetail,
+    humanAuthority,
+    lease,
+    pendingDecisions.length,
+    reviewVersionId,
+    run,
+    stageView,
+    surface,
+    toolsLive,
+  ])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -157,12 +253,13 @@ export function Workbench() {
           const registration = registerEeveeTools()
           unregister = registration.unregister
           void registration.ready
-            .then((registered) => setToolsLive(registered.live > 0))
-            .catch(() => setToolsLive(false))
+            .then((registered) => setToolsLive(registered))
+            .catch(() => setToolsLive({ live: 0, total: EEVEE_TOOL_COUNT, failures: [] }))
         }
         return Promise.all([
           refresh(undefined, controller.signal),
           refreshFiles(undefined, controller.signal),
+          api.humanAuthorityStatus(controller.signal).then(setHumanAuthority),
         ])
       })
       .catch((reason) => {
@@ -182,6 +279,8 @@ export function Workbench() {
   }, [refresh, refreshFiles])
 
   const selectApplet = (appletId: string) => {
+    dismissedRef.current = false
+    setSurface('applets')
     setReviewVersionId(null)
     setError('')
     void openApplet(appletId).catch((reason) => {
@@ -208,10 +307,10 @@ export function Workbench() {
     }
   }
 
-  const createFile = async (name: string, bytes: Uint8Array) => {
+  const createFile = async (name: string, bytes: Uint8Array, note?: string) => {
     setError('')
     try {
-      const response = await api.uploadFile(name, bytes)
+      const response = await api.uploadFile(name, bytes, undefined, note)
       await refreshFiles(response.file.id)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'This file could not be created')
@@ -230,10 +329,27 @@ export function Workbench() {
     changed()
   }
 
+  const runLease = lease && lease.runId === run?.id && leaseActive(lease) ? lease : null
+
+  const openDecision = (request: AppletActionRequest) => {
+    setDecisionsOpen(false)
+    setSurface('applets')
+    setReviewVersionId(null)
+    setFocusRequestId(request.id)
+    void refresh(request.appletId).catch((reason) => {
+      setError(reason instanceof Error ? reason.message : 'This applet could not be opened')
+    })
+  }
+
+  const showApplet = surface === 'applets' && detail !== null
+
   return (
     <main className="workbench">
       <header className="topbar">
-        <Link className="wordmark" href="/" aria-label="EEVEE MCP home">EEVEE</Link>
+        <Link className="wordmark" href="/" aria-label="EEVEE MCP home">
+          EEVEE
+          <small>agents build the app · you hold the key</small>
+        </Link>
         <nav className="workspace-nav" aria-label="Workspace">
           <button
             type="button"
@@ -250,57 +366,105 @@ export function Workbench() {
             aria-current={surface === 'studio' ? 'page' : undefined}
             onClick={() => setSurface('studio')}
           >Studio</button>
+          <button
+            type="button"
+            aria-current={surface === 'guide' ? 'page' : undefined}
+            title="How EEVEE works, with prompts you can paste to your agent"
+            onClick={() => setSurface('guide')}
+          >Guide</button>
         </nav>
         <span className="topbar-status">
-          {toolsLive === null ? null : toolsLive ? (
-            <span className="webmcp-chip is-live" title="A WebMCP-capable browser agent can use every EEVEE tool on this page.">
-              WebMCP · {EEVEE_TOOL_COUNT} tools live
-            </span>
-          ) : (
+          <HumanAuthorityControl status={humanAuthority} onStatus={setHumanAuthority} />
+          {runLease ? (
             <span
-              className="webmcp-chip is-off"
-              title="This browser did not expose document.modelContext. In Chrome 149+, enable chrome://flags/#enable-webmcp-testing and relaunch."
+              className="topbar-lease"
+              title="The open run may spend these writes on your standing decision. Every spend lands in the record."
             >
-              WebMCP unavailable
+              Lease · {runLease.remainingWrites} of {runLease.grantedWrites} writes · until{' '}
+              {new Date(runLease.expiresAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </span>
-          )}
-          <span>Public build · 01</span>
+          ) : null}
+          <DecisionsChip
+            pending={pendingDecisions}
+            open={decisionsOpen}
+            onToggle={() => setDecisionsOpen((current) => !current)}
+          />
+          <WorkspaceMenu />
         </span>
       </header>
-      <div className="workbench-body">
-        {surface === 'library' ? (
-          <LibraryLedger
-            files={files}
-            selectedId={fileDetail?.file.id ?? null}
-            onSelect={selectFile}
-            onUpload={uploadFile}
-          />
-        ) : surface === 'studio' ? (
-          <StudioLedger
-            files={files}
-            selectedId={fileDetail?.file.id ?? null}
-            onSelect={selectFile}
-            onCreate={createFile}
-          />
-        ) : (
-          <AppletLedger
-            applets={applets}
-            selectedId={detail?.applet.id ?? null}
-            onSelect={selectApplet}
-            onInstallReference={async (slug) => {
-              const response = await api.installReferenceApplet(slug)
-              await refresh(response.applet.id)
-            }}
-          />
-        )}
+      <div
+        className={[
+          'workbench-body',
+          ledgerOpen ? '' : 'is-ledger-closed',
+          railOpen ? '' : 'is-rail-closed',
+        ].filter(Boolean).join(' ')}
+      >
+        {decisionsOpen ? (
+          <DecisionsPanel pending={pendingDecisions} onOpen={openDecision} />
+        ) : null}
+        <div className="side-shell" data-closed={!ledgerOpen}>
+          {surface === 'library' ? (
+            <LibraryLedger
+              files={files}
+              selectedId={fileDetail?.file.id ?? null}
+              onSelect={selectFile}
+              onUpload={uploadFile}
+            />
+          ) : surface === 'studio' ? (
+            <StudioLedger
+              files={files}
+              selectedId={fileDetail?.file.id ?? null}
+              onSelect={selectFile}
+              onCreate={(name, bytes) => createFile(name, bytes, 'Created in Studio')}
+            />
+          ) : (
+            <AppletLedger
+              applets={applets}
+              selectedId={showApplet ? detail.applet.id : null}
+              onSelect={selectApplet}
+              onInstallReference={async (slug) => {
+                const response = await api.installReferenceApplet(slug)
+                setSurface('applets')
+                await refresh(response.applet.id)
+              }}
+            />
+          )}
+        </div>
+        <button
+          type="button"
+          className="side-toggle is-left"
+          aria-expanded={ledgerOpen}
+          title={ledgerOpen ? 'Hide the list' : 'Show the list'}
+          onClick={() => setLedgerOpen((current) => !current)}
+        >
+          <span aria-hidden="true">{ledgerOpen ? '⟨' : '⟩'}</span>
+          <span className="side-toggle-label">
+            {surface === 'library' ? 'Library' : surface === 'studio' ? 'Studio' : 'Applets'}
+          </span>
+        </button>
         <section
-          className={surface === 'studio' ? 'bench is-library' : 'bench'}
+          className={
+            surface === 'studio'
+              ? 'bench is-library'
+              : showApplet && !loading && !error
+                ? 'bench is-stage'
+                : 'bench'
+          }
           aria-live="polite"
         >
           {loading ? (
-            <div className="bench-message"><h2>Opening the ledger</h2><p>Loading durable state.</p></div>
+            <div className="bench-message"><h2>Opening your workspace</h2><p>Loading…</p></div>
           ) : error ? (
-            <div className="bench-message is-error"><h2>The workbench did not open</h2><p>{error}</p></div>
+            <div className="bench-message is-error">
+              <h2>The workbench did not open</h2>
+              <p>{error}</p>
+              <button type="button" className="primary-action" onClick={() => window.location.reload()}>
+                Try again
+              </button>
+            </div>
           ) : surface === 'studio' && fileDetail ? (
             <FileInspector detail={fileDetail} />
           ) : surface === 'library' && fileDetail ? (
@@ -316,83 +480,54 @@ export function Workbench() {
               }}
               reviewFindingIds={fileReviewFindingIds}
             />
-          ) : surface === 'applets' && detail ? (
+          ) : showApplet ? (
             <AppletInspector
               detail={detail}
               run={run}
               reviewVersionId={reviewVersionId}
+              lease={runLease}
+              onLeaseChange={setLease}
+              focusRequestId={focusRequestId}
               onRun={completed}
               onReviewVersion={setReviewVersionId}
               onChanged={changed}
+              onClose={closeApplet}
+              onViewChange={setStageView}
             />
           ) : surface === 'library' ? (
-            <div className="bench-message is-empty">
-              <span>01</span>
-              <h2>Bring the work itself into EEVEE.</h2>
-              <p>
-                Import a Word document, spreadsheet, presentation, or PDF. EEVEE keeps the
-                original bytes and every saved version, and the Studio opens each one with its
-                full editor.
-              </p>
-            </div>
+            <LibraryHome onUpload={uploadFile} />
           ) : surface === 'studio' ? (
-            <div className="bench-message is-empty">
-              <span>01</span>
-              <h2>Open the full editors.</h2>
-              <p>
-                Start a blank document, spreadsheet, or presentation — or pick a Library file.
-                Every save lands in the same immutable version register.
-              </p>
-            </div>
+            <StudioHome />
+          ) : surface === 'guide' ? (
+            <Guide toolsLive={toolsLive} humanAuthority={humanAuthority} />
           ) : (
-            <div className="bench-message is-empty">
-              <span>01</span>
-              <h2>Give the agent a result worth repeating.</h2>
-              <p>
-                Ask it to create a typed interactive applet and behavioral suite. EEVEE will compile,
-                compare, keep every result, and wait here for your approval.
-              </p>
-              <StarterPrompt toolsLive={toolsLive} />
-            </div>
+            <AppletsHome
+              toolsLive={toolsLive}
+              humanAuthority={humanAuthority}
+              hasApplets={applets.length > 0}
+              onSurface={setSurface}
+              onOpenApplets={() => {
+                setSurface('applets')
+                dismissedRef.current = false
+                void refresh()
+              }}
+            />
           )}
         </section>
-      </div>
-      <AgentActivity />
-    </main>
-  )
-}
-
-const STARTER_PROMPT =
-  'Create an interactive React project task register in EEVEE. Give it a required project-name input, persistent tasks, keyboard-friendly controls, responsive layout, and no network dependencies. Create a required browser scenario that adds a task, restarts the applet, and proves the task remains. Evaluate it, show me the evidence and rendered version for approval, then run it with the project name "WebMCP launch".'
-
-function StarterPrompt({ toolsLive }: { toolsLive: boolean | null }) {
-  const [copied, setCopied] = useState(false)
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(STARTER_PROMPT)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setCopied(false)
-    }
-  }
-
-  return (
-    <>
-      <div className="starter-prompt">
-        <p>Try this first ask</p>
-        <code>{STARTER_PROMPT}</code>
-        <button className="text-action" type="button" onClick={() => void copy()}>
-          {copied ? 'Copied' : 'Copy prompt'}
+        <button
+          type="button"
+          className="side-toggle is-right"
+          aria-expanded={railOpen}
+          title={railOpen ? 'Hide agent activity' : 'Show agent activity'}
+          onClick={() => setRailOpen((current) => !current)}
+        >
+          <span aria-hidden="true">{railOpen ? '⟩' : '⟨'}</span>
+          <span className="side-toggle-label">Agent</span>
         </button>
+        <div className="side-shell" data-closed={!railOpen}>
+          <AgentActivity toolsLive={toolsLive} />
+        </div>
       </div>
-      {toolsLive === false ? (
-        <p className="starter-warning">
-          This browser has not exposed WebMCP. In Chrome 149 or later, enable
-          chrome://flags/#enable-webmcp-testing and relaunch to let an agent use these tools.
-        </p>
-      ) : null}
-    </>
+    </main>
   )
 }

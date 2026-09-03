@@ -6,14 +6,14 @@ import type { InputDefinition, InputField } from '@/domain/input'
 import type { JsonValue } from '@/domain/json'
 import { api } from '@/client/api'
 
-const valueFor = (field: InputField, form: FormData): JsonValue | undefined => {
+export const valueFor = (field: InputField, form: FormData): JsonValue | undefined => {
   if (field.kind === 'boolean') return form.get(field.key) === 'on'
   const raw = form.get(field.key)
   if (typeof raw !== 'string' || raw === '') return undefined
   return field.kind === 'number' ? Number(raw) : raw
 }
 
-function Field({ field }: { field: InputField }) {
+export function Field({ field }: { field: InputField }) {
   const common = {
     id: `input-${field.key}`,
     name: field.key,
@@ -93,15 +93,15 @@ export function InputForm({
     <form className="run-form" key={versionId} onSubmit={(event) => void submit(event)}>
       <header>
         <div>
-          <p>Published inputs</p>
+          <p>Inputs</p>
           <h3>Run this applet</h3>
         </div>
         <button type="submit" disabled={running}>
-          {running ? 'Running' : 'Run version'}
+          {running ? 'Starting…' : 'Run'}
         </button>
       </header>
       {fields.length === 0 ? (
-        <p className="run-form-empty">This applet runs without asking for anything.</p>
+        <p className="run-form-empty">This applet takes no inputs.</p>
       ) : (
         <div className="run-fields">{fields.map((field) => <Field key={field.key} field={field} />)}</div>
       )}

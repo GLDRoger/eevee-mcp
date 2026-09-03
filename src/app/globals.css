@@ -4,31 +4,50 @@
 @import './activity.css';
 @import './workbench-footer.css';
 @import './file-library.css';
+@import './workbench-home.css';
 
 :root {
-  --ink: oklch(25% 0.026 157);
-  --ink-soft: oklch(43% 0.022 157);
-  --ink-faint: oklch(58% 0.018 157);
-  --ground: oklch(94% 0.014 146);
-  --paper: oklch(98% 0.009 127);
-  --paper-deep: oklch(91% 0.018 137);
-  --pine: oklch(35% 0.055 158);
-  --pine-pale: oklch(87% 0.035 151);
-  --stamp: oklch(47% 0.102 35);
-  --stamp-pale: oklch(91% 0.032 38);
-  --rule: oklch(78% 0.02 147);
-  --rule-strong: oklch(62% 0.028 151);
-  --error: oklch(45% 0.12 28);
+  /* Warm letterpress neutrals, tinted toward the ink hue. */
+  /* Ink leans indigo to match the landing page's dark bands; ground and
+     paper stay warm so the bench still reads as paper under a lamp. */
+  --ink: oklch(22% 0.05 272);
+  --ink-soft: oklch(42% 0.035 270);
+  --ink-faint: oklch(55% 0.025 268);
+  /* Surfaces: white where you work, a quiet gray for rails, neutral rules.
+     Corners round, shadows soft, nothing shouting. */
+  --ground: oklch(97.6% 0.003 270);
+  --ground-deep: oklch(94% 0.005 270);
+  --paper: oklch(100% 0 0);
+  --paper-deep: oklch(96.5% 0.004 270);
+  --rule: oklch(92% 0.005 270);
+  --rule-strong: oklch(85% 0.008 270);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow-sm: 0 1px 2px oklch(20% 0.04 270 / 0.05);
+  --shadow: 0 1px 2px oklch(20% 0.04 270 / 0.05), 0 10px 28px oklch(20% 0.04 270 / 0.08);
+  /* Semantic color: green marks what is proven live, oxblood marks what a
+     person must decide, cobalt marks the agent at work. */
+  --pine: oklch(45% 0.09 152);
+  --pine-pale: oklch(91% 0.035 150);
+  --stamp: oklch(43% 0.14 25);
+  --stamp-strong: oklch(36% 0.13 25);
+  --stamp-pale: oklch(93% 0.025 30);
+  --agent: oklch(45% 0.12 262);
+  --agent-pale: oklch(92.5% 0.025 258);
+  --error: oklch(46% 0.15 27);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-12: 3rem;
   --space-16: 4rem;
   --display: var(--font-avara), Georgia, serif;
-  --body: "Helvetica Neue", "Segoe UI", sans-serif;
+  --body: 'Seravek', 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 }
 
 * {
@@ -42,7 +61,7 @@ html {
 
 body {
   min-width: 20rem;
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0;
   font-family: var(--body);
   text-rendering: optimizeLegibility;
@@ -82,9 +101,11 @@ button:disabled {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  min-height: 100vh;
-  grid-template-rows: auto 1fr auto;
-  overflow-x: clip;
+  /* The shell is the viewport: topbar and both rails stay put and only the
+     bench (or the editor inside it) scrolls, so the app or document is a
+     fixed section of the screen the way it is in any desktop tool. */
+  height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .topbar {
@@ -92,81 +113,553 @@ button:disabled {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  min-height: 4.25rem;
-  grid-template-columns: 18rem minmax(0, 1fr) auto;
+  min-height: 3.6rem;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-6);
-  padding: var(--space-3) var(--space-6);
-  border-bottom: 1px solid var(--rule-strong);
+  padding: 0 var(--space-6);
+  border-bottom: 1px solid var(--rule);
   background: var(--paper);
 }
 
 .wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
   width: fit-content;
   color: var(--ink);
   font-family: var(--display);
-  font-size: 1.7rem;
-  font-variation-settings: "wght" 760;
-  letter-spacing: 0.08em;
+  font-size: 1.55rem;
+  font-variation-settings: 'wght' 780;
+  letter-spacing: 0.06em;
   line-height: 1;
   text-decoration: none;
 }
 
-.topbar > span {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.82rem;
+.wordmark small {
+  color: var(--ink-faint);
+  font-family: var(--body);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .workspace-nav {
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
+  align-items: stretch;
+  align-self: stretch;
+  gap: var(--space-2);
 }
 
 .workspace-nav button {
-  padding: var(--space-2) var(--space-3);
+  position: relative;
+  padding: 0 var(--space-3);
   border: 0;
-  border-bottom: 1px solid transparent;
   background: transparent;
   color: var(--ink-soft);
-  font-size: 0.82rem;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
-.workspace-nav button:hover,
-.workspace-nav button[aria-current='page'] {
-  border-bottom-color: var(--stamp);
+.workspace-nav button:hover {
   color: var(--ink);
 }
 
-.topbar > span {
+.workspace-nav button[aria-current='page'] {
+  color: var(--ink);
+}
+
+.workspace-nav button[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  right: var(--space-3);
+  bottom: -1px;
+  left: var(--space-3);
+  height: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--stamp);
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.human-key-setup {
+  position: relative;
+  display: grid;
+}
+
+.human-key {
+  padding: 0.3rem var(--space-3);
+  border: 1px solid var(--stamp);
+  border-radius: 999px;
+  background: var(--stamp);
+  color: var(--paper);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+span.human-key.is-enrolled {
+  border-color: var(--pine);
+  background: var(--pine-pale);
+  color: var(--pine);
+}
+
+.human-key-setup small {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: min(20rem, 80vw);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  background: var(--paper);
+  color: var(--error);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.topbar-lease {
+  padding: 0.3rem var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
+.decisions-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.3rem var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.decisions-chip strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.decisions-chip.has-pending {
+  border-color: var(--stamp);
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+.decisions-chip.has-pending:hover {
+  background: var(--stamp-strong);
+}
+
+.decisions-chip:not(.has-pending):hover {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+}
+
 .workbench-body {
+  position: relative;
   display: grid;
   width: 100%;
   min-height: 0;
   min-width: 0;
   max-width: 100%;
-  grid-template-columns: 19.5rem minmax(0, 1fr);
+  grid-template-columns: 19rem auto minmax(0, 1fr) auto 17.5rem;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.workbench-body.is-ledger-closed {
+  grid-template-columns: 0 auto minmax(0, 1fr) auto 17.5rem;
+}
+
+.workbench-body.is-rail-closed {
+  grid-template-columns: 19rem auto minmax(0, 1fr) auto 0;
+}
+
+.workbench-body.is-ledger-closed.is-rail-closed {
+  grid-template-columns: 0 auto minmax(0, 1fr) auto 0;
+}
+
+.side-shell {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* A closed shell stays in the grid so every sibling keeps its column; the
+   zero-width track does the collapsing. */
+.side-shell[data-closed='true'] {
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.side-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) 0.28rem;
+  border: 0;
+  background: var(--ground);
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+}
+
+.side-toggle.is-left {
+  border-right: 1px solid var(--rule-strong);
+}
+
+.side-toggle.is-right {
+  border-left: 1px solid var(--rule-strong);
+}
+
+.side-toggle:hover {
+  background: var(--ground-deep);
+  color: var(--ink);
+}
+
+.side-toggle-label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.decisions-panel {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: min(26rem, 100%);
+  max-height: min(70vh, 34rem);
+  align-content: start;
+  gap: 0;
+  overflow-y: auto;
+  border: 1px solid var(--rule);
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.decisions-panel > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+
+.decisions-panel h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 620;
+}
+
+.decisions-panel > header span {
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+}
+
+.decisions-empty {
+  margin: 0;
+  padding: var(--space-2) var(--space-5) var(--space-6);
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.decisions-note {
+  margin: 0;
+  padding: 0 var(--space-5) var(--space-2);
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.decisions-panel ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decision-entry {
+  display: grid;
+  width: 100%;
+  gap: 0.3rem;
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  border-top: 1px solid var(--rule);
+  background: transparent;
+  text-align: left;
+}
+
+.decision-entry:hover {
+  background: var(--stamp-pale);
+}
+
+.decision-entry strong {
+  font-size: 0.9rem;
+}
+
+.decision-entry span {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.decision-entry code {
+  color: var(--stamp);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 1180px) {
+  .workbench-body,
+  .workbench-body.is-ledger-closed,
+  .workbench-body.is-rail-closed,
+  .workbench-body.is-ledger-closed.is-rail-closed {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  /* Both closed-ledger forms are listed so this outranks the three-class
+     selector above; otherwise the closed column falls back to auto and the
+     hidden ledger still claims its max-content width. */
+  .workbench-body.is-ledger-closed,
+  .workbench-body.is-ledger-closed.is-rail-closed {
+    grid-template-columns: 0 auto minmax(0, 1fr);
+  }
+
+  .side-toggle.is-right,
+  .workbench-body > .side-shell:last-child {
+    display: none;
+  }
+
+  .workbench-body:not(.is-ledger-closed) > .side-shell:first-of-type {
+    width: 17rem;
+  }
 }
 
 @media (max-width: 760px) {
   .topbar {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
     padding-inline: var(--space-4);
   }
 
-  .workspace-nav {
-    justify-self: end;
-  }
-
-  .topbar > span {
+  .wordmark small {
     display: none;
   }
 
-  .workbench-body {
+  .workspace-nav {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+    overflow-x: auto;
+  }
+
+  .workspace-nav button {
+    flex: 1 1 0;
+    min-width: 4.5rem;
+    min-height: 2.7rem;
+    padding-inline: var(--space-2);
+  }
+
+  .topbar-status {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .topbar-lease {
+    display: none;
+  }
+
+  .human-key span,
+  .decisions-chip span {
+    display: none;
+  }
+
+  .decisions-chip::after {
+    content: 'waiting';
+  }
+
+  .workbench-body,
+  .workbench-body.is-ledger-closed {
     grid-template-columns: 1fr;
   }
+
+  .side-toggle.is-left {
+    display: none;
+  }
+
+  .workbench-body > .side-shell:first-of-type {
+    width: 100% !important;
+  }
+
+  /* Stacked on a phone, the ledger sits above the bench and the page itself
+     scrolls; a viewport-locked bench would leave a few lines visible. */
+  .workbench {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .workbench-body {
+    grid-template-rows: none;
+  }
+
+  .side-shell,
+  .bench {
+    overflow: visible;
+  }
+
+  .bench.is-library {
+    display: block;
+  }
+
+  .office-editor-shell > .office-docs,
+  .office-editor-shell > .office-sheets,
+  .office-editor-shell > .office-slides,
+  .office-editor-shell > .office-pdf {
+    height: 80dvh;
+  }
+}
+
+/* One pulse when a new decision arrives. */
+.decisions-chip.is-arrived {
+  animation: chip-arrive 0.9s ease-out 2;
+}
+
+@keyframes chip-arrive {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decisions-chip.is-arrived {
+    animation: none;
+  }
+}
+
+/* Workspace menu: the site link and the only sign-out there is. */
+.workspace-menu {
+  position: relative;
+}
+
+.workspace-menu-toggle {
+  padding: 0.3rem var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.workspace-menu-toggle::after {
+  content: ' ▾';
+  color: var(--ink-faint);
+}
+
+.workspace-menu-toggle:hover,
+.workspace-menu-toggle[aria-expanded='true'] {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.workspace-menu-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: grid;
+  width: min(20rem, 90vw);
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.workspace-menu-id {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+
+.workspace-menu-item {
+  display: grid;
+  gap: 0.1rem;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.workspace-menu-item small {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.workspace-menu-item:hover {
+  background: var(--paper-deep);
+}
+
+.workspace-menu-confirm {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--stamp-pale);
+}
+
+.workspace-menu-confirm p {
+  margin: 0;
+  color: var(--stamp-strong);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.workspace-menu-confirm > div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.workspace-menu-leave {
+  padding: 0.4rem var(--space-3);
+  border: 1px solid var(--stamp);
+  border-radius: var(--radius-sm);
+  background: var(--stamp);
+  color: var(--paper);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.workspace-menu-leave:disabled {
+  opacity: 0.6;
 }

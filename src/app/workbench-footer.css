@@ -1,8 +1,4 @@
 @media (max-width: 760px) {
-  .topbar p {
-    display: none;
-  }
-
   .ledger {
     padding: var(--space-4);
     border-right: 0;
@@ -10,7 +6,7 @@
   }
 
   .bench {
-    padding: var(--space-8) var(--space-4) var(--space-12);
+    padding: var(--space-6) var(--space-4) var(--space-12);
   }
 
   .bench.is-library {
@@ -23,27 +19,28 @@
 
   .inspector-heading {
     grid-template-columns: 1fr;
-    gap: var(--space-6);
+    gap: var(--space-4);
   }
 
-  .inspector-heading dl {
-    min-width: 0;
+  .decisions-panel {
+    width: 100%;
+    border-left: 0;
   }
 
   .run-form,
   .version-review > header,
-    .publish-waiting,
-    .quality-ledger,
-    .evaluation-register,
-    .version-register,
+  .publish-waiting,
+  .quality-ledger,
+  .evaluation-register,
+  .version-register,
   .correction-register {
     padding: var(--space-6) var(--space-4);
   }
 
   .run-form > header,
-    .version-review > header,
-    .quality-ledger > header,
-    .evaluation-register > header {
+  .version-review > header,
+  .quality-ledger > header,
+  .evaluation-register > header {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -74,7 +71,6 @@
     align-items: flex-start;
     flex-direction: column;
   }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -83,5 +79,7 @@
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

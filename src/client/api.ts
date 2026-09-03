@@ -185,18 +185,6 @@ export const api = {
       documentReviewResponseSchema,
       signal ? { signal } : undefined,
     ),
-  /** @deprecated The passkey-authorized UI replaces this direct mutation in the next commit. */
-  applyDocumentRedactions: (
-    fileId: string,
-    baseVersionId: string,
-    findingIds: string[],
-    signal?: AbortSignal,
-  ) =>
-    requestJson(
-      `/api/files/${encodeURIComponent(fileId)}/review`,
-      officeFileResponseSchema,
-      jsonMutation('POST', { baseVersionId, findingIds }, signal),
-    ),
   uploadFile: (name: string, bytes: Uint8Array, signal?: AbortSignal, note?: string) =>
     requestJson(
       '/api/files',
@@ -329,14 +317,6 @@ export const api = {
       appletPreviewResponseSchema,
       signal ? { signal } : undefined,
     ),
-  /** @deprecated The passkey-authorized UI replaces this direct mutation in the next commit. */
-  publishVersion: async (appletId: string, versionId: string): Promise<void> => {
-    await requestJson(
-      `/api/applets/${encodeURIComponent(appletId)}/versions/${encodeURIComponent(versionId)}/publish`,
-      z.object({ published: z.literal(true) }),
-      jsonMutation('POST', {}),
-    )
-  },
   runApplet: (appletId: string, input: CreateRunInput, signal?: AbortSignal) =>
     requestJson(
       `/api/applets/${encodeURIComponent(appletId)}/runs`,

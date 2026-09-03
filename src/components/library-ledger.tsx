@@ -4,9 +4,9 @@ import { useRef, useState } from 'react'
 import type { OfficeFileSummary } from '@/domain/office-file'
 
 const mediumLabel: Record<OfficeFileSummary['medium'], string> = {
-  document: 'Documents',
-  spreadsheet: 'Sheets',
-  presentation: 'Slides',
+  document: 'Document',
+  spreadsheet: 'Spreadsheet',
+  presentation: 'Presentation',
   pdf: 'PDF',
 }
 

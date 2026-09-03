@@ -3,10 +3,11 @@
   min-height: 0;
   min-width: 0;
   max-width: 100%;
-  padding: var(--space-8) var(--space-4) var(--space-12) var(--space-6);
-  border-right: 1px solid var(--rule-strong);
-  background: var(--paper-deep);
+  padding: var(--space-6) var(--space-4) var(--space-12);
+  border-right: 1px solid var(--rule);
+  background: var(--ground);
 }
+
 .ledger-heading,
 .version-register > header,
 .correction-register > header {
@@ -17,19 +18,19 @@
 }
 
 .ledger-heading {
-  padding: 0 var(--space-2) var(--space-4);
+  padding: 0 var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .ledger-heading h1,
 .version-register h3,
 .correction-register h3 {
   margin: 0;
-  font-family: var(--display);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ledger-heading h1 {
-  font-size: 1.12rem;
+  font-size: 0.98rem;
 }
 
 .ledger-heading span,
@@ -43,7 +44,7 @@
 .ledger-empty {
   display: grid;
   gap: var(--space-2);
-  padding: var(--space-12) var(--space-2);
+  padding: var(--space-8) var(--space-2);
 }
 
 .ledger-empty p,
@@ -53,13 +54,14 @@
 
 .ledger-empty p {
   font-family: var(--display);
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  font-weight: 560;
 }
 
 .ledger-empty span {
   max-width: 25ch;
   color: var(--ink-soft);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   line-height: 1.55;
 }
 
@@ -74,56 +76,54 @@
 
 .ledger-list {
   display: grid;
-  gap: 1px;
-  background: var(--rule);
+  gap: 2px;
 }
 
 .ledger-entry {
   display: grid;
   width: 100%;
-  min-height: 4.65rem;
-  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  min-height: 4rem;
+  grid-template-columns: 1.9rem minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-2);
-  border: 0;
-  background: var(--paper-deep);
+  padding: var(--space-3) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
   text-align: left;
-  transition: background-color 140ms ease-out, color 140ms ease-out;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
 }
 
 .ledger-entry:hover {
-  background: var(--pine-pale);
+  background: var(--ground-deep);
 }
 
 .ledger-entry.is-selected {
-  background: var(--pine);
-  color: var(--paper);
+  border-color: var(--rule);
+  background: var(--paper);
+  box-shadow: var(--shadow-sm);
 }
 
 .ledger-index {
   color: var(--ink-faint);
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+  font-size: 0.68rem;
 }
 
-.is-selected .ledger-index,
-.is-selected .ledger-entry-main span,
-.is-selected .ledger-state {
-  color: var(--pine-pale);
+.is-selected .ledger-entry-main strong {
+  color: var(--ink);
 }
 
 .ledger-entry-main {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.24rem;
   min-width: 0;
 }
 
 .ledger-entry-main strong {
   overflow: hidden;
-  font-family: var(--display);
-  font-size: 1rem;
-  font-weight: 560;
+  font-size: 0.92rem;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -137,6 +137,16 @@
 .ledger-state.is-live {
   color: var(--pine);
   font-weight: 700;
+}
+
+.ledger-state {
+  padding: 0.12rem var(--space-2);
+  border-radius: 999px;
+  background: var(--ground-deep);
+}
+
+.ledger-state.is-live {
+  background: var(--pine-pale);
 }
 
 .ledger-references {
@@ -155,9 +165,11 @@
 }
 
 .ledger-references > p {
-  color: var(--stamp);
-  font-size: 0.7rem;
+  color: var(--ink-faint);
+  font-size: 0.68rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .ledger-reference {
@@ -166,22 +178,32 @@
 }
 
 .ledger-reference strong {
-  font-family: var(--display);
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-weight: 650;
 }
 
 .ledger-reference span,
 .ledger-references small {
   color: var(--ink-soft);
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   line-height: 1.45;
 }
 
 .ledger-reference button {
   width: fit-content;
-  min-height: 2.3rem;
+  min-height: 2.1rem;
   padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  color: var(--ink);
   font-size: 0.74rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.ledger-reference button:hover {
+  border-color: var(--ink);
 }
 
 .ledger-references small {

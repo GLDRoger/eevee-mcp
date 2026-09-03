@@ -1,12 +1,20 @@
-.activity-strip {
+.agent-rail {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+  border-left: 1px solid var(--rule);
+  background: var(--ground);
+}
+
+.agent-rail-heading {
+  display: flex;
   align-items: center;
-  gap: var(--space-6);
-  min-height: 3rem;
-  padding: var(--space-2) var(--space-6);
-  border-top: 1px solid var(--rule-strong);
-  background: var(--paper);
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule-strong);
 }
 
 .activity-label {
@@ -22,7 +30,7 @@
 }
 
 .activity-label.is-working {
-  color: var(--pine);
+  color: var(--agent);
 }
 
 .activity-pulse {
@@ -30,12 +38,12 @@
   height: 0.55rem;
   border: 1px solid var(--rule-strong);
   border-radius: 50%;
-  background: var(--paper-deep);
+  background: var(--paper);
 }
 
 .is-working .activity-pulse {
-  border-color: var(--pine);
-  background: var(--pine);
+  border-color: var(--agent);
+  background: var(--agent);
   animation: activity-pulse 1.1s ease-in-out infinite;
 }
 
@@ -47,34 +55,40 @@
 
 .activity-empty {
   margin: 0;
-  overflow: hidden;
-  color: var(--ink-faint);
-  font-size: 0.78rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.55;
 }
 
 .activity-list {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
+  display: grid;
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
-  overflow-x: auto;
   list-style: none;
 }
 
 .activity-list li {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-2);
   font-size: 0.75rem;
-  white-space: nowrap;
+}
+
+.activity-list li > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .activity-list code {
-  font-size: 0.75rem;
-  font-weight: 700;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activity-meta {
@@ -85,19 +99,20 @@
 .activity-mark {
   width: 0.55rem;
   height: 0.55rem;
+  margin-top: 0.2rem;
   border: 1px solid var(--rule-strong);
   border-radius: 50%;
 }
 
 .activity-list .is-started .activity-mark {
-  border-color: var(--stamp);
-  background: var(--stamp-pale);
+  border-color: var(--agent);
+  background: var(--agent-pale);
   animation: activity-pulse 1.1s ease-in-out infinite;
 }
 
 .activity-list .is-succeeded .activity-mark {
-  border-color: var(--pine);
-  background: var(--pine);
+  border-color: var(--agent);
+  background: var(--agent);
 }
 
 .activity-list .is-failed .activity-mark {
@@ -110,18 +125,18 @@
 }
 
 .webmcp-chip {
-  padding: 0.2rem var(--space-2);
+  padding: 0.18rem var(--space-2);
   border: 1px solid var(--rule-strong);
-  border-radius: 2px;
+  border-radius: 999px;
   color: var(--ink-soft);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .webmcp-chip.is-live {
-  border-color: var(--pine);
-  color: var(--pine);
+  border-color: var(--agent);
+  color: var(--agent);
 }
 
 .webmcp-chip.is-off {
@@ -129,49 +144,102 @@
   color: var(--stamp);
 }
 
-.topbar-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
+.webmcp-chip.is-partial {
+  border-color: var(--error);
+  color: var(--error);
 }
 
-.topbar-status > span:last-child {
-  color: var(--ink-soft);
-  font-size: 0.82rem;
-}
-
-.starter-prompt {
+.mission-plan {
   display: grid;
-  gap: var(--space-3);
-  max-width: 56ch;
-  margin-top: var(--space-4);
-  padding: var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid oklch(84% 0.05 258);
+  border-radius: var(--radius-sm);
+  background: var(--agent-pale);
+}
+
+.mission-plan header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.mission-plan header strong {
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.mission-plan header span {
+  color: var(--agent);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.mission-plan ol {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission-plan li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-2);
+}
+
+.mission-plan li > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.mission-title {
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.mission-note {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.mission-mark {
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-top: 0.24rem;
   border: 1px solid var(--rule-strong);
+  border-radius: 50%;
   background: var(--paper);
 }
 
-.starter-prompt p {
-  margin: 0;
+.mission-plan .is-active .mission-mark {
+  border-color: var(--agent);
+  background: var(--agent);
+  animation: activity-pulse 1.1s ease-in-out infinite;
+}
+
+.mission-plan .is-active .mission-title {
+  font-weight: 700;
+}
+
+.mission-plan .is-done .mission-mark {
+  border-color: var(--pine);
+  background: var(--pine);
+}
+
+.mission-plan .is-done .mission-title {
   color: var(--ink-soft);
-  font-size: 0.78rem;
-  font-weight: 700;
 }
 
-.starter-prompt code {
-  display: block;
-  color: var(--ink);
-  font-size: 0.82rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
+.mission-plan .is-failed .mission-mark {
+  border-color: var(--error);
+  background: var(--error);
 }
 
-.starter-prompt button {
-  justify-self: start;
-}
-
-.starter-warning {
-  margin: var(--space-3) 0 0;
-  color: var(--stamp);
-  font-size: 0.82rem;
-  font-weight: 700;
+.mission-plan .is-failed .mission-title {
+  color: var(--error);
 }

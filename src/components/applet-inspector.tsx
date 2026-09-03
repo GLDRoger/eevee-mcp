@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react'
 import type { AppletRun } from '@/domain/applet'
 import type { AppletActionDefinition } from '@/domain/applet-action'
 import type { AppletDetail } from '@/domain/api'
+import type { AutonomyLease } from '@/domain/autonomy-lease'
 import { isPublishableQuality } from '@/domain/quality'
 import { api } from '@/client/api'
 import { evaluateAppletVersion } from '@/client/evaluation-worker'
+import { authorizeHuman } from '@/client/human-authority'
 import { AppletPreview } from './applet-preview'
 import { CorrectionForm } from './correction-form'
 import { InputForm } from './input-form'
-import { QualityLedger } from './quality-ledger'
+import { QualityLedger, verdictLabel } from './quality-ledger'
 
 const date = new Intl.DateTimeFormat('en', { day: '2-digit', month: 'short', year: 'numeric' })
 
@@ -34,7 +36,7 @@ function VersionRegister({
         <span>{detail.versions.length} immutable</span>
       </header>
       {detail.versions.length === 0 ? (
-        <p className="version-empty">The applet exists. Its first executable version does not.</p>
+        <p className="version-empty">No versions yet.</p>
       ) : (
         <ol>
           {detail.versions.map((version) => {
@@ -63,7 +65,9 @@ function VersionRegister({
                 {active ? (
                   <span className="version-state">Published</span>
                 ) : !staticallyPublishable ? (
-                  <span className="version-state">Blocked</span>
+                  <span className="version-state" title="A required quality check failed; see the checks above.">
+                    Blocked by checks
+                  </span>
                 ) : evaluated ? (
                   <button type="button" onClick={() => onReview(version.id)}>Review</button>
                 ) : detail.evaluationSuites.length > 0 ? (
@@ -94,7 +98,7 @@ function EvaluationRegister({ detail }: { detail: AppletDetail }) {
       <header>
         <div>
           <p>Behavioral evidence</p>
-          <h3 id="evaluations-title">Scenario register</h3>
+          <h3 id="evaluations-title">Evaluation runs</h3>
         </div>
         <strong>{detail.evaluationRuns.length}</strong>
       </header>
@@ -104,7 +108,7 @@ function EvaluationRegister({ detail }: { detail: AppletDetail }) {
         </p>
       ) : (
         <p className="version-empty">
-          No behavioral suite exists. The agent must define repeatable actions and assertions before review.
+          No behavioral suite yet. Ask the agent to create scenarios with actions and assertions; review needs a passing run.
         </p>
       )}
       {latest?.report ? (
@@ -122,7 +126,7 @@ function EvaluationRegister({ detail }: { detail: AppletDetail }) {
                   <strong>{item.label}</strong>
                   <p>{item.detail}</p>
                 </div>
-                <span className="quality-status">{item.criticality} · {item.verdict}</span>
+                <span className="quality-status">{verdictLabel(item.criticality, item.verdict)}</span>
               </li>
             ))}
           </ul>
@@ -153,8 +157,8 @@ function CorrectionRegister({ detail, onChanged }: { detail: AppletDetail; onCha
         <span>{detail.corrections.length}</span>
       </header>
       <p className="correction-hint">
-        Open proposals are the brief for the next version. When an agent submits a version that
-        answers one, it can mark the proposal applied; dismiss the ones that no longer matter.
+        Open proposals are the brief for the next version. An agent marks a proposal applied when
+        its version answers it. Dismiss the ones that no longer matter.
       </p>
       <ol>
         {detail.corrections.map((item) => (
@@ -227,7 +231,14 @@ function VersionReview({
     setPublishing(true)
     setError('')
     try {
-      await api.publishVersion(appletId, version.id)
+      const authorized = await authorizeHuman({
+        kind: 'publish-version',
+        appletId,
+        versionId: version.id,
+      })
+      if (authorized.kind !== 'publish-version' || !authorized.published) {
+        throw new Error('The passkey did not publish this version')
+      }
       onPublished()
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'This version was not published')
@@ -240,7 +251,7 @@ function VersionReview({
     <section className="version-review" aria-labelledby="review-title">
       <header>
         <div>
-          <p>Draft v{version.version} · ephemeral state</p>
+          <p>Draft v{version.version} · preview state is not saved</p>
           <h3 id="review-title">Review before publishing</h3>
         </div>
         <button
@@ -249,13 +260,26 @@ function VersionReview({
           disabled={!ready || publishing}
           onClick={() => void publish()}
         >
-          {publishing ? 'Publishing' : ready ? 'Approve & publish' : 'Waiting for runtime'}
+          {publishing ? 'Verifying passkey…' : ready ? 'Approve & publish' : 'Waiting for the preview'}
         </button>
       </header>
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
+      {preview ? (
+        <AppletPreview
+          appletId={appletId}
+          output={preview}
+          storage="ephemeral"
+          actions={actions}
+          title="Draft preview"
+          onReady={() => setReady(true)}
+          onRevoked={() => setReady(false)}
+        />
+      ) : null}
       {report ? (
         <div className="review-evidence">
           <p className="review-evidence-summary">
-            Candidate {report.candidate.verdict}
+            {report.candidate.cases.filter(({ verdict }) => verdict === 'pass').length} of{' '}
+            {report.candidate.cases.length} scenarios passed · candidate {report.candidate.verdict}
             {report.baseline
               ? ` · published baseline ${report.baseline.verdict} · ${report.regressions.length} regression${report.regressions.length === 1 ? '' : 's'}`
               : ' · first published version'}
@@ -264,8 +288,11 @@ function VersionReview({
             {report.candidate.cases.map((item) => (
               <li key={item.caseId}>
                 <span className={`quality-mark is-${item.verdict}`} aria-hidden="true" />
-                <div>
-                  <strong>{item.name}</strong>
+                <details className="review-case" open={item.verdict === 'fail'}>
+                  <summary>
+                    <strong>{item.name}</strong>
+                    <small>{item.steps.length} steps</small>
+                  </summary>
                   <ol className="review-steps">
                     {item.steps.map((step) => (
                       <li key={step.index} className={step.verdict === 'fail' ? 'is-fail' : undefined}>
@@ -273,15 +300,15 @@ function VersionReview({
                       </li>
                     ))}
                   </ol>
-                </div>
-                <span className="quality-status">{item.criticality} · {item.verdict}</span>
+                </details>
+                <span className="quality-status">{verdictLabel(item.criticality, item.verdict)}</span>
               </li>
             ))}
           </ol>
         </div>
       ) : (
         <p className="review-evidence-summary is-missing">
-          No stored behavioral evidence is bound to this candidate yet.
+          This version has no passing behavioral evidence yet. Evaluate it before publishing.
         </p>
       )}
       {sourceFiles.length > 0 ? (
@@ -305,24 +332,12 @@ function VersionReview({
             </pre>
           ) : (
             <p className="review-source-hint">
-              {sourceFiles.length} typed source file{sourceFiles.length === 1 ? '' : 's'} — open one
-              to read exactly what you are approving.
+              {sourceFiles.length} source file{sourceFiles.length === 1 ? '' : 's'}. Open one to
+              read exactly what you are approving.
             </p>
           )}
         </div>
       ) : null}
-      {preview ? (
-        <AppletPreview
-          appletId={appletId}
-          output={preview}
-          storage="ephemeral"
-          actions={actions}
-          title="Draft specimen"
-          onReady={() => setReady(true)}
-          onRevoked={() => setReady(false)}
-        />
-      ) : null}
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
     </section>
   )
 }
@@ -331,22 +346,36 @@ export function AppletInspector({
   detail,
   run,
   reviewVersionId,
+  lease = null,
+  onLeaseChange,
+  focusRequestId = null,
   onRun,
   onReviewVersion,
   onChanged,
+  onClose,
+  onViewChange,
 }: {
   detail: AppletDetail
   run: AppletRun | null
   reviewVersionId: string | null
+  lease?: AutonomyLease | null
+  onLeaseChange?: (lease: AutonomyLease | null) => void
+  focusRequestId?: string | null
   onRun: (run: AppletRun) => void
   onReviewVersion: (versionId: string | null) => void
   onChanged: () => void
+  onClose: () => void
+  onViewChange?: (view: 'app' | 'code') => void
 }) {
   const [runtimeError, setRuntimeError] = useState('')
   const [evaluationError, setEvaluationError] = useState('')
   const [evaluationProgress, setEvaluationProgress] = useState('')
+  const [evaluationOutcome, setEvaluationOutcome] = useState('')
   const [evaluatingVersionId, setEvaluatingVersionId] = useState<string | null>(null)
   const [view, setView] = useState<'app' | 'code'>('app')
+  useEffect(() => {
+    onViewChange?.(view)
+  }, [onViewChange, view])
   const [draftPreview, setDraftPreview] = useState<{
     versionId: string
     output: NonNullable<AppletRun['output']>
@@ -366,6 +395,17 @@ export function AppletInspector({
   // including that version's governed action contract.
   const stageVersion = runVersion ?? active ?? latest
   const stageVersionId = stageVersion?.id
+  // The lifecycle spine used to hide inside the collapsed provenance drawer;
+  // the stage bar now names the next step for an unpublished latest version.
+  const latestEvaluated =
+    latest !== undefined &&
+    detail.evaluationRuns.some(
+      (evaluationRun) =>
+        evaluationRun.candidateVersionId === latest.id &&
+        evaluationRun.baselineVersionId === detail.applet.activeVersionId &&
+        evaluationRun.suiteId === detail.evaluationSuites[0]?.id &&
+        evaluationRun.state === 'passed',
+    )
   const showDraftPreview = !run?.output && stageVersionId !== undefined
   // A preview is only current when it belongs to the version on stage, so a
   // stale one from the previous applet or version never flashes.
@@ -438,6 +478,7 @@ export function AppletInspector({
   const evaluateVersion = async (versionId: string) => {
     setEvaluatingVersionId(versionId)
     setEvaluationError('')
+    setEvaluationOutcome('')
     setEvaluationProgress('Starting browser scenarios')
     try {
       const response = await evaluateAppletVersion(
@@ -447,8 +488,22 @@ export function AppletInspector({
         undefined,
         setEvaluationProgress,
       )
-      if (response.run.state !== 'passed') {
-        setEvaluationError('The version failed one or more required behavioral scenarios.')
+      const report = response.run.report
+      const cases = report?.candidate.cases ?? []
+      const passed = cases.filter(({ verdict }) => verdict === 'pass').length
+      if (response.run.state === 'passed') {
+        setEvaluationOutcome(
+          `Evaluation passed: ${passed} of ${cases.length} scenario${cases.length === 1 ? '' : 's'}${
+            report?.regressions.length ? `, ${report.regressions.length} informational regression${report.regressions.length === 1 ? '' : 's'}` : ''
+          }. Review & publish is ready.`,
+        )
+      } else {
+        const failed = cases.filter(({ verdict }) => verdict === 'fail').map(({ name }) => name)
+        setEvaluationError(
+          failed.length > 0
+            ? `Evaluation failed: ${failed.join('; ')}. Open Provenance for the step that broke.`
+            : response.run.error ?? 'The evaluation did not pass.',
+        )
       }
       onChanged()
     } catch (error) {
@@ -461,22 +516,6 @@ export function AppletInspector({
 
   return (
     <article className="inspector">
-      <header className="inspector-heading">
-        <div>
-          <span>{detail.applet.medium.replace('-', ' ')}</span>
-          <h2>{detail.applet.name}</h2>
-          <p>{detail.applet.description}</p>
-        </div>
-        <p className="inspector-status">
-          {active
-            ? `v${active.version} published`
-            : latest
-              ? `draft v${latest.version} · not yet published`
-              : 'waiting for the agent'}
-          {latest && active && latest.id !== active.id ? ` · draft v${latest.version} in progress` : ''}
-        </p>
-      </header>
-
       {reviewing ? (
         <VersionReview
           key={reviewing.id}
@@ -484,6 +523,10 @@ export function AppletInspector({
           version={reviewing}
           detail={detail}
           onPublished={() => {
+            setEvaluationOutcome(
+              `Published v${reviewing.version}. Run it below; while a run is open, its actions are live agent tools.`,
+            )
+            setEvaluationError('')
             onReviewVersion(null)
             onChanged()
           }}
@@ -491,28 +534,63 @@ export function AppletInspector({
       ) : stageVersion ? (
         <section className="stage" aria-label="Applet">
           <div className="stage-bar">
-            <div className="stage-toggle" role="tablist" aria-label="Stage view">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'app'}
-                onClick={() => setView('app')}
-              >App</button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={view === 'code'}
-                onClick={() => setView('code')}
-              >Code</button>
+            <div className="stage-id">
+              <h2>{detail.applet.name}</h2>
+              {!active ? <span className="stage-draft-mark">draft</span> : null}
+              {!active && latest && isPublishableQuality(latest.qualityReport) ? (
+                latestEvaluated ? (
+                  <button
+                    type="button"
+                    className="stage-next"
+                    onClick={() => onReviewVersion(latest.id)}
+                  >
+                    Review &amp; publish
+                  </button>
+                ) : detail.evaluationSuites.length > 0 ? (
+                  <button
+                    type="button"
+                    className="stage-next"
+                    disabled={evaluatingVersionId !== null}
+                    onClick={() => void evaluateVersion(latest.id)}
+                  >
+                    {evaluatingVersionId === latest.id
+                      ? evaluationProgress || 'Evaluating…'
+                      : 'Evaluate'}
+                  </button>
+                ) : (
+                  <span className="stage-hint">Needs a behavioral suite before review</span>
+                )
+              ) : null}
             </div>
-            <span className="stage-note">
-              {run?.output
-                ? `run ${run.id.slice(0, 8)} · ${run.state} · durable state`
-                : active && stageVersion.id === active.id
-                  ? 'published version · preview state'
-                  : `draft v${stageVersion.version} · preview state`}
-            </span>
+            <div className="stage-actions">
+              <div className="stage-toggle" role="tablist" aria-label="Stage view">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'app'}
+                  onClick={() => setView('app')}
+                >App</button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={view === 'code'}
+                  onClick={() => setView('code')}
+                >Code</button>
+              </div>
+              <button
+                type="button"
+                className="stage-close"
+                title="Close this applet and show the bare workbench"
+                onClick={onClose}
+              >
+                Close
+              </button>
+            </div>
           </div>
+          {evaluationOutcome ? (
+            <p className="evaluation-outcome" role="status">{evaluationOutcome}</p>
+          ) : null}
+          {evaluationError ? <p className="form-error" role="alert">{evaluationError}</p> : null}
           {view === 'code' ? (
             sourceFiles.length > 0 ? (
               <div className="review-source is-stage">
@@ -534,7 +612,7 @@ export function AppletInspector({
                 </pre>
               </div>
             ) : (
-              <p className="stage-empty">The source for this version is loading.</p>
+              <p className="stage-empty">Loading source…</p>
             )
           ) : run?.output ? (
             <AppletPreview
@@ -545,6 +623,10 @@ export function AppletInspector({
               runId={run.id}
               actions={stageActions}
               title={detail.applet.name}
+              frameless
+              lease={lease}
+              onLeaseChange={onLeaseChange}
+              focusRequestId={focusRequestId}
               onReady={() => void completeRuntime()}
               onRevoked={() => void failRuntime()}
             />
@@ -556,11 +638,11 @@ export function AppletInspector({
               storage="ephemeral"
               actions={stageActions}
               title={detail.applet.name}
+              frameless
             />
           ) : (
             <p className="stage-empty">
-              This version has no runnable build yet. Open Provenance below to see which check
-              stopped it.
+              This version did not compile. Open Provenance below to see which check stopped it.
             </p>
           )}
           {run?.output && run.state === 'succeeded' ? (
@@ -572,8 +654,8 @@ export function AppletInspector({
         </section>
       ) : (
         <section className="publish-waiting">
-          <h3>The agent has not submitted a version yet.</h3>
-          <p>Ask it to create a typed React version; the app will render here the moment one compiles.</p>
+          <h3>No version yet.</h3>
+          <p>Ask the agent to create a React version. The app renders here as soon as one compiles.</p>
         </section>
       )}
 
@@ -587,11 +669,10 @@ export function AppletInspector({
       ) : null}
       {runtimeError ? <p className="form-error" role="alert">{runtimeError}</p> : null}
       {evaluationProgress ? <p className="evaluation-progress" role="status">{evaluationProgress}</p> : null}
-      {evaluationError ? <p className="form-error" role="alert">{evaluationError}</p> : null}
 
       <details className="provenance">
         <summary>
-          Provenance — {detail.applet.versionCount} version{detail.applet.versionCount === 1 ? '' : 's'} ·{' '}
+          Provenance · {detail.applet.versionCount} version{detail.applet.versionCount === 1 ? '' : 's'} ·{' '}
           {detail.applet.evaluationCount} evaluation{detail.applet.evaluationCount === 1 ? '' : 's'} ·{' '}
           {detail.applet.runCount} run{detail.applet.runCount === 1 ? '' : 's'} ·{' '}
           {detail.applet.correctionCount} correction{detail.applet.correctionCount === 1 ? '' : 's'}
@@ -599,8 +680,8 @@ export function AppletInspector({
         <div className="provenance-body">
           {!active && latest ? (
             <section className="publish-waiting">
-              <h3>Nothing runs durably until a person publishes a passing version.</h3>
-              <p>The browser agent can draft and evaluate. The final decision remains here.</p>
+              <h3>Nothing runs for real until you publish a passing version.</h3>
+              <p>The agent can draft and evaluate. Publishing needs your passkey.</p>
             </section>
           ) : null}
           {qualityVersion ? <QualityLedger report={qualityVersion.qualityReport} /> : null}

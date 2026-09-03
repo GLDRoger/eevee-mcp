@@ -2,6 +2,8 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The floating Next badge sat over the workbench corner; errors still surface.
+  devIndicators: false,
   serverExternalPackages: ['esbuild'],
   turbopack: {
     root: process.cwd(),

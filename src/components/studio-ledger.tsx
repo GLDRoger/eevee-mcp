@@ -5,9 +5,9 @@ import type { OfficeFileSummary } from '@/domain/office-file'
 import { blankFile, type BlankFileKind } from '@/client/blank-files'
 
 const mediumLabel: Record<OfficeFileSummary['medium'], string> = {
-  document: 'Documents',
-  spreadsheet: 'Sheets',
-  presentation: 'Slides',
+  document: 'Document',
+  spreadsheet: 'Spreadsheet',
+  presentation: 'Presentation',
   pdf: 'PDF',
 }
 

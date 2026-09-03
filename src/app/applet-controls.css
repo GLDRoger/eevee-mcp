@@ -12,6 +12,67 @@
   background: var(--rule);
 }
 
+/* Full-bleed applet stage: the bench drops its padding and the running
+   applet claims every pixel of the middle column. */
+
+.bench.is-stage {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.bench.is-stage .inspector {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  max-width: none;
+  gap: 0;
+  margin: 0;
+}
+
+.bench.is-stage .stage {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.bench.is-stage .stage > .run-actions {
+  margin-top: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--paper);
+}
+
+.bench.is-stage .preview-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.bench.is-stage .preview-stage iframe {
+  flex: 1;
+  height: auto;
+  /* The running app is the point of the screen; a 24rem letterbox hid the
+     detail pane a person had just clicked into. */
+  min-height: clamp(30rem, 64vh, 56rem);
+}
+
+.preview-stage > header.is-hidden {
+  display: none;
+}
+
+.bench.is-stage .run-form,
+.bench.is-stage .publish-waiting,
+.bench.is-stage .provenance {
+  border-top: 1px solid var(--rule-strong);
+}
+
+.bench.is-stage .provenance {
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+}
+
 .stage-bar {
   display: flex;
   align-items: center;
@@ -19,6 +80,44 @@
   gap: var(--space-4);
   padding: var(--space-2) var(--space-4);
   background: var(--paper);
+}
+
+.stage-id {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.stage-id h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stage-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.stage-close {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.stage-close:hover {
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .stage-toggle {
@@ -29,7 +128,7 @@
 .stage-toggle button {
   padding: var(--space-1) var(--space-3);
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-soft);
   font-size: 0.78rem;
@@ -37,15 +136,49 @@
 }
 
 .stage-toggle button[aria-selected='true'] {
-  border-color: var(--pine);
-  background: var(--pine-pale);
-  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
 }
 
-.stage-note {
+.stage-draft-mark {
+  padding: 0.1rem var(--space-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  color: var(--ink-faint);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stage-next {
+  padding: 0.15rem var(--space-3);
+  border: 1px solid var(--stamp);
+  border-radius: 999px;
+  background: var(--stamp);
+  color: var(--paper);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stage-next:hover:not(:disabled) {
+  background: var(--stamp-strong);
+}
+
+.stage-next:disabled {
+  opacity: 0.7;
+}
+
+.stage-hint {
   color: var(--ink-faint);
   font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
+  font-style: italic;
+}
+
+.applet-action-ledger li.is-focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
 }
 
 .stage-empty {
@@ -150,9 +283,9 @@
 .publish-waiting h3,
 .preview-stage h3,
 .correction-form h3 {
-  font-family: var(--display);
-  font-size: 1.35rem;
-  font-weight: 580;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .run-form button,
@@ -160,9 +293,9 @@
 .version-register button {
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--pine);
-  border-radius: 2px;
-  background: var(--pine);
+  border: 1px solid var(--stamp);
+  border-radius: var(--radius-sm);
+  background: var(--stamp);
   color: var(--paper);
   font-weight: 700;
   transition: background-color 140ms ease-out;
@@ -171,7 +304,8 @@
 .run-form button:hover,
 .primary-action:hover,
 .version-register button:hover {
-  background: var(--ink);
+  border-color: var(--stamp-strong);
+  background: var(--stamp-strong);
 }
 
 .run-fields {
@@ -208,8 +342,8 @@
   min-height: 2.8rem;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule-strong);
-  border-radius: 0;
-  background: var(--ground);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
 }
 
 .run-field input[type="checkbox"] {
@@ -324,7 +458,7 @@
 .review-source-tabs button {
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--rule-strong);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--ink-soft);
   font-family: ui-monospace, monospace;
@@ -332,9 +466,9 @@
 }
 
 .review-source-tabs button[aria-selected='true'] {
-  border-color: var(--pine);
-  background: var(--pine-pale);
-  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .review-source-body {
@@ -373,9 +507,9 @@
 }
 
 .version-review h3 {
-  font-family: var(--display);
-  font-size: 1.35rem;
-  font-weight: 580;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .version-review p {
@@ -456,9 +590,9 @@
 
 .applet-action-ledger li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-2);
   padding: var(--space-3) 0;
   background: var(--paper);
 }
@@ -476,6 +610,30 @@
   font-size: 0.7rem;
 }
 
+.action-result {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.action-result summary {
+  width: fit-content;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.action-result code {
+  display: block;
+  width: 100%;
+  max-height: 9rem;
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  overflow: auto;
+  background: var(--ground);
+  white-space: pre-wrap;
+}
+
 .applet-action-ledger li p {
   color: var(--error);
   font-size: 0.74rem;
@@ -483,13 +641,168 @@
 
 .applet-action-decision {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
+}
+
+.applet-action-decision input {
+  min-width: 14rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--ground);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.action-tools {
+  margin-left: var(--space-2);
+  color: var(--ink-soft);
+  font-family: var(--text);
+  font-size: 0.68rem;
+  font-weight: 400;
+}
+
+.action-tools.is-partial {
+  color: var(--error);
+}
+
+.applet-action-decision,
+.action-result {
+  justify-self: start;
+}
+
+.lease-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+}
+
+.lease-chip {
+  padding: 0.2rem var(--space-2);
+  border: 1px solid var(--pine);
+  border-radius: 999px;
+  color: var(--pine);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.rehearsal {
+  display: grid;
+  gap: var(--space-1);
+  max-width: 56ch;
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule-strong);
+  background: var(--ground);
+  font-size: 0.75rem;
+}
+
+.rehearsal p {
+  margin: 0;
+  color: var(--ink-soft) !important;
+  font-size: 0.72rem !important;
+  font-weight: 700;
+}
+
+.rehearsal.is-refused {
+  border-color: var(--stamp);
+  background: var(--stamp-pale);
+}
+
+.rehearsal.is-refused p,
+.rehearsal.is-refused code {
+  color: var(--stamp-strong) !important;
+}
+
+.rehearsal dl {
+  display: grid;
+  margin: 0;
+  gap: 0.1rem;
+}
+
+.rehearsal dt {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.rehearsal dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+
+@media (max-width: 760px) {
+  .stage-bar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .stage-id {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .stage-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .applet-action-ledger > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lease-controls {
+    width: 100%;
+  }
+}
+
+.rehearsal s {
+  color: var(--ink-faint);
+}
+
+.rehearsal ins {
+  color: var(--pine);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .applet-action-decision button {
   min-height: 2.25rem;
   padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--stamp);
+  border-radius: var(--radius-sm);
   font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.applet-action-decision button:first-child {
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+.applet-action-decision button:first-child:hover {
+  border-color: var(--stamp-strong);
+  background: var(--stamp-strong);
+}
+
+.applet-action-decision button:last-child {
+  background: transparent;
+  color: var(--stamp);
+}
+
+.applet-action-decision button:last-child:hover {
+  background: var(--stamp-pale);
 }
 
 .run-actions {
@@ -572,6 +885,16 @@
 .evaluation-suite-name,
 .evaluation-progress {
   margin: 0;
+}
+
+.evaluation-outcome {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--agent);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .quality-mark {
@@ -723,4 +1046,179 @@
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.5;
+}
+
+/* The publish error sits directly under the review header, where the person
+   just clicked, instead of below the full-height preview. */
+.version-review > .form-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.ledger-empty {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.ledger-empty > p {
+  margin: 0;
+}
+
+.ledger-test {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 48rem;
+}
+
+/* Rehearsal card: collection · entity · field, then the value change. */
+.rehearsal dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+}
+
+.rehearsal-group {
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.66rem;
+}
+
+.rehearsal-subject {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.rehearsal-field {
+  color: var(--ink-soft);
+}
+
+.rehearsal dl.is-added ins,
+.rehearsal dl.is-removed s {
+  font-weight: 600;
+}
+
+/* Lease grants are a real control with their consequence stated. */
+.lease-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lease-offer-label {
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+.lease-offer {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--stamp);
+  background: transparent;
+  color: var(--stamp-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
+  transition: background-color 120ms ease-out;
+}
+
+.lease-offer:hover:not(:disabled) {
+  background: var(--stamp-pale);
+}
+
+.lease-offer-note {
+  flex-basis: 100%;
+  color: var(--ink-faint);
+  font-size: 0.68rem;
+}
+
+/* Feedback moments: a decided card settles, new tools flash once. */
+.applet-action-ledger li.is-settled {
+  animation: settle-flash 2.4s ease-out;
+}
+
+@keyframes settle-flash {
+  from {
+    background: var(--pine-pale);
+    box-shadow: inset 3px 0 0 var(--pine);
+  }
+  to {
+    background: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+.applet-action-ledger li.is-dismissed {
+  animation: dismiss-flash 2.4s ease-out;
+}
+
+@keyframes dismiss-flash {
+  from {
+    background: var(--paper-deep);
+    box-shadow: inset 3px 0 0 var(--ink-faint);
+  }
+  to {
+    background: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+.action-tools {
+  display: inline-block;
+  transform-origin: left center;
+}
+
+.action-tools.is-fresh {
+  animation: tools-flash 2s ease-out;
+}
+
+@keyframes tools-flash {
+  0% {
+    color: var(--pine);
+    transform: scale(1.08);
+  }
+  60% {
+    color: var(--pine);
+  }
+  100% {
+    color: var(--ink-soft);
+    transform: none;
+  }
+}
+
+/* Review: scenarios read as a list of verdicts; evidence opens on demand. */
+.review-case summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+}
+
+.review-case summary::-webkit-details-marker {
+  display: none;
+}
+
+.review-case summary::before {
+  content: '▸';
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+
+.review-case[open] summary::before {
+  content: '▾';
+}
+
+.review-case summary small {
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .applet-action-ledger li.is-settled,
+  .applet-action-ledger li.is-dismissed,
+  .action-tools.is-fresh {
+    animation: none;
+  }
 }

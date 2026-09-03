@@ -6,7 +6,7 @@ import { api } from '@/client/api'
 import { DocumentReview } from './document-review'
 
 const mediumLabel = {
-  document: 'Word document',
+  document: 'Document',
   spreadsheet: 'Spreadsheet',
   presentation: 'Presentation',
   pdf: 'PDF',
@@ -64,7 +64,7 @@ export function FileExplorer({
 
   return (
     <article className="file-explorer">
-      <header className="inspector-heading">
+      <header className="inspector-heading is-file">
         <div>
           <span>{mediumLabel[file.medium]}</span>
           <h2>{file.name}</h2>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { DocumentReview as DocumentReviewResult } from '@/domain/document-review'
 import type { OfficeFileSummary } from '@/domain/office-file'
 import { api } from '@/client/api'
+import { authorizeHuman } from '@/client/human-authority'
 
 const findingLabel = {
   email: 'Email address',
@@ -37,7 +38,7 @@ export function DocumentReview({
       const available = new Set(response.review.findings.map(({ id }) => id))
       setSelected(new Set(preselected.filter((id) => available.has(id))))
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Private review could not scan this file')
+      setError(reason instanceof Error ? reason.message : 'Sensitive-text review could not scan this file')
     } finally {
       setLoading(false)
     }
@@ -55,7 +56,7 @@ export function DocumentReview({
       })
       .catch((reason) => {
         if (!controller.signal.aborted) {
-          setError(reason instanceof Error ? reason.message : 'Private review could not scan this file')
+          setError(reason instanceof Error ? reason.message : 'Sensitive-text review could not scan this file')
         }
       })
     return () => controller.abort()
@@ -75,7 +76,15 @@ export function DocumentReview({
     setApplying(true)
     setError('')
     try {
-      await api.applyDocumentRedactions(file.id, review.versionId, [...selected])
+      const authorized = await authorizeHuman({
+        kind: 'redact-document',
+        fileId: file.id,
+        baseVersionId: review.versionId,
+        findingIds: [...selected],
+      })
+      if (authorized.kind !== 'redact-document') {
+        throw new Error('The human key did not authorize this reviewed version')
+      }
       setReview(null)
       setSelected(new Set())
       onChanged()
@@ -90,16 +99,17 @@ export function DocumentReview({
     <section className="document-review" aria-labelledby="document-review-title">
       <header>
         <div>
-          <p>System application · human decision</p>
-          <h3 id="document-review-title">Private review</h3>
+          <p>Library · saving needs your passkey</p>
+          <h3 id="document-review-title">Sensitive-text review</h3>
         </div>
         <button type="button" disabled={loading || applying} onClick={() => void scan()}>
           {loading ? 'Scanning' : review ? 'Scan again' : 'Scan current version'}
         </button>
       </header>
       <p className="document-review-intro">
-        EEVEE detects sensitive text without returning the original values to the agent. Selected
-        values are replaced with block characters and saved as a new immutable DOCX version.
+        The scan finds emails, phone numbers, and similar patterns in the current version and
+        shows them masked. The agent sees the same masks, not the values. Pick the findings to
+        remove; saving creates a new version and asks for your passkey.
       </p>
       {review ? (
         review.supported ? (

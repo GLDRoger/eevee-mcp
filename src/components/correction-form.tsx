@@ -45,7 +45,7 @@ export function CorrectionForm({ runId, onSaved }: { runId: string; onSaved: () 
   return (
     <form className="correction-form" onSubmit={(event) => void submit(event)}>
       <header>
-        <h3>Teach from this run</h3>
+        <h3>Record a correction</h3>
         <button type="button" onClick={() => setOpen(false)}>Cancel</button>
       </header>
       <label>
@@ -61,7 +61,7 @@ export function CorrectionForm({ runId, onSaved }: { runId: string; onSaved: () 
         <textarea name="desiredOutcome" required maxLength={2_000} rows={3} />
       </label>
       <button className="primary-action" type="submit" disabled={saving}>
-        {saving ? 'Saving proposal' : 'Save correction proposal'}
+        {saving ? 'Saving…' : 'Save correction'}
       </button>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
     </form>

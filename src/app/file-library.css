@@ -3,10 +3,12 @@
   margin: 0 var(--space-2) var(--space-6);
   padding: 0.72rem var(--space-3);
   border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
   background: var(--paper);
   color: var(--pine);
   font-size: 0.78rem;
   font-weight: 700;
+  box-shadow: var(--shadow-sm);
 }
 
 .library-upload:hover {
@@ -68,8 +70,8 @@
 }
 
 .document-review h3 {
-  font-family: var(--display);
-  font-size: 1.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .document-review > header p {
@@ -153,8 +155,12 @@
 
 .file-inspector,
 .office-editor-shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
 }
 
@@ -163,8 +169,22 @@
   overscroll-behavior-inline: contain;
 }
 
+/* Each editor sets its own 600px floor and viewport-based height for a
+   standalone page; inside the shell the flex track is the height. */
+.office-editor-shell > .office-docs,
+.office-editor-shell > .office-sheets,
+.office-editor-shell > .office-slides,
+.office-editor-shell > .office-pdf {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+
 .file-preview {
   min-height: 42rem;
-  border: 1px solid var(--rule-strong);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
   background: var(--paper);
 }

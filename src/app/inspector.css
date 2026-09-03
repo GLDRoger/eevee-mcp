@@ -1,27 +1,28 @@
 .bench {
   width: 100%;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
-  padding: clamp(1.5rem, 4vw, 4rem);
-  background: var(--ground);
+  padding: clamp(1.5rem, 3.5vw, 3.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
 }
 
+/* An Office editor owns its scrolling: the bench hands it the full height
+   and the editor's grid or page area scrolls inside its own chrome. */
 .bench.is-library {
+  display: flex;
+  flex-direction: column;
   padding: var(--space-3);
+  overflow: hidden;
 }
+
 .bench-message {
   display: grid;
   max-width: 44rem;
   gap: var(--space-3);
-  padding-top: 14vh;
-}
-
-.bench-message > span {
-  color: var(--stamp);
-  font-family: var(--display);
-  font-size: clamp(4rem, 10vw, 9rem);
-  font-variation-settings: "wght" 100;
-  line-height: 0.75;
+  padding-top: 12vh;
 }
 
 .bench-message h2,
@@ -30,18 +31,18 @@
 }
 
 .bench-message h2 {
-  max-width: 18ch;
+  max-width: 22ch;
   font-family: var(--display);
-  font-size: clamp(2.3rem, 5vw, 5.6rem);
-  font-weight: 520;
-  letter-spacing: -0.025em;
-  line-height: 0.98;
+  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  font-weight: 560;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
 }
 
 .bench-message p {
   max-width: 56ch;
   color: var(--ink-soft);
-  font-size: 1.02rem;
+  font-size: 1rem;
   line-height: 1.65;
 }
 
@@ -53,7 +54,7 @@
 .inspector {
   display: grid;
   max-width: 75rem;
-  gap: var(--space-12);
+  gap: var(--space-8);
   margin: 0 auto;
 }
 
@@ -61,7 +62,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: var(--space-12);
+  gap: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--rule);
 }
 
 .inspector-heading > div:first-child {
@@ -71,9 +74,10 @@
 
 .inspector-heading span {
   color: var(--stamp);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  text-transform: capitalize;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .inspector-heading h2,
@@ -84,39 +88,19 @@
 .inspector-heading h2 {
   overflow-wrap: anywhere;
   font-family: var(--display);
-  font-size: clamp(2.4rem, 5vw, 5rem);
-  font-weight: 540;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.inspector-heading.is-file h2 {
+  font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+  line-height: 1.15;
 }
 
 .inspector-heading p {
   max-width: 62ch;
   color: var(--ink-soft);
   line-height: 1.55;
-}
-
-.inspector-heading dl {
-  display: grid;
-  min-width: 20rem;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-  margin: 0;
-}
-
-.inspector-heading dl div {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.inspector-heading dt {
-  color: var(--ink-faint);
-  font-size: 0.7rem;
-}
-
-.inspector-heading dd {
-  margin: 0;
-  font-family: var(--display);
-  font-size: 1.7rem;
-  font-variant-numeric: tabular-nums;
 }
