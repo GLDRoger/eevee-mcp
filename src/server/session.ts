@@ -19,6 +19,11 @@ const sessionSecret = (): string => {
   throw new Error('EEVEE_SESSION_SECRET must contain at least 32 characters')
 }
 
+/** Throws the same error the first API call would; the health probe uses it so a deploy without a secret reports unhealthy instead of 500ing on every request. */
+export const assertSessionSecret = (): void => {
+  sessionSecret()
+}
+
 const signature = (workspaceId: string): string =>
   createHmac('sha256', sessionSecret()).update(workspaceId).digest('base64url')
 
@@ -43,6 +48,12 @@ export const workspaceSession = (request: NextRequest): WorkspaceSession => {
   return existing
     ? { workspaceId: existing, fresh: false }
     : { workspaceId: crypto.randomUUID(), fresh: true }
+}
+
+/** Forget the browser's workspace cookie. The workspace row and its data stay; nothing points at them any more. */
+export const clearWorkspaceSession = (response: NextResponse): NextResponse => {
+  response.cookies.set(COOKIE_NAME, '', { httpOnly: true, maxAge: 0, path: '/', sameSite: 'strict' })
+  return response
 }
 
 export const attachWorkspaceSession = (

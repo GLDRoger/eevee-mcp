@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A model-free applet harness for people, Codex, and browser agents using WebMCP.",
+  "description": "A workbench where browser agents build and run small apps through WebMCP, and a person approves what ships with a passkey.",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=24 <25",
@@ -19,12 +19,15 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run",
+    "test": "node --env-file-if-exists=.env.local ./node_modules/vitest/vitest.mjs run",
     "test:watch": "vitest",
     "db:migrate": "node --env-file-if-exists=.env.local src/server/db/migrate.ts",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "test:webmcp": "node scripts/webmcp-e2e.mjs"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "13.3.0",
+    "@simplewebauthn/server": "13.3.3",
     "@tiptap/core": "3.30.5",
     "@tiptap/extensions": "3.30.5",
     "@tiptap/pm": "3.30.5",
@@ -51,6 +54,7 @@
     "esbuild": "0.28.2",
     "fast-xml-parser": "5.11.0",
     "fflate": "0.8.3",
+    "gsap": "3.15.0",
     "jszip": "3.10.1",
     "konva": "10.3.1",
     "mammoth": "1.12.1",
@@ -73,6 +77,7 @@
     "@types/node": "24.13.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "0.31.10",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.3",
     "jsdom": "30.0.1",

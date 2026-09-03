@@ -92,6 +92,7 @@ export const evaluationExecutionResponseSchema = z.strictObject({
 })
 export const evaluationRunResponseSchema = z.strictObject({ run: evaluationRunSchema })
 export const workspaceSessionResponseSchema = z.strictObject({ workspaceId: z.uuid() })
+export const workspaceLeaveResponseSchema = z.strictObject({ left: z.literal(true) })
 
 export type AppletSummary = z.infer<typeof appletSummarySchema>
 export type AppletVersionSummary = z.infer<typeof appletVersionSummarySchema>
