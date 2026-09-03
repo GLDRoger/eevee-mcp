@@ -1,25 +1,20 @@
 # Provenance
 
-This repository was created under the GLDRoger GitHub account on 26 August 2026 as an empty public repository.
+This repository was created under the GLDRoger GitHub account on 26 August 2026 as an empty public repository. It carries no Git history from EEVEE's private predecessor.
 
-The repository does not preserve or import Git history from EEVEE's private predecessor. The applet model, API, database schema, WebMCP tools, web runtime, evaluation gate, and workbench in the initial commit were built in this fresh repository.
+The WebMCP Challenge scores work done during the submission period (25 August 2026 11:00 PT to 3 September 2026 13:00 PT). This file separates that work from what was ported.
 
-The bundled Avara Variable font is third-party software. Its source and license are recorded in [NOTICE](../NOTICE) and [AVARA-OFL.txt](../public/fonts/AVARA-OFL.txt).
+## Written during the submission period
 
-Any later port from a predecessor must identify the imported files and their creation date here. New work stays distinguishable from pre-existing work for the WebMCP Challenge.
+Everything outside `src/office`: the applet model, API, database schema, the 28 WebMCP tools and the dynamic `applet_*` tools, the React compiler, the preview sandbox and bridge, the behavioral suite runner, passkey gates, decisions, rehearsal, leases, the Library and Studio host integration, Meridian Ops, the tests, and `scripts/webmcp-e2e.mjs`.
 
-## Upstream study on 26 August 2026
+Measured on 3 September 2026 with `find src -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' \) -not -path 'src/office/*' | xargs cat | wc -l`: 23,485 lines across 164 files, of which 4,117 lines in 37 files are tests. `scripts/webmcp-e2e.mjs` adds about 450 lines.
 
-- [GrowthX Output](https://github.com/growthxai/output) at commit `b3beef161910df053f62710dc190d5a00c4ab3d2` informed EEVEE's required/informational evaluator contract and aggregate verdict. The narrow adapted concept is recorded in [NOTICE](../NOTICE); Output's Temporal runtime, model stack, CLI, credentials, and remote trace processors were not imported.
-- [Firecrawl Open Lovable](https://github.com/firecrawl/open-lovable) at commit `69bd93bae7a9c97ef989eb70aabe6797fb3dac89` informed the source-bundle to isolated-build to preview lifecycle. No Open Lovable code was copied. Its chat/model routes, sandbox providers, arbitrary package installation, and process-global state were deliberately excluded.
+## Ported from the private predecessor
 
-EEVEE's implementation is a direct, local design: typed `src/` files, an in-memory esbuild compiler, a stored immutable artifact, an iframe runtime, and a PostgreSQL lifecycle. It contains no embedded AI or chatbot implementation.
+Commit `906dc23` on 31 August 2026 (`feat: complete governed applet and Office workbench`) ported the Office editors from private EEVEE commit `e32e1f7`. `git show --stat 906dc23 -- src/office` reports 374 files and 155,433 insertions. On 2 September 2026, `find src/office -name '*.ts' -o -name '*.tsx' -o -name '*.css' | xargs cat | wc -l` reports 155,594 lines.
 
-## Office work on 26 August 2026
-
-The durable Library, file/version schema, upload and save APIs, and first temporary PDF, DOCX, and XLSX editor surfaces were authored in this fresh repository. Those temporary editors were removed when the complete predecessor editors replaced them. PDF.js runtime assets came from the installed `pdfjs-dist@6.2.108` package.
-
-The repository owner subsequently directed that the predecessor's complete office ribbons and working controls be brought into this public WebMCP build. Source copied from private EEVEE commit `e32e1f7` is released here under Apache-2.0 by that direction. The port maps are:
+The port maps:
 
 - `apps/web-next/src/office/pdf/` to `src/office/pdf/`;
 - `apps/web-next/src/office/docs/` to `src/office/docs/`;
@@ -30,4 +25,16 @@ The repository owner subsequently directed that the predecessor's complete offic
 - `packages/pptx-render/src/` to `src/office/engines/pptx-render/`; and
 - the predecessor's metric-compatible Office fonts to `public/fonts/office/`.
 
-The port excludes every AI panel, chat path, provider setting, model call, learning action, and related asset. Browser-only host storage, same-origin APIs, immutable file versions, the full XLSX save gateway, WebMCP tools, responsive workbench integration, tests, and all model-removal work were authored in this public repository.
+The Office editors are pre-hackathon work. The owner released them here under Apache-2.0. The port excludes every AI panel, chat path, provider setting, model call, learning action, and related asset. `src/office/host` (Library storage, pickers, print, download, external URL checks) and `src/office/registry.ts` were written in this repository so the ported editors read and save through the same-origin API.
+
+Before the port, temporary DOCX, XLSX, and PDF editor surfaces were written in this repository on 26 August 2026 and removed when the ported editors replaced them. PDF.js runtime assets under `public/pdfjs` come from the installed `pdfjs-dist@6.2.108` package.
+
+## Removed reference applets
+
+Sparkbench (commit `a90894e`) and FableCut (commit `fe073fb`) were added as reference applets on 31 August 2026 and removed in the working tree before submission. Meridian Ops is the only reference applet.
+
+## Third-party study
+
+On 26 August 2026 the owner read two public projects before choosing React source bundles over raw HTML. [upstream-notes.md](upstream-notes.md) records what was kept and left out. No code was copied from either.
+
+The bundled Avara Variable font is third-party software. Its source and license are recorded in [NOTICE](../NOTICE) and [AVARA-OFL.txt](../public/fonts/AVARA-OFL.txt).

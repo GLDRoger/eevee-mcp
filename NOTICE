@@ -19,10 +19,11 @@ Apache License, Version 2.0, and pdf-lib 1.17.1 by Andrew Dillon under the MIT
 License. PDF.js runtime assets and their included notices are under
 public/pdfjs.
 
-At the repository owner's direction on 26 August 2026, EEVEE's office ribbon,
-control, and document-engine source may be ported from the private predecessor
-at commit e32e1f7 and released here under the repository's Apache License,
-Version 2.0. Imported paths are recorded in docs/provenance.md as they land.
+On 31 August 2026 (commit 906dc23), at the repository owner's direction,
+EEVEE's office ribbon, control, and document-engine source was ported from the
+owner's private predecessor at commit e32e1f7 and released here under the
+repository's Apache License, Version 2.0. The imported paths are listed in
+docs/provenance.md.
 
 This product bundles Carlito, Liberation Sans, Liberation Serif, Liberation
 Mono, and subsetted Noto Sans/Serif CJK fonts under the SIL Open Font License

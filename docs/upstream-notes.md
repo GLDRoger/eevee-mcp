@@ -1,6 +1,6 @@
 # Upstream notes
 
-EEVEE studied two public projects before replacing raw HTML authoring with React source bundles. The objective was to reuse durable product ideas without importing their AI stacks or operational complexity.
+On 26 August 2026 the owner studied two public projects before replacing raw HTML authoring with React source bundles. The goal was to reuse product ideas without importing their model stacks or operational services. No source code was copied from either.
 
 ## GrowthX Output
 
@@ -11,7 +11,7 @@ Kept:
 - explicit evaluator verdicts;
 - required versus informational checks;
 - a report verdict derived from its required results;
-- the direction toward repeatable scenarios and comparison evidence.
+- repeatable scenarios with comparison evidence.
 
 Left out:
 
@@ -19,6 +19,8 @@ Left out:
 - Temporal, Redis, S3, and trace-processing services;
 - credentials and provider abstractions;
 - its CLI and workflow execution stack.
+
+The adapted verdict aggregation is recorded in [NOTICE](../NOTICE).
 
 ## Firecrawl Open Lovable
 
@@ -28,7 +30,7 @@ Kept as a product convention:
 
 - a version is a bundle of named source files with one entry point;
 - source compiles into an isolated preview artifact;
-- build failures return useful evidence instead of creating a runnable version.
+- build failures return useful diagnostics instead of creating a runnable version.
 
 Left out:
 
@@ -37,4 +39,4 @@ Left out:
 - remote sandbox and deployment providers;
 - global mutable sandbox state and stubbed validation.
 
-No Open Lovable source code was copied. EEVEE compiles a small allow-listed React surface in memory, stores the exact artifact with its immutable version, and never executes applet code on the server.
+EEVEE compiles a small allow-listed React surface in memory with esbuild, stores the exact artifact with its version, and never executes applet code on the server.

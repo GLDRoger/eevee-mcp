@@ -1,7 +1,8 @@
 # Metric-compatible fallback fonts
 
-Source: fonts bundled with LibreOffice (`/Applications/LibreOffice.app/Contents/Resources/fonts/truetype`),
-freely redistributable with the app. Licenses: Carlito and Liberation are
+Source: the fonts LibreOffice bundles, converted to WOFF2 for the browser (only
+`.woff2` files ship here; the Slides engine measures them through CSS
+`@font-face` and canvas, since opentype.js cannot read WOFF2). Licenses: Carlito and Liberation are
 **SIL Open Font License 1.1** (see `LICENSE-OFL.txt`); Caladea is
 **Apache License 2.0** (copyright Huerta Tipografica).
 
@@ -16,10 +17,11 @@ freely redistributable with the app. Licenses: Carlito and Liberation are
 Purpose: when a Word font declared by the document is missing on this machine, the
 browser's silent fallback (Helvetica etc.) changes glyph widths, so line-break points
 and pagination diverge from Word. Falling back to a metric-compatible font keeps
-canvas line breaking aligned with Word, and stays consistent with the offline
-pagination model (`tests/helpers/lo-fonts.ts` measures the same set of files).
+canvas line breaking aligned with Word.
 
-Registration lives in `fonts.css`; family-name mapping in `cssFontFamily()` of `line-metrics.ts`.
+Registration lives in `fonts.css`; family-name mapping in `cssFontFamily()` of
+`src/office/docs/line-metrics.ts`; the Slides substitution table in
+`src/office/slides/fonts.ts`.
 
 ## CJK fallback
 

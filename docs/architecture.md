@@ -1,75 +1,103 @@
 # Architecture
 
-EEVEE separates agent intelligence from durable execution. A browser agent plans and authors work through WebMCP. The EEVEE service validates, stores, evaluates, and runs that work.
+EEVEE separates the agent from the record. A browser agent plans and authors through WebMCP tools registered by the page. The EEVEE service validates, stores, compiles, evaluates, and runs what the agent sends. EEVEE contains no model, chat, or prompt code.
 
-EEVEE does not embed a model, chatbot, prompt router, or generation service. Codex and browser agents remain the intelligence layer.
-
-## Canonical lifecycle
+## Lifecycle
 
 ```text
-create applet
-  -> submit typed source
-  -> compile and store one immutable version and artifact
-  -> create an immutable behavioral suite
-  -> execute candidate and published baseline in isolated browser runtimes
-  -> store required, informational, and regression evidence
-  -> human review and publish
-  -> validate generated-form inputs
-  -> create durable run
-  -> execute in the medium sandbox
-  -> expose the published version's typed actions while its run is open
-  -> require one human decision before any durable action write
-  -> record output and evidence
-  -> propose a correction
-  -> create another immutable version
+create applet (web-app or video)
+  -> submit source; compile once; store the version and its artifact
+  -> create a behavioral suite
+  -> evaluate: run every scenario against the candidate and the published version
+  -> store step evidence, verdicts, and regressions
+  -> agent requests review; person publishes with a passkey
+  -> validate run inputs; create a run; render the preview
+  -> register the version's actions as applet_* WebMCP tools
+  -> reads execute at once; writes become decisions
+  -> rehearse each decision; person approves, rejects with a reason, or grants a lease
+  -> execute the approved action in the preview; record the result
+  -> person records a correction; agent builds the next version
 ```
 
-The applet library and the desk read the same API. There is no fixture store or client-only lifecycle.
+The Applet ledger, the Library, Studio, and the Guide read the same API the tools use. There is no fixture store and no client-only path.
 
 ## Trust boundaries
 
-- The browser provides a signed anonymous workspace cookie. Every query and foreign key includes that workspace ID.
-- API mutations reject cross-origin requests, oversized bodies, unknown fields, and invalid values before they reach the service.
-- An applet version is immutable. Publishing changes a deployment pointer; it does not rewrite history.
-- A web version stores the submitted React source and the exact compiled artifact separately. Preview and run use that stored artifact; neither path recompiles it.
-- React compilation uses an in-memory source map. Applet files never touch the server filesystem, and the compiler never executes applet code on the server. User source may import React and relative files under `src/`; package, URL, dynamic, metadata, and path-traversing imports fail compilation.
-- A draft review uses placeholder inputs and isolated in-memory state. The publish control stays disabled until that sandbox reports a working runtime.
-- Behavioral suites contain bounded declarative steps, not arbitrary JavaScript. The browser worker executes each case with isolated in-memory storage, preserves that storage across explicit restarts, and records every step result.
-- A candidate and the currently published version run the same suite. Publication requires a passing candidate evaluation bound to the current deployment, so evidence becomes stale when the published baseline changes.
-- Evaluation runs have ten-minute leases and per-applet concurrency limits. Expired browser work is failed before new work starts.
-- Web applets run in a sandboxed iframe. EEVEE injects a restrictive content security policy and a narrow `window.eevee` state bridge. The parent page blocks external frame navigation, and any navigation revokes the bridge. Applet state is capped at 128 keys and 64 KB per key.
-- A version may declare up to twelve typed actions. The sandbox must implement every declaration before it reports ready. EEVEE registers only the published run's actions, prefixes their WebMCP names, validates inputs at the server, serializes execution, caps JSON results at 64 KB, and records each request state.
-- Durable state writes require `human` authority in the version schema. The person approves one exact request in the visible run ledger. The parent verifies every storage or file bridge call against that action's declared effects before forwarding it.
-- A web run stays `running` until the mounted React tree reports ready through the matching private channel. EEVEE records a revoked runtime as `failed`; only a `succeeded` run can receive corrections.
-- Agents can request review. A person publishes a passing version in the interface after seeing the rendered draft.
-- Office files use the same workspace boundary and immutable version register. Raw replacement tools re-run native-format validation. XLSX cell, formula, style, structure, page-layout, chart, table, pivot, and drawing edits pass through one server-side gateway that declares and verifies every changed archive entry.
-- Private review returns only masked sensitive findings. DOCX redaction is recomputed against the selected immutable version, rejects stale finding ids, removes the selected text from the Office XML, revalidates the archive, and saves a new version after a visible human decision.
-- The Documents, Sheets, Slides, and PDF editors contain no model or chat path. Their browser hosts read and save through the Library API.
+These describe the code as it stands on 2 September 2026.
+
+**Workspace.** The browser holds a signed anonymous cookie (`src/server/session.ts`). Every query and foreign key includes the workspace id. Production refuses to start without `EEVEE_SESSION_SECRET` of at least 32 characters (`src/server/db/migrate.ts` runs first and checks it), and `/api/health` reports 503 if it is ever missing at runtime.
+
+**API boundary.** Mutations reject cross-origin requests, oversized bodies, unknown fields, and invalid values before reaching the service (`src/server/http.ts`). The page validates tool input with the same Zod schemas first, so an agent sees field-level errors without a round trip.
+
+**Versions.** A version stores the submitted source and the compiled artifact separately and never recompiles either. Compilation runs esbuild in memory with an allow-list: React and relative paths under `src/`. Package, URL, dynamic, and path-traversing imports fail compilation. Applet code never runs on the server.
+
+**Preview sandbox.** Applets render in an iframe with `sandbox="allow-scripts allow-forms"` and an injected content security policy that blocks network, frames, and navigation (`src/domain/applet-runtime.ts`). The only way out is `window.eevee`: inputs, `store` (128 keys, 64 KB per value), read-only `files`, and `actions.register`. Navigation revokes the bridge and fails the run.
+
+**Evaluation.** Scenarios are declarative steps, not JavaScript. A browser worker runs each scenario with isolated in-memory state, keeps that state across `restart` steps, and records every step. The candidate and the published version run the same suite; publishing requires a passing evaluation bound to the current published version, so evidence goes stale when the baseline changes. Evaluation runs hold a ten-minute lease and a per-applet concurrency cap.
+
+**Publishing.** The publish control stays disabled until the draft preview reports a working runtime. The publish route refuses any request that did not come through a passkey challenge (`human_authority_required`).
+
+**Actions.** A version declares up to 32 actions with effects (`state:read`, `state:write`, `files:list`, `files:read`) and authority. The schema rejects a `state:write` action without `human` authority. The preview registers only the open published run's actions, validates inputs at the server, serializes execution, caps results at 64 KB, and stores each request's state. `run_applet` fails the open requests of earlier runs of the same applet, because only the newest run is on screen.
+
+**Write gate.** Two checks protect durable state, the PostgreSQL rows behind a run. First, every storage or file call an action makes carries its invocation tag, and the page verifies the tag against that action's declared effects before forwarding it; the rehearsal applies the same rule. Second, once an agent action has run in a frame, any untagged durable write is refused unless the browser's user-activation flag is set. A real click or keypress inside the applet iframe activates the parent document, and the applet cannot forge that flag, so the person's own use of the interface still works while a deferred write from an action handler does not.
+
+**Passkeys.** Publishing, action approvals and rejections, DOCX redaction, and leases go through `src/server/human-authority.ts`. Each challenge lives five minutes, is workspace-bound, is scoped to one exact operation, requires user verification, and is deleted on use. A lease is a server row scoped to one run with a write count and expiry; spends decrement under an advisory lock and re-check revocation and expiry in the same statement.
+
+**Library and Studio.** Office files share the workspace boundary and version register. Raw replacements re-run native-format validation. XLSX edits from Studio and from `edit_spreadsheet` pass through one server gateway that verifies every changed archive entry (`src/server/spreadsheet-edits.ts`). The sensitive-text scan returns masked findings and stable ids; redaction recomputes against the selected version, rejects stale ids, rewrites the Office XML, revalidates, and saves a new version after the passkey check. This is response minimization, not a claim that the agent cannot read content the person opens elsewhere.
 
 ## Source map
 
 | Path | Responsibility |
 | --- | --- |
-| `src/domain` | Schemas, input validation, evaluation, and isolated runtime injection. |
-| `src/server` | Tenant-scoped lifecycle, React compilation, and database access. |
-| `src/app/api` | Same-origin HTTP boundary. |
-| `src/client/webmcp.ts` | Page-owned WebMCP tool registration. |
-| `src/client/evaluation-worker.ts` | Isolated browser scenario execution and step evidence. |
-| `src/components` | One API-backed library, desk, generated form, preview, evidence, and corrections. |
-| `src/office` | Native Office engines, ported ribbon editors, and browser host contracts. |
-| `src/server/spreadsheet-edits.ts` | Tenant-scoped full XLSX mutation planning and archive verification. |
-| `src/server/applet-actions.ts` | Tenant-scoped action authority, decisions, execution state, and evidence. |
-| `src/server/document-review.ts` | Masked DOCX detection and selected native-text removal. |
-| `src/reference-applets` | Audited source, action contracts, and behavioral suites for Sparkbench and FableCut. |
-| `drizzle` | PostgreSQL schema history. |
+| `src/app` | Next.js app shell, global styles, and the same-origin API routes under `src/app/api`. `/` is the landing page; `/workbench` is the workbench. |
+| `src/components/landing.tsx` | The marketing landing page: the loop, the three prompts, the bench, the tool list, and setup. Registers one WebMCP tool, `open_workbench`. |
+| `src/app/api/human-gates.test.ts` | Proves publish, decision, and redaction routes refuse requests without a passkey challenge. |
+| `src/client/webmcp.ts` | The 28 static WebMCP tools, Chrome 152 normalization, and the `navigator.modelContext` fallback. |
+| `src/client/rehearsal.ts` | Shadow-iframe dry run of one waiting decision against current state. |
+| `src/client/rehearsal-diff.ts` | Field-level before/after summary shown on a decision card. |
+| `src/client/workbench-state.ts` | The state the workbench publishes and `get_workbench_state` reads. |
+| `src/client/evaluation-worker.ts` | Runs behavioral suites in the browser and reports step evidence. |
+| `src/client/human-authority.ts` | Browser side of passkey registration and authorization. |
+| `src/client/mission-plan.ts` | The shared plan behind `share_plan` and `update_plan_step`. |
+| `src/components/workbench.tsx` | Surfaces, header, Decisions chip, and which home or inspector the bench shows. |
+| `src/components/workbench-home.tsx` | The Applets, Guide, Library, and Studio homes: how to navigate, plus paste-ready prompts. |
+| `src/domain/starter-prompts.ts` | The six starter prompts and the Meridian acts, shared by the landing page and the homes. |
+| `src/components/applet-preview.tsx` | Preview iframe, bridge, write gate, dynamic `applet_*` tools, decision cards, leases. |
+| `src/components/applet-inspector.tsx` | Versions, evidence, review, and the publish control. |
+| `src/components/applet-ledger.tsx` | The Applet ledger. |
+| `src/components/decisions.tsx` | The queue of decisions waiting on the person. |
+| `src/domain` | Zod schemas and limits: applets, actions, evaluation, inputs, state, leases, video projects. |
+| `src/domain/applet-runtime.ts` | HTML wrapper, content security policy, and `window.eevee` bridge injected into every artifact. |
+| `src/server/applets.ts` | Applet, version, publish, and correction lifecycle. |
+| `src/server/applet-runs.ts` | Runs, run state, and superseding open requests. |
+| `src/server/applet-actions.ts` | Action requests, decisions, lease spends, execution states. |
+| `src/server/human-authority.ts` | Passkey registration, scoped challenges, and lease issuance. |
+| `src/server/evaluations.ts` | Evaluation runs, leases, concurrency, and evidence storage. |
+| `src/server/react-compiler.ts` | In-memory esbuild compilation with the import allow-list. |
+| `src/server/session.ts` | Signed workspace cookie. |
+| `src/server/office-files.ts` | Library files and versions. |
+| `src/server/spreadsheet-edits.ts` | XLSX edit gateway and archive verification. |
+| `src/server/document-review.ts` | Masked DOCX scan and native-text redaction. |
+| `src/server/db` | Drizzle client, schema, and migration runner. |
+| `src/office/registry.ts` | The editor contract Studio uses to mount a Documents, Sheets, Slides, or PDF editor. |
+| `src/office/host` | Browser host services the ported editors call: Library storage, pickers, print, download, external URLs. |
+| `src/office/docs`, `sheets`, `slides`, `pdf` | Ported editors. |
+| `src/office/engines` | Ported DOCX and PPTX engines and renderers. |
+| `src/reference-applets/meridian` | Meridian Ops source, actions, suite, and tests. |
+| `src/types/webmcp.d.ts` | WebMCP and `window.eevee` type declarations. |
+| `src/test` | Test-only shims. |
+| `scripts/webmcp-e2e.mjs` | Headless Chrome check of the live WebMCP surface. |
+| `drizzle` | PostgreSQL migrations. |
+| `public` | Fonts, PDF.js runtime assets, icon. |
+| `docs` | This documentation. |
 
 ## Adding a medium
 
-A new medium becomes runnable after it supplies four first-class pieces:
+`src/domain/applet.ts` lists every medium (`web-app`, `document`, `spreadsheet`, `presentation`, `pdf`, `workflow`, `image`, `video`) and a shorter list of media an agent can create today (`web-app`, `video`). A medium moves to the creatable list when it has:
 
-1. A discriminated version definition and output type.
-2. A deterministic executor with explicit resource limits.
-3. A quality suite that produces stored evidence.
-4. A rendered review surface and a human publish gate.
+1. a version definition and run output type in the discriminated unions;
+2. a deterministic executor with explicit resource limits;
+3. a behavioral suite path that stores evidence;
+4. a preview and a passkey-verified publish gate.
 
-The applet, version, evaluation suite, evaluation run, execution run, correction, and deployment records remain shared across media.
+Applets, versions, suites, evaluations, runs, decisions, and corrections stay shared across media.
